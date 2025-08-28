@@ -1,0 +1,2 @@
+nus.edu.u.framework.redis.config.CacheAutoConfiguration
+nus.edu.u.framework.redis.config.RedisAutoConfiguration

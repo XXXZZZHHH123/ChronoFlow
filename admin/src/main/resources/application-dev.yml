@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost/ChronoFlow?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    username: root
+    password: 123456
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+
+# log config
+logging:
+  level:
+    nus.edu.u: debug
+    org.springframework: warn
+    com.zaxxer.hikari: debug
