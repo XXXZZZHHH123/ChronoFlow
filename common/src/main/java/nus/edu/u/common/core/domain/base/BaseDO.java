@@ -1,4 +1,4 @@
-package nus.edu.u.module.system.domain.dataobject.base;
+package nus.edu.u.common.core.domain.base;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;

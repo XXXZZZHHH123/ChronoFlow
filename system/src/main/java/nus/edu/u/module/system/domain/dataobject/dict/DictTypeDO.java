@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.*;
 import nus.edu.u.common.enums.CommonStatusEnum;
-import nus.edu.u.module.system.domain.dataobject.base.BaseDO;
+import nus.edu.u.common.core.domain.base.BaseDO;
 
 /**
  * Dictionary type data object for table sys_dict_type

@@ -1,8 +1,7 @@
-package nus.edu.u.module.system.domain.dataobject.base;
+package nus.edu.u.common.core.domain.base;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import nus.edu.u.module.system.domain.dataobject.tenant.TenantDO;
 
 /**
  * Tenant basic class
@@ -14,8 +13,5 @@ import nus.edu.u.module.system.domain.dataobject.tenant.TenantDO;
 @EqualsAndHashCode(callSuper = true)
 public abstract class TenantBaseDO  extends BaseDO {
 
-    /**
-     * Related to {@link TenantDO#getId()}
-     */
     private Long tenantId;
 }

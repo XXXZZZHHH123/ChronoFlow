@@ -1,4 +1,4 @@
-package nus.edu.u.module.business.enums.task;
+package nus.edu.u.module.system.enums.task;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -3,7 +3,7 @@ package nus.edu.u.module.system.domain.dataobject.dict;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.*;
 import nus.edu.u.common.enums.CommonStatusEnum;
-import nus.edu.u.module.system.domain.dataobject.base.BaseDO;
+import nus.edu.u.common.core.domain.base.BaseDO;
 
 /**
  * Dictionary data data object for table sys_dict_data

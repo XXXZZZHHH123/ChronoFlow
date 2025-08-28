@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import nus.edu.u.module.system.domain.dataobject.base.TenantBaseDO;
+import nus.edu.u.common.core.domain.base.TenantBaseDO;
 import nus.edu.u.module.system.domain.dataobject.user.UserDO;
 
 /**

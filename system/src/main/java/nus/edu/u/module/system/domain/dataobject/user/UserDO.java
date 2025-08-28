@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.*;
 import nus.edu.u.module.system.domain.dataobject.role.RoleDO;
-import nus.edu.u.module.system.domain.dataobject.base.TenantBaseDO;
+import nus.edu.u.common.core.domain.base.TenantBaseDO;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.module.system.domain.dataobject.dept.DeptDO;
 

@@ -1,4 +1,4 @@
-package nus.edu.u.module.business.controller.test;
+package nus.edu.u.module.system.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

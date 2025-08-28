@@ -1,4 +1,4 @@
-package nus.edu.u.module.business.enums.task;
+package nus.edu.u.module.system.enums.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,27 +7,30 @@ import nus.edu.u.common.core.ArrayValuable;
 import java.util.Arrays;
 
 /**
- * Task status enum class
+ * Event status enum class
  *
  * @author Lu Shuwen
  * @date 2025-08-28
  */
 @Getter
 @AllArgsConstructor
-public enum TaskStatusEnum implements ArrayValuable<Integer> {
+public enum EventStatusEnum implements ArrayValuable<Integer> {
 
     WAITING(1, "Waiting"),
     DOING(2, "Doing"),
-    DONE(3, "Done");
-
-    public static final Integer[] ARRAYS = Arrays.stream(values()).map(TaskStatusEnum::getStatus).toArray(Integer[]::new);
+    SUSPENDED(3, "Suspended"),
+    DELAYED(4, "Delayed"),
+    CLOSED(5, "Closed");
 
     private final Integer status;
 
     private final String name;
 
+    private static final Integer[] ARRAYS = Arrays.stream(values()).map(EventStatusEnum::getStatus).toArray(Integer[]::new);
+
     @Override
     public Integer[] array() {
         return ARRAYS;
     }
+
 }
