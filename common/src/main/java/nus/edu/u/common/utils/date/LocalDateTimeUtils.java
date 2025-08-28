@@ -5,7 +5,7 @@ import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
-import nus.edu.u.common.enums.common.DateIntervalEnum;
+import nus.edu.u.common.enums.DateIntervalEnum;
 
 import java.time.*;
 import java.time.format.DateTimeParseException;

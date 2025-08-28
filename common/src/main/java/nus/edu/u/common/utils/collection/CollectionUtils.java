@@ -4,7 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ArrayUtil;
 import com.google.common.collect.ImmutableMap;
-import nus.edu.u.common.core.page.PageResult;
+import nus.edu.u.common.core.domain.PageResult;
 
 import java.util.*;
 import java.util.function.*;

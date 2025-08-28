@@ -4,9 +4,9 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.func.Func1;
 import cn.hutool.core.lang.func.LambdaUtil;
 import cn.hutool.core.util.ArrayUtil;
-import nus.edu.u.common.core.page.PageParam;
-import nus.edu.u.common.core.page.SortablePageParam;
-import nus.edu.u.common.core.page.SortingField;
+import nus.edu.u.common.core.domain.PageParam;
+import nus.edu.u.common.core.domain.SortablePageParam;
+import nus.edu.u.common.core.domain.SortingField;
 import org.springframework.util.Assert;
 
 import static java.util.Collections.singletonList;

@@ -39,22 +39,9 @@
             <artifactId>spring-boot-starter-cache</artifactId> <!-- 实现对 Caches 的自动化配置 -->
         </dependency>
 
-        <!-- 验证码 -->
-        <dependency>
-            <groupId>pro.fessional</groupId>
-            <artifactId>kaptcha</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>servlet-api</artifactId>
-                    <groupId>javax.servlet</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- 系统模块-->
         <dependency>
             <groupId>nus.edu.u</groupId>
-            <artifactId>system</artifactId>
+            <artifactId>common</artifactId>
         </dependency>
 
     </dependencies>

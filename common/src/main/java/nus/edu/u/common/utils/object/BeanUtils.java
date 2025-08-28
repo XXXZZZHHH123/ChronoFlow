@@ -1,7 +1,7 @@
 package nus.edu.u.common.utils.object;
 
 import cn.hutool.core.bean.BeanUtil;
-import nus.edu.u.common.core.page.PageResult;
+import nus.edu.u.common.core.domain.PageResult;
 import nus.edu.u.common.utils.collection.CollectionUtils;
 
 import java.util.List;
