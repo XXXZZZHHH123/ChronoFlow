@@ -18,3 +18,9 @@ logging:
     nus.edu.u: debug
     org.springframework: warn
     com.zaxxer.hikari: debug
+
+chronoflow:
+  security:
+    mock-enable: true
+  captcha:
+    enable: false

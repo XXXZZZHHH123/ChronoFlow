@@ -1,6 +1,9 @@
 spring:
   application:
     name: ChronoFLow
+  devtools:
+    restart:
+      enabled: false
   # Data source
   datasource:
     url: jdbc:mysql://hopper.proxy.rlwy.net:56222/ChronoFlow?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
@@ -17,6 +20,8 @@ spring:
       # max lifetime of connection
       max-lifetime: 900000
       connection-timeout: 30000
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:test} # Default is dev  Can modified by environment variable
   data:
@@ -40,11 +45,32 @@ spring:
       write-durations-as-timestamps: true # 设置 Duration 的格式，使用时间戳
       fail-on-empty-beans: false # 允许序列化无属性的 Bean
 
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true            # db: user_name -> java: userName
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # dev-only SQL logs
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID     # snowflake-style; or AUTO for DB auto-increment
+      table-underline: true
+
 # 项目相关配置
 chronoflow:
   name: ChronoFlow
   version: 1.0.0
   base-package: nus.edu.u
+  captcha:
+    enable: false
+  security:
+    token-header: Authentication
+    token-parameter: token
+    mock-enable: false
+    mock-secret: mock_secret
+    permit-all-urls:
+      - /system/auth/login
+      - /system/auth/refresh
+      - /system/captcha/*
   swagger:
     title: ChronoFLow Platform
     version: ${chronoflow.version}
@@ -71,32 +97,32 @@ knife4j:
   setting:
     language: zh_cn
 
-# MyBatis Plus
-mybatis-plus:
-  configuration:
-    map-underscore-to-camel-case: true # 虽然默认为 true ，但是还是显示去指定下。
-  global-config:
-    db-config:
-      id-type: ASSIGN_ID
-      #      id-type: AUTO # 自增 ID，适合 MySQL 等直接自增的数据库
-      #      id-type: INPUT # 用户输入 ID，适合 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库
-      #      id-type: ASSIGN_ID # 分配 ID，默认使用雪花算法。注意，Oracle、PostgreSQL、Kingbase、DB2、H2 数据库时，需要去除实体类上的 @KeySequence 注解
-      logic-delete-value: 1 # 逻辑已删除值(默认为 1)
-      logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
-    banner: false # 关闭控制台的 Banner 打印
-  type-aliases-package: ${chronoflow.base-package}.*
-  encryptor:
-    password: khjWR2QvVxfgPwtE # 加解密的秘钥，可使用 https://www.imaegoo.com/2020/aes-key-generator/ 网站生成
-
-mybatis-plus-join:
-  banner: false # 是否打印 mybatis plus join banner，默认true
-  sub-table-logic: true # 全局启用副表逻辑删除，默认true。关闭后关联查询不会加副表逻辑删除
-  ms-cache: true # 拦截器MappedStatement缓存，默认 true
-  table-alias: t # 表别名(默认 t)
-  logic-del-type: on # 副表逻辑删除条件的位置，支持 WHERE、ON，默认 ON
 
 # log file address
 logging:
   file:
     name: ${user.home}/logs/${spring.application.name}.log
 
+# Jwt
+jwt:
+  secret: my-super-secret-key
+  access-expire: 1800
+  refresh-expire: 604800
+
+# Captcha
+aj:
+  captcha:
+    jigsaw: classpath:images/jigsaw # 滑动验证，底图路径，不配置将使用默认图片；以 classpath: 开头，取 resource 目录下路径
+    pic-click: classpath:images/pic-click # 滑动验证，底图路径，不配置将使用默认图片；以 classpath: 开头，取 resource 目录下路径
+    cache-type: redis # 缓存 local/redis...
+    cache-number: 1000 # local 缓存的阈值,达到这个值，清除缓存
+    timing-clear: 180 # local定时清除过期缓存(单位秒),设置为0代表不执行
+    type: blockPuzzle # 验证码类型 default 三种都实例化。blockPuzzle 滑块拼图、clickWord 文字点选、pictureWord 文本输入
+    water-mark: ChronoFlow # 右下角水印文字(我的水印)，可使用 https://tool.chinaz.com/tools/unicode.aspx 中文转 Unicode，Linux 可能需要转 unicode
+    interference-options: 1 # 滑动干扰项(0/1/2)
+    req-frequency-limit-enable: false # 接口请求次数一分钟限制是否开启 true|false
+    req-get-lock-limit: 5 # 验证失败 5 次，get接口锁定
+    req-get-lock-seconds: 10 # 验证失败后，锁定时间间隔
+    req-get-minute-limit: 30 # get 接口一分钟内请求数限制
+    req-check-minute-limit: 60 # check 接口一分钟内请求数限制
+    req-verify-minute-limit: 60 # verify 接口一分钟内请求数限制

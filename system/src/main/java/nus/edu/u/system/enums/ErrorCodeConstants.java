@@ -1,0 +1,18 @@
+package nus.edu.u.system.enums;
+
+import nus.edu.u.common.exception.ErrorCode;
+
+/**
+ * Error code enum class
+ *
+ * @author Lu Shuwen
+ * @date 2025-08-30
+ */
+public interface ErrorCodeConstants {
+
+    // ========= Auth module 10-01-000 ============
+    ErrorCode AUTH_LOGIN_BAD_CREDENTIALS = new ErrorCode(10_01_001, "Login fail，username/password is wrong");
+    ErrorCode AUTH_LOGIN_USER_DISABLED = new ErrorCode(10_01_002, "Login fail，this account is disabled");
+    ErrorCode AUTH_LOGIN_CAPTCHA_CODE_ERROR = new ErrorCode(10_01_003, "Captcha wrong，reason：{}");
+
+}

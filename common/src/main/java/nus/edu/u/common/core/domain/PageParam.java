@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.springframework.validation.annotation.Validated;
 
 import java.io.Serializable;
 
@@ -14,7 +15,7 @@ import java.io.Serializable;
  * @author Lu Shuwen
  * @date 2025-08-28
  */
-
+@Validated
 @Schema(description="Page parameters")
 @Data
 public class PageParam implements Serializable {
