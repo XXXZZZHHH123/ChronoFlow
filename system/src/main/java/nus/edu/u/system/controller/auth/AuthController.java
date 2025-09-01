@@ -76,4 +76,9 @@ public class AuthController {
         return success(authService.refresh(refreshToken));
     }
 
+    @GetMapping("/list")
+    public List<UserDO> list() {
+        return userMapper.selectList(null);
+    }
+
 }
