@@ -69,12 +69,19 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public CommonResult<Boolean> logout(HttpServletRequest request) {
+    public CommonResult<Boolean> logout(HttpServletRequest request, HttpServletResponse response) {
+        // Logout
         String token = SecurityUtils.getAuthorization(request,
                 securityProperties.getTokenHeader(), securityProperties.getTokenParameter());
         if (StrUtil.isNotBlank(token)) {
             authService.logout(token);
         }
+        // Delete refresh token from cookie
+        Cookie deleteCookie = new Cookie("refreshToken", null);
+        deleteCookie.setHttpOnly(true);
+        deleteCookie.setPath("/");
+        deleteCookie.setMaxAge(0);
+        response.addCookie(deleteCookie);
         return success(true);
     }
 
