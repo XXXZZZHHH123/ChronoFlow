@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
- * Start application
+ * Start application 111
  *
  * @author Lu Shuwen
  * @date 2025-08-25
