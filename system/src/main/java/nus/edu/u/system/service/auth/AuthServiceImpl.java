@@ -13,10 +13,7 @@ import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.TokenDTO;
 import nus.edu.u.system.domain.dto.UserTokenDTO;
-import nus.edu.u.system.domain.vo.auth.CaptchaVerificationReqVO;
-import nus.edu.u.system.domain.vo.auth.LoginReqVO;
-import nus.edu.u.system.domain.vo.auth.LoginRespVO;
-import nus.edu.u.system.domain.vo.auth.RefreshTokenVO;
+import nus.edu.u.system.domain.vo.auth.*;
 import nus.edu.u.system.service.user.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -103,11 +100,12 @@ public class AuthServiceImpl implements AuthService {
         // 2.Create two token and set parameters into response object
         TokenDTO accessToken = tokenService.createAccessToken(userTokenDTO);
         String refreshToken = tokenService.createRefreshToken(userTokenDTO);
+        UserVO userVO = UserVO.builder().id(userDO.getId()).build();
         return LoginRespVO.builder()
                 .accessToken(accessToken.getAccessToken())
-                .expireTime(accessToken.getExpireTime())
+                .accessTokenExpireTime(accessToken.getExpireTime())
                 .refreshToken(refreshToken)
-                .userId(userDO.getId()).build();
+                .user(userVO).build();
     }
 
     @Override

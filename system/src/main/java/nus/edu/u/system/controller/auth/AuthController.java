@@ -3,7 +3,9 @@ package nus.edu.u.system.controller.auth;
 import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import jakarta.annotation.security.PermitAll;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
@@ -54,8 +56,16 @@ public class AuthController {
     private SecurityProperties securityProperties;
 
     @PostMapping("/login")
-    public CommonResult<LoginRespVO> login(@RequestBody @Valid LoginReqVO reqVO) {
-        return success(authService.login(reqVO));
+    public CommonResult<LoginRespVO> login(@RequestBody @Valid LoginReqVO reqVO, HttpServletResponse response) {
+        LoginRespVO loginRespVO = authService.login(reqVO);
+        // TODO Remove this to service layer
+        Cookie refreshCookie = new Cookie("refreshToken", loginRespVO.getRefreshToken());
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(false);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7 Days
+        response.addCookie(refreshCookie);
+        return success(loginRespVO);
     }
 
     @PostMapping("/logout")
@@ -69,7 +79,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public CommonResult<LoginRespVO> refresh(@CookieValue(name = "token", required = false) String refreshToken) {
+    public CommonResult<LoginRespVO> refresh(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
         if (StrUtil.isBlank(refreshToken)) {
             return error(MISSING_COOKIE);
         }
