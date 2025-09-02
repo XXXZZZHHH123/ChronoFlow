@@ -103,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
         UserVO userVO = UserVO.builder().id(userDO.getId()).build();
         return LoginRespVO.builder()
                 .accessToken(accessToken.getAccessToken())
-                .accessTokenExpireTime(accessToken.getExpireTime())
+                .accessTokenExpireTime(accessToken.getAccessTokenExpireTime())
                 .refreshToken(refreshToken)
                 .user(userVO).build();
     }
@@ -125,6 +125,8 @@ public class AuthServiceImpl implements AuthService {
         LoginRespVO loginRespVO = new LoginRespVO();
         BeanUtil.copyProperties(tokenDTO, loginRespVO);
         loginRespVO.setRefreshToken(refreshToken);
+        UserVO userVO = UserVO.builder().id(tokenDTO.getUserId()).build();
+        loginRespVO.setUser(userVO);
         return loginRespVO;
     }
 }
