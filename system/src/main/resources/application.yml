@@ -6,9 +6,9 @@ spring:
       enabled: false
   # Data source
   datasource:
-    url: jdbc:mysql://hopper.proxy.rlwy.net:56222/ChronoFlow?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-    username: root
-    password: DoTKPrsSvsikuqxPhelmOIvCLNMcltyK
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     # Database connection pool
     hikari:
       # min free connection
