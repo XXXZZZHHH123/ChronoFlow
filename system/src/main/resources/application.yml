@@ -23,7 +23,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:test} # Default is dev  Can modified by environment variable
+    active: ${SPRING_PROFILES_ACTIVE:dev} # Default is dev  Can modified by environment variable
   data:
     redis:
       repositories:
