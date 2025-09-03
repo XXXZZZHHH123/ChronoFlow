@@ -80,7 +80,6 @@ chronoflow:
     version: ${chronoflow.version}
 
 server:
-  port: 8081
   servlet:
     encoding:
       enabled: true
