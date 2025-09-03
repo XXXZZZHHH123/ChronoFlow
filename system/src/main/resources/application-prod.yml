@@ -1,14 +1,28 @@
 spring:
+  ##Production(use AWS Secrets Manager)
+  #  config:
+  #    import: aws-secretsmanager:ChronoFlowDBSecret
+  #  datasource:
+  #    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+  #    username: ${DB_USER}
+  #    password: ${DB_PASSWORD}
+  #  data:
+  #    redis:
+  #      host: ${REDIS_HOST}
+  #      port: ${REDIS_PORT}
+  #      database: ${REDIS_DATABASE}
+  #      password: ${REDIS_PASSWORD}
+
   datasource:
-    url: jdbc:mysql://hopper.proxy.rlwy.net:56222/ChronoFlow?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-    username: root
-    password: DoTKPrsSvsikuqxPhelmOIvCLNMcltyK
+    url: jdbc:mysql://${PORD_DB_HOST}:${PORD_DB_PORT}/${PORD_DB_NAME}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    username: ${PORD_DB_USER}
+    password: ${PORD_DB_PASSWORD}
   data:
     redis:
-      host: nozomi.proxy.rlwy.net
-      port: 42775
-      database: 0
-      password: MmvxXZswsKgtFukcBGteMInEslKuMCTp
+      host: ${PORD_REDIS_HOST}
+      port: ${PORD_REDIS_PORT}
+      database: ${PORD_REDIS_DATABASE}
+      password: ${PORD_REDIS_PASSWORD}
 
 # log config
 logging:
