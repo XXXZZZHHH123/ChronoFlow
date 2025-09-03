@@ -1,15 +1,15 @@
 spring:
   #use environment variable
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://${TEST_DB_HOST}:${TEST_DB_PORT}/${TEST_DB_NAME}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    username: ${TEST_DB_USER}
+    password: ${TEST_DB_PASSWORD}
   data:
     redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      database: ${REDIS_DATABASE}
-      password: ${REDIS_PASSWORD}
+      host: ${TEST_REDIS_HOST}
+      port: ${TEST_REDIS_PORT}
+      database: ${TEST_REDIS_DATABASE}
+      password: ${TEST_REDIS_PASSWORD}
 
 # log config
 logging:
