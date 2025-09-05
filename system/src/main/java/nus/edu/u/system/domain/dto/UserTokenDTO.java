@@ -21,4 +21,6 @@ public class UserTokenDTO {
     private Long tenantId;
 
     private Long roleId;
+
+    private boolean remember;
 }

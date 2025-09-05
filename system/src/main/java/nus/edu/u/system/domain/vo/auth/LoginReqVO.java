@@ -19,4 +19,6 @@ public class LoginReqVO extends CaptchaVerificationReqVO {
     @NotEmpty(message = "Passage can't be empty")
     private String password;
 
+    private boolean remember = true;
+
 }

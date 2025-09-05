@@ -51,9 +51,11 @@ public class TokenServiceImpl implements TokenService {
     public String createRefreshToken(UserTokenDTO userTokenDTO) {
         // 1.Use utils to create token
         String token = jwtUtils.generateRefreshToken(userTokenDTO.getId(), userTokenDTO.getRoleId(), userTokenDTO.getTenantId());
-        // 2.Put token into redis
-        stringRedisTemplate.opsForValue().set(LOGIN_REFRESH_TOKEN_KEY + userTokenDTO.getId(), token,
-                jwtProperties.getRefreshExpire(), TimeUnit.SECONDS);
+        if (userTokenDTO.isRemember()) {
+            // 2.Put token into redis
+            stringRedisTemplate.opsForValue().set(LOGIN_REFRESH_TOKEN_KEY + userTokenDTO.getId(), token,
+                    jwtProperties.getRefreshExpire(), TimeUnit.SECONDS);
+        }
         // 3.Return token
         return token;
     }

@@ -24,3 +24,6 @@ chronoflow:
     mock-enable: true
   captcha:
     enable: false
+  cookie:
+    http-only: false
+    security: false

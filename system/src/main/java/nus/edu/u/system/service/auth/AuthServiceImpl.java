@@ -77,7 +77,7 @@ public class AuthServiceImpl implements AuthService {
         // 2.Verify username and password
         UserDO userDO = authenticate(reqVO.getUsername(), reqVO.getPassword());
         // 3.Create token
-        return createTokenAfterLoginSuccess(userDO);
+        return createTokenAfterLoginSuccess(userDO, reqVO.isRemember());
     }
 
     /**
@@ -93,10 +93,11 @@ public class AuthServiceImpl implements AuthService {
         return captchaService.verification(captchaVO);
     }
 
-    private LoginRespVO createTokenAfterLoginSuccess(UserDO userDO) {
+    private LoginRespVO createTokenAfterLoginSuccess(UserDO userDO, boolean rememberMe) {
         // 1.Create UserTokenDTO which contains parameters required to create a token
         UserTokenDTO userTokenDTO = new UserTokenDTO();
         BeanUtil.copyProperties(userDO, userTokenDTO);
+        userTokenDTO.setRemember(rememberMe);
         // 2.Create two token and set parameters into response object
         TokenDTO accessToken = tokenService.createAccessToken(userTokenDTO);
         String refreshToken = tokenService.createRefreshToken(userTokenDTO);

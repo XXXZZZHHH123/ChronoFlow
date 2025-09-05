@@ -30,3 +30,8 @@ logging:
     nus.edu.u: info
     org.springframework: error
     root: warn
+
+chronoflow:
+  cookie:
+    http-only: true
+    security: true
