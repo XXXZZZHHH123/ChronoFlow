@@ -17,5 +17,5 @@ public class TokenDTO {
 
     private String accessToken;
 
-    private Long expireTime;
+    private Long accessTokenExpireTime;
 }
