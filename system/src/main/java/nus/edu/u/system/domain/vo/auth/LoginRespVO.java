@@ -1,11 +1,11 @@
 package nus.edu.u.system.domain.vo.auth;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 
 /**
  * User login response VO
@@ -16,12 +16,13 @@ import java.time.LocalDateTime;
 @Builder
 public class LoginRespVO {
 
-    private Long userId;
+    private UserVO user;
 
     private String accessToken;
 
+    @JsonIgnore
     private String refreshToken;
 
-    private Long expireTime;
+    private Long accessTokenExpireTime;
 
 }

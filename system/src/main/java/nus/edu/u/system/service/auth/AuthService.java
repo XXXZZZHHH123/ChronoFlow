@@ -1,10 +1,8 @@
 package nus.edu.u.system.service.auth;
 
-import jakarta.servlet.http.HttpServletRequest;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.auth.LoginReqVO;
 import nus.edu.u.system.domain.vo.auth.LoginRespVO;
-import nus.edu.u.system.domain.vo.auth.RefreshTokenVO;
 
 /**
  * Authentication service interface
@@ -40,5 +38,5 @@ public interface AuthService {
      */
     void logout(String token);
 
-    LoginRespVO refresh(RefreshTokenVO refreshTokenVO);
+    LoginRespVO refresh(String refreshTokenVO);
 }
