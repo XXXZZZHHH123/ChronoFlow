@@ -19,7 +19,6 @@ import nus.edu.u.common.utils.collection.SetUtils;
 import nus.edu.u.common.utils.exception.ServiceExceptionUtil;
 import nus.edu.u.common.utils.servlet.ServletUtils;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.util.Assert;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -95,9 +94,6 @@ public class GlobalExceptionHandler {
         }
         if (ex instanceof ServiceException) {
             return serviceExceptionHandler((ServiceException) ex);
-        }
-        if (ex instanceof AccessDeniedException) {
-            return accessDeniedExceptionHandler(request, (AccessDeniedException) ex);
         }
         return defaultExceptionHandler(ex);
     }
@@ -240,17 +236,6 @@ public class GlobalExceptionHandler {
     public CommonResult<?> httpMediaTypeNotSupportedExceptionHandler(HttpMediaTypeNotSupportedException ex) {
         log.warn("[httpMediaTypeNotSupportedExceptionHandler]", ex);
         return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求类型不正确:%s", ex.getMessage()));
-    }
-
-    /**
-     * 处理 Spring Security 权限不足的异常
-     *
-     * 来源是，使用 @PreAuthorize 注解，AOP 进行权限拦截
-     */
-    @ExceptionHandler(value = AccessDeniedException.class)
-    public CommonResult<?> accessDeniedExceptionHandler(HttpServletRequest req, AccessDeniedException ex) {
-        log.warn("[accessDeniedExceptionHandler][无法访问 url({})]", req.getRequestURL(), ex);
-        return CommonResult.error(FORBIDDEN);
     }
 
     /**

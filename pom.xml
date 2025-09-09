@@ -24,13 +24,13 @@
 		<commons.io.version>2.19.0</commons.io.version>
 		<poi.version>4.1.2</poi.version>
 		<jwt.version>0.9.1</jwt.version>
-		<captcha.version>1.4.0</captcha.version>
 		<guava.version>33.4.0-jre</guava.version>
 		<jakarta-validation.version>3.0.2</jakarta-validation.version>
 		<redisson.version>3.41.0</redisson.version>
 		<springdoc.version>2.7.0</springdoc.version>
 		<lombok.version>1.18.34</lombok.version>
 		<hutool.version>5.8.35</hutool.version>
+		<satoken.version>1.44.0</satoken.version>
 	</properties>
 	<!-- 依赖声明 -->
 	<dependencyManagement>
@@ -92,20 +92,6 @@
 				<version>${fastjson.version}</version>
 			</dependency>
 
-			<!-- Token生成与解析-->
-			<dependency>
-				<groupId>io.jsonwebtoken</groupId>
-				<artifactId>jjwt</artifactId>
-				<version>${jwt.version}</version>
-			</dependency>
-
-			<!-- captcha for login -->
-			<dependency>
-				<groupId>com.anji-plus</groupId>
-				<artifactId>captcha-spring-boot-starter</artifactId>
-				<version>${captcha.version}</version>
-			</dependency>
-
 			<!-- hutool utils -->
 			<dependency>
 				<groupId>cn.hutool</groupId>
@@ -134,21 +120,34 @@
 				<version>${lombok.version}</version>
 			</dependency>
 
-			<!-- 核心模块-->
+			<!-- sa-token -->
+			<dependency>
+				<groupId>cn.dev33</groupId>
+				<artifactId>sa-token-spring-boot3-starter</artifactId>
+				<version>${satoken.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>cn.dev33</groupId>
+				<artifactId>sa-token-redis-template</artifactId>
+				<version>1.44.0</version>
+			</dependency>
+
+			<!-- Framework module -->
 			<dependency>
 				<groupId>nus.edu.u</groupId>
 				<artifactId>framework</artifactId>
 				<version>${revision}</version>
 			</dependency>
 
-			<!-- 系统模块-->
+			<!-- System module -->
 			<dependency>
 				<groupId>nus.edu.u</groupId>
 				<artifactId>system</artifactId>
 				<version>${revision}</version>
 			</dependency>
 
-			<!-- 通用工具-->
+			<!-- Common module -->
 			<dependency>
 				<groupId>nus.edu.u</groupId>
 				<artifactId>common</artifactId>

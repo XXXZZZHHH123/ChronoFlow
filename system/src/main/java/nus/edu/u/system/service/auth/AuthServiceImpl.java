@@ -1,13 +1,12 @@
 package nus.edu.u.system.service.auth;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
-import com.anji.captcha.model.common.ResponseModel;
-import com.anji.captcha.model.vo.CaptchaVO;
-import com.anji.captcha.service.CaptchaService;
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.ObjUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Validator;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
@@ -15,9 +14,7 @@ import nus.edu.u.system.domain.dto.TokenDTO;
 import nus.edu.u.system.domain.dto.UserTokenDTO;
 import nus.edu.u.system.domain.vo.auth.*;
 import nus.edu.u.system.service.user.UserService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import nus.edu.u.common.utils.validation.ValidationUtils;
 
 import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.EXPIRED_LOGIN_CREDENTIALS;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
@@ -37,17 +34,7 @@ public class AuthServiceImpl implements AuthService {
     private UserService userService;
 
     @Resource
-    private CaptchaService captchaService;
-
-    @Resource
     private TokenService tokenService;
-
-    @Resource
-    private Validator validator;
-
-    @Value("${chronoflow.captcha.enable:true}")
-    @Setter
-    private Boolean captchaEnable;
 
     @Override
     public UserDO authenticate(String username, String password) {
@@ -69,28 +56,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginRespVO login(LoginReqVO reqVO) {
-        // 1.Verify captcha
-        ResponseModel response = validateCaptcha(reqVO);
-        if (!response.isSuccess()) {
-            throw exception(AUTH_LOGIN_CAPTCHA_CODE_ERROR, response.getRepMsg());
-        }
-        // 2.Verify username and password
+        // 1.Verify username and password
         UserDO userDO = authenticate(reqVO.getUsername(), reqVO.getPassword());
-        // 3.Create token
+        // 2.Create token
         return createTokenAfterLoginSuccess(userDO, reqVO.isRemember());
-    }
-
-    /**
-     * Second verification of captcha
-     */
-    private ResponseModel validateCaptcha(CaptchaVerificationReqVO reqVO) {
-        if (!captchaEnable) {
-            return ResponseModel.success();
-        }
-        ValidationUtils.validate(validator, reqVO, CaptchaVerificationReqVO.CodeEnableGroup.class);
-        CaptchaVO captchaVO = new CaptchaVO();
-        captchaVO.setCaptchaVerification(reqVO.getCaptchaVerification());
-        return captchaService.verification(captchaVO);
     }
 
     private LoginRespVO createTokenAfterLoginSuccess(UserDO userDO, boolean rememberMe) {
@@ -99,12 +68,12 @@ public class AuthServiceImpl implements AuthService {
         BeanUtil.copyProperties(userDO, userTokenDTO);
         userTokenDTO.setRemember(rememberMe);
         // 2.Create two token and set parameters into response object
-        TokenDTO accessToken = tokenService.createAccessToken(userTokenDTO);
+        StpUtil.login(userDO.getId());
         String refreshToken = tokenService.createRefreshToken(userTokenDTO);
         UserVO userVO = UserVO.builder().id(userDO.getId()).build();
         return LoginRespVO.builder()
-                .accessToken(accessToken.getAccessToken())
-                .accessTokenExpireTime(accessToken.getAccessTokenExpireTime())
+                .accessToken(StpUtil.getTokenValue())
+                .accessTokenExpireTime(StpUtil.getTokenTimeout())
                 .refreshToken(refreshToken)
                 .user(userVO).build();
     }
@@ -112,22 +81,24 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void logout(String token) {
         tokenService.removeToken(token);
+        StpUtil.logout();
     }
 
     @Override
     public LoginRespVO refresh(String refreshToken) {
         // 1.Create access token and expire time
-        TokenDTO tokenDTO = tokenService.refreshToken(refreshToken);
-        // 2.If tokenDTO == null, throw an exception to re-login
-        if (tokenDTO == null) {
-            throw exception(EXPIRED_LOGIN_CREDENTIALS);
+        Long userId = tokenService.getUserIdFromRefreshToken(refreshToken);
+        if (ObjUtil.isNull(userId)) {
+            throw exception(REFRESH_TOKEN_WRONG);
         }
+        // 2.Login user
+        StpUtil.login(userId);
         // 3.Build response object
-        LoginRespVO loginRespVO = new LoginRespVO();
-        BeanUtil.copyProperties(tokenDTO, loginRespVO);
-        loginRespVO.setRefreshToken(refreshToken);
-        UserVO userVO = UserVO.builder().id(tokenDTO.getUserId()).build();
-        loginRespVO.setUser(userVO);
-        return loginRespVO;
+        UserVO userVO = UserVO.builder().id(userId).build();
+        return LoginRespVO.builder()
+                .accessToken(StpUtil.getTokenValue())
+                .accessTokenExpireTime(StpUtil.getTokenTimeout())
+                .refreshToken(refreshToken)
+                .user(userVO).build();
     }
 }

@@ -1,5 +1,6 @@
 package nus.edu.u.system.controller.auth;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import jakarta.annotation.security.PermitAll;
@@ -10,7 +11,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
-import nus.edu.u.common.utils.security.SecurityUtils;
 import nus.edu.u.framework.security.config.CookieConfig;
 import nus.edu.u.framework.security.config.SecurityProperties;
 import nus.edu.u.framework.security.factory.AbstractCookieFactory;
@@ -55,12 +55,6 @@ public class AuthController {
     private UserMapper userMapper;
 
     @Resource
-    private DeptMapper deptMapper;
-
-    @Resource
-    private SecurityProperties securityProperties;
-
-    @Resource
     private CookieConfig cookieConfig;
 
     @PostMapping("/login")
@@ -79,13 +73,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public CommonResult<Boolean> logout(HttpServletRequest request, HttpServletResponse response) {
-        // Logout
-        String token = SecurityUtils.getAuthorization(request,
-                securityProperties.getTokenHeader(), securityProperties.getTokenParameter());
-        if (StrUtil.isNotBlank(token)) {
-            authService.logout(token);
-        }
+    public CommonResult<Boolean> logout(@CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken, HttpServletResponse response) {
+        authService.logout(refreshToken);
         // Delete refresh token from cookie
         AbstractCookieFactory cookieFactory = new ZeroLifeRefreshTokenCookie(cookieConfig.isHttpOnly(),
                 cookieConfig.isSecurity());

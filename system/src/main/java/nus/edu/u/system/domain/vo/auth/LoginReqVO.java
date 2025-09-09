@@ -7,11 +7,10 @@ import lombok.*;
  * User login request VO
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LoginReqVO extends CaptchaVerificationReqVO {
+public class LoginReqVO {
 
     @NotEmpty(message = "Username can't be empty")
     private String username;
