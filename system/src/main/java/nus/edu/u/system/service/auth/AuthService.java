@@ -40,5 +40,5 @@ public interface AuthService {
      */
     void logout(String token);
 
-    LoginRespVO refresh(String refreshToken);
+    LoginRespVO refresh(RefreshTokenVO refreshTokenVO);
 }
