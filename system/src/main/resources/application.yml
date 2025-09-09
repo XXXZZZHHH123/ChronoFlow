@@ -71,10 +71,11 @@ chronoflow:
       - /system/auth/login
       - /system/auth/refresh
       - /system/captcha/*
-  cors:
-    origins:
-      - "http://172.20.10.9:5173"
-      - "http://localhost:5173"
+    cors:
+      origins:
+        - "http://172.20.10.9:5173"
+        - "http://localhost:5173"
+        - "https://chronoflow-frontend-production.up.railway.app"
   swagger:
     title: ChronoFLow Platform
     version: ${chronoflow.version}
