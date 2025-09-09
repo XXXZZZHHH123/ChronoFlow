@@ -22,8 +22,7 @@ public interface GlobalErrorCodeConstants {
     ErrorCode NOT_FOUND = new ErrorCode(404, "Not found");
     ErrorCode METHOD_NOT_ALLOWED = new ErrorCode(405, "Invalid request method");
     ErrorCode EXPIRED_LOGIN_CREDENTIALS = new ErrorCode(406, "Login expired, please log in again");
-    ErrorCode MISSING_COOKIE = new ErrorCode(410, "Missing cookie");
-    ErrorCode LOCKED = new ErrorCode(423, "Request failed, please try again later");
+    ErrorCode LOCKED = new ErrorCode(423, "Request failed, please try again later"); // 并发请求，不允许
     ErrorCode TOO_MANY_REQUESTS = new ErrorCode(429, "The request is too frequent, please try again later");
 
     // ========== Server error segment ==========
