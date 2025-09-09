@@ -43,7 +43,7 @@ public class TokenServiceImpl implements TokenService {
         // 3.Build response object
         return TokenDTO.builder()
                 .accessToken(token)
-                .expireTime(System.currentTimeMillis() + jwtProperties.getAccessExpire() * 1000)
+                .accessTokenExpireTime(System.currentTimeMillis() + jwtProperties.getAccessExpire() * 1000)
                 .build();
     }
 
@@ -84,10 +84,13 @@ public class TokenServiceImpl implements TokenService {
         }
         // 3.Create access token
         String accessToken = jwtUtils.generateAccessToken(userId, roleId, tenantId);
-        // 4.Build return object
+        // 4.Add access token in redis
+        stringRedisTemplate.opsForValue().set(LOGIN_ACCESS_TOKEN_KEY + userId, accessToken,
+                jwtProperties.getAccessExpire(), TimeUnit.SECONDS);
+        // 5.Build return object
         return TokenDTO.builder()
                 .accessToken(accessToken)
-                .expireTime(System.currentTimeMillis() + jwtProperties.getAccessExpire() * 1000)
+                .accessTokenExpireTime(System.currentTimeMillis() + jwtProperties.getAccessExpire() * 1000)
                 .userId(userId)
                 .build();
     }
