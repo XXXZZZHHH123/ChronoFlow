@@ -14,6 +14,7 @@ public interface ErrorCodeConstants {
     ErrorCode AUTH_LOGIN_BAD_CREDENTIALS = new ErrorCode(10_01_001, "Login fail，username/password is wrong");
     ErrorCode AUTH_LOGIN_USER_DISABLED = new ErrorCode(10_01_002, "Login fail，this account is disabled");
     ErrorCode AUTH_LOGIN_CAPTCHA_CODE_ERROR = new ErrorCode(10_01_003, "Captcha wrong，reason：{}");
+    ErrorCode REFRESH_TOKEN_WRONG = new ErrorCode(10_01_004, "Can't refresh, please login again");
 
     ErrorCode GROUP_NOT_FOUND = new ErrorCode(10_02_001, "Group not found");
     ErrorCode EVENT_NOT_FOUND = new ErrorCode(10_02_002, "Event not found");

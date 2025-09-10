@@ -28,6 +28,16 @@ spring:
     redis:
       repositories:
         enabled: false
+      lettuce:
+        pool:
+          # 连接池最大连接数
+          max-active: 200
+          # 连接池最大阻塞等待时间（使用负值表示没有限制）
+          max-wait: -1ms
+          # 连接池中的最大空闲连接
+          max-idle: 10
+          # 连接池中的最小空闲连接
+          min-idle: 0
   main:
     allow-circular-references: true
   # Servlet 配置
@@ -60,21 +70,8 @@ chronoflow:
   name: ChronoFlow
   version: 1.0.0
   base-package: nus.edu.u
-  captcha:
-    enable: false
   security:
-    token-header: Authentication
-    token-parameter: token
-    mock-enable: false
-    mock-secret: mock_secret
-    permit-all-urls:
-      - /system/auth/login
-      - /system/auth/refresh
-      - /system/captcha/*
-  cors:
-    origins:
-      - "http://172.20.10.9:5173"
-      - "http://localhost:5173"
+    refresh-token-expire: 604800
   swagger:
     title: ChronoFLow Platform
     version: ${chronoflow.version}
@@ -107,26 +104,24 @@ logging:
   file:
     name: ${user.home}/logs/${spring.application.name}.log
 
-# Jwt
-jwt:
-  secret: my-super-secret-key
-  access-expire: 1800
-  refresh-expire: 604800
-
-# Captcha
-aj:
-  captcha:
-    jigsaw: classpath:images/jigsaw # 滑动验证，底图路径，不配置将使用默认图片；以 classpath: 开头，取 resource 目录下路径
-    pic-click: classpath:images/pic-click # 滑动验证，底图路径，不配置将使用默认图片；以 classpath: 开头，取 resource 目录下路径
-    cache-type: redis # 缓存 local/redis...
-    cache-number: 1000 # local 缓存的阈值,达到这个值，清除缓存
-    timing-clear: 180 # local定时清除过期缓存(单位秒),设置为0代表不执行
-    type: blockPuzzle # 验证码类型 default 三种都实例化。blockPuzzle 滑块拼图、clickWord 文字点选、pictureWord 文本输入
-    water-mark: ChronoFlow # 右下角水印文字(我的水印)，可使用 https://tool.chinaz.com/tools/unicode.aspx 中文转 Unicode，Linux 可能需要转 unicode
-    interference-options: 1 # 滑动干扰项(0/1/2)
-    req-frequency-limit-enable: false # 接口请求次数一分钟限制是否开启 true|false
-    req-get-lock-limit: 5 # 验证失败 5 次，get接口锁定
-    req-get-lock-seconds: 10 # 验证失败后，锁定时间间隔
-    req-get-minute-limit: 30 # get 接口一分钟内请求数限制
-    req-check-minute-limit: 60 # check 接口一分钟内请求数限制
-    req-verify-minute-limit: 60 # verify 接口一分钟内请求数限制
+############## Sa-Token 配置 (文档: https://sa-token.cc) ##############
+sa-token:
+  # token 名称（同时也是 cookie 名称）
+  token-name: Authentication
+  token-prefix: Bearer
+  # Read token from cookie
+  is-read-cookie: false
+  # token 有效期（单位：秒） 默认30天，-1 代表永久有效
+  timeout: 1800
+  # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结
+  active-timeout: -1
+  # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
+  is-concurrent: true
+  # 在多人登录同一账号时，是否共用一个 token （为 true 时所有登录共用一个 token, 为 false 时每次登录新建一个 token）
+  is-share: true
+  # 是否输出操作日志
+  is-log: true
+  # Jwt key
+  jwt-secret-key: chronoflow123
+  # Token style
+  token-style: uuid
