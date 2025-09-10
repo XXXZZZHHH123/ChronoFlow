@@ -15,4 +15,12 @@ public interface ErrorCodeConstants {
     ErrorCode AUTH_LOGIN_USER_DISABLED = new ErrorCode(10_01_002, "Login fail，this account is disabled");
     ErrorCode AUTH_LOGIN_CAPTCHA_CODE_ERROR = new ErrorCode(10_01_003, "Captcha wrong，reason：{}");
 
+    ErrorCode GROUP_NOT_FOUND = new ErrorCode(10_02_001, "Group not found");
+    ErrorCode EVENT_NOT_FOUND = new ErrorCode(10_02_002, "Event not found");
+    ErrorCode USER_NOT_FOUND = new ErrorCode(10_02_003, "User not found");
+    ErrorCode GROUP_NAME_EXISTS = new ErrorCode(10_02_004, "Group name already exists in this event");
+    ErrorCode INSUFFICIENT_PERMISSION = new ErrorCode(10_02_005, "Insufficient permission to manage this group");
+
+
+
 }
