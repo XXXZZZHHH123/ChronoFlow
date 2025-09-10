@@ -9,7 +9,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -22,7 +21,7 @@ import java.sql.DatabaseMetaData;
  * @date 2025-08-25
  */
 @MapperScan(basePackages = "nus.edu.u.system.mapper", annotationClass = Mapper.class)
-@SpringBootApplication(scanBasePackages = {"nus.edu.u.framework", "nus.edu.u.common", "nus.edu.u.system", "com.anji.captcha"})
+@SpringBootApplication(scanBasePackages = {"nus.edu.u.framework", "nus.edu.u.common", "nus.edu.u.system"})
 @Slf4j
 public class ChronoFlowApplication {
     public static void main(String[] args) {
