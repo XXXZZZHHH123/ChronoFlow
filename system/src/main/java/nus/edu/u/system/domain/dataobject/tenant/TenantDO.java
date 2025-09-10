@@ -40,6 +40,8 @@ public class TenantDO extends BaseDO implements Serializable {
 
     private String contactMobile;
 
+    private String address;
+
     /**
      * Tenant status
      *
