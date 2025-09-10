@@ -30,30 +30,30 @@ spring:
         enabled: false
       lettuce:
         pool:
-          # 连接池最大连接数
+          # Maximum number of connections in the connection pool
           max-active: 200
-          # 连接池最大阻塞等待时间（使用负值表示没有限制）
+          # The maximum blocking wait time of the connection pool (a negative value indicates no limit)
           max-wait: -1ms
-          # 连接池中的最大空闲连接
+          # Maximum idle connections in the connection pool
           max-idle: 10
-          # 连接池中的最小空闲连接
+          # Minimum number of idle connections in the connection pool
           min-idle: 0
   main:
     allow-circular-references: true
-  # Servlet 配置
+  # Servlet Config
   servlet:
-    # 文件上传相关配置项
+    # File upload related configuration items
     multipart:
-      max-file-size: 16MB # 单个文件大小
-      max-request-size: 32MB # 设置总上传的文件大小
+      max-file-size: 16MB # Single file size
+      max-request-size: 32MB # Set the total uploaded file size
 
-  # Jackson 配置项
+  # Jackson config
   jackson:
     serialization:
-      write-dates-as-timestamps: true # 设置 Date 的格式，使用时间戳
-      write-date-timestamps-as-nanoseconds: false # 设置不使用 nanoseconds 的格式。例如说 1611460870.401，而是直接 1611460870401
-      write-durations-as-timestamps: true # 设置 Duration 的格式，使用时间戳
-      fail-on-empty-beans: false # 允许序列化无属性的 Bean
+      write-dates-as-timestamps: true # Set the Date format to use a timestamp
+      write-date-timestamps-as-nanoseconds: false
+      write-durations-as-timestamps: true # Set the Duration format to use timestamp
+      fail-on-empty-beans: false # Allow serialization of beans without attributes
 
 mybatis-plus:
   configuration:
@@ -65,7 +65,7 @@ mybatis-plus:
       id-type: ASSIGN_ID     # snowflake-style; or AUTO for DB auto-increment
       table-underline: true
 
-# 项目相关配置
+# Project config
 chronoflow:
   name: ChronoFlow
   version: 1.0.0
@@ -80,7 +80,7 @@ server:
   servlet:
     encoding:
       enabled: true
-      charset: UTF-8 # 必须设置 UTF-8，避免 WebFlux 流式返回（AI 场景）会乱码问题
+      charset: UTF-8
       force: true
 
 --- #################### API doc configuration ####################
@@ -104,22 +104,29 @@ logging:
   file:
     name: ${user.home}/logs/${spring.application.name}.log
 
-############## Sa-Token 配置 (文档: https://sa-token.cc) ##############
+############## Sa-Token config (文档: https://sa-token.cc) ##############
 sa-token:
-  # token 名称（同时也是 cookie 名称）
+  # token name
   token-name: Authentication
+  # token prefix
   token-prefix: Bearer
   # Read token from cookie
   is-read-cookie: false
-  # token 有效期（单位：秒） 默认30天，-1 代表永久有效
+  # token validity period (unit: seconds) The default is 30 days, -1 means permanent validity
   timeout: 1800
   # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结
+  # Minimum active frequency (unit: seconds). If the token does not access the system within this time,
+  # it will be frozen. The default value of -1 means no limit and never freeze.
   active-timeout: -1
   # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
+  # Whether to allow multiple logins from the same account at the same time
+  # (if true, multiple logins are allowed; if false, new logins will replace old logins)
   is-concurrent: true
   # 在多人登录同一账号时，是否共用一个 token （为 true 时所有登录共用一个 token, 为 false 时每次登录新建一个 token）
+  # When multiple people log into the same account, do they share a token?
+  # (If true, all logins share a token; if false, a new token is created for each login.)
   is-share: true
-  # 是否输出操作日志
+  # Whether to output operation logs
   is-log: true
   # Jwt key
   jwt-secret-key: chronoflow123

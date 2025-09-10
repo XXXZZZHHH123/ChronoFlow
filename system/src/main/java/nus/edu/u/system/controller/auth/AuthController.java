@@ -1,28 +1,18 @@
 package nus.edu.u.system.controller.auth;
 
-import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
-import jakarta.annotation.security.PermitAll;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.framework.security.config.CookieConfig;
-import nus.edu.u.framework.security.config.SecurityProperties;
 import nus.edu.u.framework.security.factory.AbstractCookieFactory;
 import nus.edu.u.framework.security.factory.LongLifeRefreshTokenCookie;
 import nus.edu.u.framework.security.factory.ZeroLifeRefreshTokenCookie;
-import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
-import nus.edu.u.system.domain.vo.auth.RefreshTokenVO;
-import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.auth.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
