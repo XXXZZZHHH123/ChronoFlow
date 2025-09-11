@@ -3,6 +3,7 @@ package nus.edu.u.system.mapper.user;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
 import org.apache.ibatis.annotations.Mapper;
 
 
@@ -20,4 +21,6 @@ public interface UserMapper extends BaseMapper<UserDO> {
                 new LambdaQueryWrapper<UserDO>().eq(UserDO::getUsername, username)
         );
     }
+
+    UserRoleDTO selectUserWithRole(Long userId);
 }

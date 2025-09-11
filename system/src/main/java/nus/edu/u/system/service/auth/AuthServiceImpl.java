@@ -2,21 +2,16 @@ package nus.edu.u.system.service.auth;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjUtil;
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
-import nus.edu.u.system.domain.dto.TokenDTO;
 import nus.edu.u.system.domain.dto.UserTokenDTO;
 import nus.edu.u.system.domain.vo.auth.*;
 import nus.edu.u.system.service.user.UserService;
 import org.springframework.stereotype.Service;
 
-import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.EXPIRED_LOGIN_CREDENTIALS;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
