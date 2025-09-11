@@ -20,4 +20,8 @@ public class Constants
      */
     public static final Locale DEFAULT_LOCALE = Locale.SIMPLIFIED_CHINESE;
 
+    /**
+     *  Common delimiter
+     */
+    public static final String DEFAULT_DELIMITER = ",";
 }

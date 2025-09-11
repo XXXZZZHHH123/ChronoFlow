@@ -23,7 +23,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev} # Default is dev  Can modified by environment variable
+    active: ${SPRING_PROFILES_ACTIVE:test} # Default is dev  Can modified by environment variable
   data:
     redis:
       repositories:
@@ -56,6 +56,7 @@ spring:
       fail-on-empty-beans: false # Allow serialization of beans without attributes
 
 mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true            # db: user_name -> java: userName
     cache-enabled: false
@@ -107,11 +108,7 @@ logging:
 ############## Sa-Token config (文档: https://sa-token.cc) ##############
 sa-token:
   # token name
-  token-name: Authentication
-  # token prefix
-  token-prefix: Bearer
-  # Read token from cookie
-  is-read-cookie: false
+  token-name: Authorization
   # token validity period (unit: seconds) The default is 30 days, -1 means permanent validity
   timeout: 1800
   # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结
@@ -132,3 +129,5 @@ sa-token:
   jwt-secret-key: chronoflow123
   # Token style
   token-style: uuid
+  cookie:
+    http-only: true
