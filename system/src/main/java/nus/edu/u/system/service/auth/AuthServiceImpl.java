@@ -3,6 +3,7 @@ package nus.edu.u.system.service.auth;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
@@ -54,21 +55,22 @@ public class AuthServiceImpl implements AuthService {
         // 1.Verify username and password
         UserDO userDO = authenticate(reqVO.getUsername(), reqVO.getPassword());
         // 2.Create token
-        return createTokenAfterLoginSuccess(userDO, reqVO.isRemember());
+        return handleLogin(userDO, reqVO.isRemember(), reqVO.getRefreshToken());
     }
 
-    private LoginRespVO createTokenAfterLoginSuccess(UserDO userDO, boolean rememberMe) {
+    private LoginRespVO handleLogin(UserDO userDO, boolean rememberMe, String refreshToken) {
         // 1.Create UserTokenDTO which contains parameters required to create a token
         UserTokenDTO userTokenDTO = new UserTokenDTO();
         BeanUtil.copyProperties(userDO, userTokenDTO);
         userTokenDTO.setRemember(rememberMe);
         // 2.Create two token and set parameters into response object
         StpUtil.login(userDO.getId());
-        String refreshToken = tokenService.createRefreshToken(userTokenDTO);
+        // 3.Check if there already is a refresh token
+        if (StrUtil.isEmpty(refreshToken)) {
+            refreshToken = tokenService.createRefreshToken(userTokenDTO);
+        }
         UserVO userVO = UserVO.builder().id(userDO.getId()).build();
         return LoginRespVO.builder()
-                .accessToken(StpUtil.getTokenValue())
-                .accessTokenExpireTime(StpUtil.getTokenTimeout() * 1000)
                 .refreshToken(refreshToken)
                 .user(userVO).build();
     }
@@ -91,8 +93,6 @@ public class AuthServiceImpl implements AuthService {
         // 3.Build response object
         UserVO userVO = UserVO.builder().id(userId).build();
         return LoginRespVO.builder()
-                .accessToken(StpUtil.getTokenValue())
-                .accessTokenExpireTime(StpUtil.getTokenTimeout())
                 .refreshToken(refreshToken)
                 .user(userVO).build();
     }
