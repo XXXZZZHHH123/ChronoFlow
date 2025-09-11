@@ -2,12 +2,10 @@ package nus.edu.u.system.service.auth;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.framework.security.config.SecurityProperties;
-import nus.edu.u.system.domain.dto.TokenDTO;
 import nus.edu.u.system.domain.dto.UserTokenDTO;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
