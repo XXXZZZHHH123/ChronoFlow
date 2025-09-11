@@ -15,6 +15,7 @@ import nus.edu.u.system.domain.vo.auth.*;
 import nus.edu.u.system.service.user.UserService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 import static nus.edu.u.common.constant.Constants.DEFAULT_DELIMITER;
@@ -59,7 +60,9 @@ public class AuthServiceImpl implements AuthService {
     public LoginRespVO login(LoginReqVO reqVO) {
         // 1.Verify username and password
         UserDO userDO = authenticate(reqVO.getUsername(), reqVO.getPassword());
-        // 2.Create token
+        // 2.Update user login time
+        userDO.setLoginTime(LocalDateTime.now());
+        // 3.Create token
         return handleLogin(userDO, reqVO.isRemember(), reqVO.getRefreshToken());
     }
 

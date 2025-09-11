@@ -106,6 +106,7 @@ public class RegServiceImpl implements RegService {
                 .username(regMemberReqVO.getUsername())
                 .phone(regMemberReqVO.getPhone())
                 .password(passwordEncoder.encode(regMemberReqVO.getPassword()))
+                .status(UserStatusEnum.ENABLE.getCode())
                 .build();
         return userMapper.updateById(user) > 0;
     }
@@ -120,6 +121,7 @@ public class RegServiceImpl implements RegService {
                 .phone(regOrganizerReqVO.getMobile())
                 .password(passwordEncoder.encode(regOrganizerReqVO.getUserPassword()))
                 .remark(ORGANIZER_REMARK)
+                .status(UserStatusEnum.ENABLE.getCode())
                 .build();
         boolean isSuccess = userMapper.insert(user) > 0;
         if (!isSuccess) {
