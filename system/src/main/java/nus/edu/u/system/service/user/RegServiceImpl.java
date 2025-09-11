@@ -81,13 +81,12 @@ public class RegServiceImpl implements RegService {
             throw exception(NO_SEARCH_RESULT);
         }
         // Select position name
-        List<PostDO> postList = postMapper.selectBatchIds(user.getPostList());
-        String post = postList.stream().map(PostDO::getName).collect(Collectors.joining(","));
+        // List<PostDO> postList = postMapper.selectBatchIds(user.getPostList());
+        // String post = postList.stream().map(PostDO::getName).collect(Collectors.joining(","));
         // Build return value
         return RegSearchRespVO.builder()
                 .organizationName(tenant.getName())
                 .email(user.getEmail())
-                .roleName(post)
                 .build();
     }
 

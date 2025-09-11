@@ -18,6 +18,4 @@ public class RegSearchRespVO {
     private String organizationName;
 
     private String email;
-
-    private String roleName;
 }
