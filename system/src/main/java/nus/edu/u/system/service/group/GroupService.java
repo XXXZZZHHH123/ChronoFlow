@@ -1,6 +1,10 @@
 package nus.edu.u.system.service.group;
 
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
+import nus.edu.u.system.domain.vo.group.GroupRespVO;
+import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
+
+import java.util.List;
 
 /**
  * Group service interface
@@ -17,4 +21,18 @@ public interface GroupService {
      * @return Created group ID
      */
     Long createGroup(CreateGroupReqVO reqVO);
+
+    void updateGroup(UpdateGroupReqVO reqVO);
+
+    void deleteGroup(Long id);
+
+    void addMemberToGroup(Long groupId, Long userId);
+
+    void removeMemberFromGroup(Long groupId, Long userId);
+
+    List<GroupRespVO.MemberInfo> getGroupMembers(Long groupId);
+
+    void addMembersToGroup(Long groupId, List<Long> userIds);
+
+    void removeMembersToGroup(Long groupId, List<Long> userIds);
 }
