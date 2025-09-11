@@ -81,6 +81,10 @@ public class RegServiceImpl implements RegService {
         if (!ObjUtil.equals(user.getTenantId(), tenant.getId())) {
             throw exception(NO_SEARCH_RESULT);
         }
+        // Check if user has signed up
+        if (!ObjUtil.equals(user.getStatus(), UserStatusEnum.PENDING.getCode())) {
+            throw exception(ACCOUNT_EXIST);
+        }
         // Select position name
         // List<PostDO> postList = postMapper.selectBatchIds(user.getPostList());
         // String post = postList.stream().map(PostDO::getName).collect(Collectors.joining(","));
@@ -94,7 +98,7 @@ public class RegServiceImpl implements RegService {
     @Override
     public boolean registerAsMember(RegMemberReqVO regMemberReqVO) {
         UserDO user = userMapper.selectById(regMemberReqVO.getUserId());
-        if (!ObjUtil.equals(user.getStatus(), UserStatusEnum.PENDING)) {
+        if (!ObjUtil.equals(user.getStatus(), UserStatusEnum.PENDING.getCode())) {
             throw exception(ACCOUNT_EXIST);
         }
         user = UserDO.builder()
