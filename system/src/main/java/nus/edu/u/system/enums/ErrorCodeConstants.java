@@ -24,4 +24,8 @@ public interface ErrorCodeConstants {
 
 
 
+    // ========= Reg module 11-01-000 =============
+    ErrorCode NO_SEARCH_RESULT = new ErrorCode(11_01_001, "No result found");
+    ErrorCode REG_FAIL = new ErrorCode(11_01_002, "Sign up fail, please contact administrator");
+    ErrorCode EXCEED_MAX_RETRY_GENERATE_CODE = new ErrorCode(11_01_003, "Failed to generate unique organization code, please try again");
 }

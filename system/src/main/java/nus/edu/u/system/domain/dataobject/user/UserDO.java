@@ -54,11 +54,6 @@ public class UserDO extends TenantBaseDO implements Serializable {
     private LocalDateTime loginTime;
 
     /**
-     * Related to {@link RoleDO#getId()}
-     */
-    private Long roleId;
-
-    /**
      * Related to {@link DeptDO#getId()}
      */
     private Long DeptId;
