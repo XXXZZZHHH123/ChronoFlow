@@ -20,4 +20,6 @@ public class LoginReqVO {
 
     private boolean remember = true;
 
+    private String refreshToken;
+
 }

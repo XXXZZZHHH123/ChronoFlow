@@ -1,6 +1,7 @@
 package nus.edu.u.system.service.user;
 
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
 
 /**
  * User service interface
@@ -25,4 +26,11 @@ public interface UserService {
      * @return  Match result
      */
     boolean isPasswordMatch(String rawPassword, String encodedPassword);
+
+    /**
+     * Select user and his role by userId
+     * @param userId user id
+     * @return UserRoleDTO
+     */
+    UserRoleDTO selectUserWithRole(Long userId);
 }
