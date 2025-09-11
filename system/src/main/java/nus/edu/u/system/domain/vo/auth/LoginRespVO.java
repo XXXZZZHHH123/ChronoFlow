@@ -18,11 +18,7 @@ public class LoginRespVO {
 
     private UserVO user;
 
-    private String accessToken;
-
     @JsonIgnore
     private String refreshToken;
-
-    private Long accessTokenExpireTime;
 
 }

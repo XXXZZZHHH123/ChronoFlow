@@ -7,6 +7,7 @@ import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.utils.validation.ValidationUtils;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.UserCreateDTO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.mapper.user.UserMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,11 @@ public class UserServiceImpl implements UserService{
     @Override
     public boolean isPasswordMatch(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+
+    @Override
+    public UserRoleDTO selectUserWithRole(Long userId) {
+        return userMapper.selectUserWithRole(userId);
     }
 
     @Override

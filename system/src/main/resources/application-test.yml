@@ -19,5 +19,5 @@ logging:
 
 chronoflow:
   cookie:
-    http-only: false
+    http-only: true
     security: false

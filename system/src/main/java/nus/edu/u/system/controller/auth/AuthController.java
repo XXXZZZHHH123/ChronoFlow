@@ -48,7 +48,10 @@ public class AuthController {
     private CookieConfig cookieConfig;
 
     @PostMapping("/login")
-    public CommonResult<LoginRespVO> login(@RequestBody @Valid LoginReqVO reqVO, HttpServletResponse response) {
+    public CommonResult<LoginRespVO> login(@RequestBody @Valid LoginReqVO reqVO,
+                                           @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
+                                           HttpServletResponse response) {
+        reqVO.setRefreshToken(refreshToken);
         LoginRespVO loginRespVO = authService.login(reqVO);
         AbstractCookieFactory cookieFactory;
         if (reqVO.isRemember()) {

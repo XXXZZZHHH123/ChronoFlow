@@ -106,7 +106,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = MissingServletRequestParameterException.class)
     public CommonResult<?> missingServletRequestParameterExceptionHandler(MissingServletRequestParameterException ex) {
         log.warn("[missingServletRequestParameterExceptionHandler]", ex);
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数缺失:%s", ex.getParameterName()));
+        return CommonResult.error(BAD_REQUEST.getCode(), String.format("Request parameters missing:%s", ex.getParameterName()));
     }
 
     /**
@@ -117,7 +117,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public CommonResult<?> methodArgumentTypeMismatchExceptionHandler(MethodArgumentTypeMismatchException ex) {
         log.warn("[methodArgumentTypeMismatchExceptionHandler]", ex);
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数类型错误:%s", ex.getMessage()));
+        return CommonResult.error(BAD_REQUEST.getCode(), String.format("Request parameter type wrong:%s", ex.getMessage()));
     }
 
     /**
@@ -142,7 +142,7 @@ public class GlobalExceptionHandler {
         if (StrUtil.isEmpty(errorMessage)) {
             return CommonResult.error(BAD_REQUEST);
         }
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数不正确:%s", errorMessage));
+        return CommonResult.error(BAD_REQUEST.getCode(), String.format("Request parameters error:%s", errorMessage));
     }
 
     /**
@@ -153,7 +153,7 @@ public class GlobalExceptionHandler {
         log.warn("[handleBindException]", ex);
         FieldError fieldError = ex.getFieldError();
         assert fieldError != null; // 断言，避免告警
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数不正确:%s", fieldError.getDefaultMessage()));
+        return CommonResult.error(BAD_REQUEST.getCode(), String.format("Request parameters error:%s", fieldError.getDefaultMessage()));
     }
 
     /**
@@ -166,10 +166,10 @@ public class GlobalExceptionHandler {
         log.warn("[methodArgumentTypeInvalidFormatExceptionHandler]", ex);
         if (ex.getCause() instanceof InvalidFormatException) {
             InvalidFormatException invalidFormatException = (InvalidFormatException) ex.getCause();
-            return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数类型错误:%s", invalidFormatException.getValue()));
+            return CommonResult.error(BAD_REQUEST.getCode(), String.format("Request parameters type error:%s", invalidFormatException.getValue()));
         }
         if (StrUtil.startWith(ex.getMessage(), "Required request body is missing")) {
-            return CommonResult.error(BAD_REQUEST.getCode(), "请求参数类型错误: request body 缺失");
+            return CommonResult.error(BAD_REQUEST.getCode(), "Request parameters type error: request body 缺失");
         }
         return defaultExceptionHandler(ex);
     }
@@ -181,7 +181,7 @@ public class GlobalExceptionHandler {
     public CommonResult<?> constraintViolationExceptionHandler(ConstraintViolationException ex) {
         log.warn("[constraintViolationExceptionHandler]", ex);
         ConstraintViolation<?> constraintViolation = ex.getConstraintViolations().iterator().next();
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数不正确:%s", constraintViolation.getMessage()));
+        return CommonResult.error(BAD_REQUEST.getCode(), String.format("Request parameters error:%s", constraintViolation.getMessage()));
     }
 
     /**
@@ -204,7 +204,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     public CommonResult<?> noHandlerFoundExceptionHandler(NoHandlerFoundException ex) {
         log.warn("[noHandlerFoundExceptionHandler]", ex);
-        return CommonResult.error(NOT_FOUND.getCode(), String.format("请求地址不存在:%s", ex.getRequestURL()));
+        return CommonResult.error(NOT_FOUND.getCode(), String.format("Request address doesn't exist:%s", ex.getRequestURL()));
     }
 
     /**
@@ -213,7 +213,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     private CommonResult<?> noResourceFoundExceptionHandler(HttpServletRequest req, NoResourceFoundException ex) {
         log.warn("[noResourceFoundExceptionHandler]", ex);
-        return CommonResult.error(NOT_FOUND.getCode(), String.format("请求地址不存在:%s", ex.getResourcePath()));
+        return CommonResult.error(NOT_FOUND.getCode(), String.format("Request address doesn't exist:%s", ex.getResourcePath()));
     }
 
     /**
@@ -224,7 +224,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public CommonResult<?> httpRequestMethodNotSupportedExceptionHandler(HttpRequestMethodNotSupportedException ex) {
         log.warn("[httpRequestMethodNotSupportedExceptionHandler]", ex);
-        return CommonResult.error(METHOD_NOT_ALLOWED.getCode(), String.format("请求方法不正确:%s", ex.getMessage()));
+        return CommonResult.error(METHOD_NOT_ALLOWED.getCode(), String.format("Request method doesn't correct:%s", ex.getMessage()));
     }
 
     /**
@@ -235,7 +235,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public CommonResult<?> httpMediaTypeNotSupportedExceptionHandler(HttpMediaTypeNotSupportedException ex) {
         log.warn("[httpMediaTypeNotSupportedExceptionHandler]", ex);
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求类型不正确:%s", ex.getMessage()));
+        return CommonResult.error(BAD_REQUEST.getCode(), String.format("Request type error:%s", ex.getMessage()));
     }
 
     /**
