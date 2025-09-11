@@ -16,6 +16,7 @@ import nus.edu.u.system.domain.vo.reg.RegMemberReqVO;
 import nus.edu.u.system.domain.vo.reg.RegOrganizerReqVO;
 import nus.edu.u.system.domain.vo.reg.RegSearchReqVO;
 import nus.edu.u.system.domain.vo.reg.RegSearchRespVO;
+import nus.edu.u.system.enums.user.UserStatusEnum;
 import nus.edu.u.system.mapper.dept.PostMapper;
 import nus.edu.u.system.mapper.role.RoleMapper;
 import nus.edu.u.system.mapper.tenant.TenantMapper;
@@ -92,7 +93,11 @@ public class RegServiceImpl implements RegService {
 
     @Override
     public boolean registerAsMember(RegMemberReqVO regMemberReqVO) {
-        UserDO user = UserDO.builder()
+        UserDO user = userMapper.selectById(regMemberReqVO.getUserId());
+        if (!ObjUtil.equals(user.getStatus(), UserStatusEnum.PENDING)) {
+            throw exception(ACCOUNT_EXIST);
+        }
+        user = UserDO.builder()
                 .id(regMemberReqVO.getUserId())
                 .username(regMemberReqVO.getUsername())
                 .phone(regMemberReqVO.getPhone())
