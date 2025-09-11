@@ -1,5 +1,7 @@
 package nus.edu.u.common.exception.enums;
 
+import nus.edu.u.common.exception.ErrorCode;
+
 /**
  * Service error code enums
  *

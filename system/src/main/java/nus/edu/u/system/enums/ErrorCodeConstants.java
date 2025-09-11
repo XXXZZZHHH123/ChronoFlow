@@ -16,4 +16,9 @@ public interface ErrorCodeConstants {
     ErrorCode AUTH_LOGIN_CAPTCHA_CODE_ERROR = new ErrorCode(10_01_003, "Captcha wrong，reason：{}");
     ErrorCode REFRESH_TOKEN_WRONG = new ErrorCode(10_01_004, "Can't refresh, please login again");
 
+
+    // ========= user create module 12-01-000 ============
+    ErrorCode USERNAME_EXIST = new ErrorCode(12_01_001, "Username already exists");
+    ErrorCode EMAIL_EXIST = new ErrorCode(12_01_002, "Email already exists");
+    ErrorCode WRONG_MOBILE = new ErrorCode(12_01_003, "Invalid mobile");
 }

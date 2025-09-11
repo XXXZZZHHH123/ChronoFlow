@@ -1,6 +1,7 @@
 package nus.edu.u.system.service.user;
 
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dto.UserCreateDTO;
 
 /**
  * User service interface
@@ -19,10 +20,12 @@ public interface UserService {
 
     /**
      * Check if two password are matched
-     *ddddddd
+     *
      * @param rawPassword   Unencrypted password
      * @param encodedPassword   Encrypted password
      * @return  Match result
      */
     boolean isPasswordMatch(String rawPassword, String encodedPassword);
+
+    Long createUser(UserCreateDTO dto);
 }
