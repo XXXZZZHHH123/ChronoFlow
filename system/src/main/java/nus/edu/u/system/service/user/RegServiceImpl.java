@@ -16,6 +16,7 @@ import nus.edu.u.system.domain.vo.reg.RegMemberReqVO;
 import nus.edu.u.system.domain.vo.reg.RegOrganizerReqVO;
 import nus.edu.u.system.domain.vo.reg.RegSearchReqVO;
 import nus.edu.u.system.domain.vo.reg.RegSearchRespVO;
+import nus.edu.u.system.enums.user.UserStatusEnum;
 import nus.edu.u.system.mapper.dept.PostMapper;
 import nus.edu.u.system.mapper.role.RoleMapper;
 import nus.edu.u.system.mapper.tenant.TenantMapper;
@@ -80,6 +81,10 @@ public class RegServiceImpl implements RegService {
         if (!ObjUtil.equals(user.getTenantId(), tenant.getId())) {
             throw exception(NO_SEARCH_RESULT);
         }
+        // Check if user has signed up
+        if (!ObjUtil.equals(user.getStatus(), UserStatusEnum.PENDING.getCode())) {
+            throw exception(ACCOUNT_EXIST);
+        }
         // Select position name
         // List<PostDO> postList = postMapper.selectBatchIds(user.getPostList());
         // String post = postList.stream().map(PostDO::getName).collect(Collectors.joining(","));
@@ -92,11 +97,16 @@ public class RegServiceImpl implements RegService {
 
     @Override
     public boolean registerAsMember(RegMemberReqVO regMemberReqVO) {
-        UserDO user = UserDO.builder()
+        UserDO user = userMapper.selectById(regMemberReqVO.getUserId());
+        if (!ObjUtil.equals(user.getStatus(), UserStatusEnum.PENDING.getCode())) {
+            throw exception(ACCOUNT_EXIST);
+        }
+        user = UserDO.builder()
                 .id(regMemberReqVO.getUserId())
                 .username(regMemberReqVO.getUsername())
                 .phone(regMemberReqVO.getPhone())
                 .password(passwordEncoder.encode(regMemberReqVO.getPassword()))
+                .status(UserStatusEnum.ENABLE.getCode())
                 .build();
         return userMapper.updateById(user) > 0;
     }
@@ -111,6 +121,7 @@ public class RegServiceImpl implements RegService {
                 .phone(regOrganizerReqVO.getMobile())
                 .password(passwordEncoder.encode(regOrganizerReqVO.getUserPassword()))
                 .remark(ORGANIZER_REMARK)
+                .status(UserStatusEnum.ENABLE.getCode())
                 .build();
         boolean isSuccess = userMapper.insert(user) > 0;
         if (!isSuccess) {

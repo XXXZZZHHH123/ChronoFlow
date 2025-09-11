@@ -8,11 +8,17 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dto.RoleDTO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.dto.UserTokenDTO;
 import nus.edu.u.system.domain.vo.auth.*;
 import nus.edu.u.system.service.user.UserService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.stream.Collectors;
+
+import static nus.edu.u.common.constant.Constants.DEFAULT_DELIMITER;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
@@ -54,7 +60,9 @@ public class AuthServiceImpl implements AuthService {
     public LoginRespVO login(LoginReqVO reqVO) {
         // 1.Verify username and password
         UserDO userDO = authenticate(reqVO.getUsername(), reqVO.getPassword());
-        // 2.Create token
+        // 2.Update user login time
+        userDO.setLoginTime(LocalDateTime.now());
+        // 3.Create token
         return handleLogin(userDO, reqVO.isRemember(), reqVO.getRefreshToken());
     }
 
@@ -69,10 +77,17 @@ public class AuthServiceImpl implements AuthService {
         if (StrUtil.isEmpty(refreshToken)) {
             refreshToken = tokenService.createRefreshToken(userTokenDTO);
         }
-        UserVO userVO = UserVO.builder().id(userDO.getId()).build();
+        UserRoleDTO userRoleDTO = userService.selectUserWithRole(userDO.getId());
+        UserVO userVO = UserVO.builder()
+                .id(userDO.getId())
+                .email(userDO.getEmail())
+                .name(userDO.getUsername())
+                .role(userRoleDTO.getRoles().stream().map(RoleDTO::getRoleKey).collect(Collectors.joining(DEFAULT_DELIMITER)))
+                .build();
         return LoginRespVO.builder()
                 .refreshToken(refreshToken)
-                .user(userVO).build();
+                .user(userVO)
+                .build();
     }
 
     @Override
