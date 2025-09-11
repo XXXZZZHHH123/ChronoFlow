@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
         UserVO userVO = UserVO.builder().id(userDO.getId()).build();
         return LoginRespVO.builder()
                 .accessToken(StpUtil.getTokenValue())
-                .accessTokenExpireTime(StpUtil.getTokenTimeout())
+                .accessTokenExpireTime(StpUtil.getTokenTimeout() * 1000)
                 .refreshToken(refreshToken)
                 .user(userVO).build();
     }
