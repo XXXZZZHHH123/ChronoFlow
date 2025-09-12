@@ -31,6 +31,7 @@
 		<lombok.version>1.18.34</lombok.version>
 		<hutool.version>5.8.35</hutool.version>
 		<satoken.version>1.44.0</satoken.version>
+		<mapstruct.version>1.5.5.Final</mapstruct.version>
 	</properties>
 
 	<dependencyManagement>
@@ -120,6 +121,13 @@
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok</artifactId>
 				<version>${lombok.version}</version>
+			</dependency>
+
+			<!-- mapstruct -->
+			<dependency>
+				<groupId>org.mapstruct</groupId>
+				<artifactId>mapstruct</artifactId>
+				<version>${mapstruct.version}</version>
 			</dependency>
 
 			<!-- sa-token -->

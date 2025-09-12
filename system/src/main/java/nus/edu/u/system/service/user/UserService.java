@@ -3,6 +3,7 @@ package nus.edu.u.system.service.user;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.dto.UserCreateDTO;
+import nus.edu.u.system.domain.dto.UserUpdateDTO;
 
 /**
  * User service interface
@@ -28,7 +29,6 @@ public interface UserService {
      */
     boolean isPasswordMatch(String rawPassword, String encodedPassword);
 
-    Long createUser(UserCreateDTO dto);
 
     /**
      * Select user and his role by userId
@@ -36,4 +36,8 @@ public interface UserService {
      * @return UserRoleDTO
      */
     UserRoleDTO selectUserWithRole(Long userId);
+
+    UserDO createUser(UserCreateDTO dto);
+
+    UserDO updateUser(UserUpdateDTO dto);
 }
