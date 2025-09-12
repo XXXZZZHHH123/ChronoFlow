@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 import static nus.edu.u.common.constant.Constants.DEFAULT_DELIMITER;
+import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
@@ -73,6 +74,8 @@ public class AuthServiceImpl implements AuthService {
         userTokenDTO.setRemember(rememberMe);
         // 2.Create two token and set parameters into response object
         StpUtil.login(userDO.getId());
+        // 2.1 Set tenant id into context
+        StpUtil.getSession().set(SESSION_TENANT_ID, userDO.getTenantId());
         // 3.Check if there already is a refresh token
         if (StrUtil.isEmpty(refreshToken)) {
             refreshToken = tokenService.createRefreshToken(userTokenDTO);
