@@ -1,12 +1,15 @@
 package nus.edu.u.framework.mybatis;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+
+import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
 
 /**
  * Config to fill common properties automatically
@@ -27,6 +30,7 @@ public class MybatisMetaObjectHandler implements MetaObjectHandler {
         this.strictInsertFill(metaObject, "creator", String.class, currentUser);
         this.strictInsertFill(metaObject, "updater", String.class, currentUser);
 
+        this.strictInsertFill(metaObject, "tenant_id", Long.class, getCurrentTenantId());
         this.strictInsertFill(metaObject, "deleted", Boolean.class, false);
     }
 
@@ -45,5 +49,16 @@ public class MybatisMetaObjectHandler implements MetaObjectHandler {
             }
         } catch (Exception ignored) {}
         return "system"; // Default value
+    }
+
+    private Long getCurrentTenantId() {
+        try {
+            Object tenantIdObject = StpUtil.getSession().get(SESSION_TENANT_ID);
+            Long tenantId = Long.parseLong(tenantIdObject.toString());
+            if (ObjectUtil.isNotNull(tenantId)) {
+                return tenantId;
+            }
+        } catch (Exception ignored) {}
+        return 1L; // Default value
     }
 }

@@ -26,6 +26,16 @@ public interface ErrorCodeConstants {
     ErrorCode USER_NOT_FOUND = new ErrorCode(12_01_006, "User not found");
     ErrorCode UPDATE_FAILURE = new ErrorCode(12_01_007, "Update failure");
 
+    ErrorCode GROUP_NOT_FOUND = new ErrorCode(10_02_001, "Group not found");
+    ErrorCode EVENT_NOT_FOUND = new ErrorCode(10_02_002, "Event not found");
+    ErrorCode USER_NOT_FOUND = new ErrorCode(10_02_003, "User not found");
+    ErrorCode GROUP_NAME_EXISTS = new ErrorCode(10_02_004, "Group name already exists in this event");
+    ErrorCode GROUP_MEMBER_ALREADY_EXISTS = new ErrorCode(10_02_005, "User is already a member of this group");
+    ErrorCode USER_STATUS_INVALID = new ErrorCode(10_02_006, "User status is invalid, cannot add to group");
+    ErrorCode CANNOT_REMOVE_GROUP_LEADER = new ErrorCode(10_02_007, "Cannot remove group leader from group");
+
+
+
     // ========= Reg module 11-01-000 =============
     ErrorCode NO_SEARCH_RESULT = new ErrorCode(11_01_001, "No result found");
     ErrorCode REG_FAIL = new ErrorCode(11_01_002, "Sign up fail, please contact administrator");

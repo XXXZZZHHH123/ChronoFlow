@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.*;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.core.domain.base.TenantBaseDO;
+import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 
 import java.io.Serializable;
@@ -49,5 +50,12 @@ public class DeptDO extends TenantBaseDO implements Serializable {
      * Enum {@link CommonStatusEnum}
      */
     private Integer status;
+
+    /**
+     * Associated event ID
+     *
+     * Related to {@link EventDO#getId()}
+     */
+    private Long eventId;
 
 }

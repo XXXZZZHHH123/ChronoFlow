@@ -8,6 +8,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 import javax.sql.DataSource;
@@ -20,8 +21,10 @@ import java.sql.DatabaseMetaData;
  * @author Lu Shuwen
  * @date 2025-08-25
  */
+
 @MapperScan(basePackages = "nus.edu.u.system.mapper", annotationClass = Mapper.class)
 @SpringBootApplication(scanBasePackages = {"nus.edu.u.framework", "nus.edu.u.common", "nus.edu.u.system"})
+@EnableAspectJAutoProxy(exposeProxy = true)
 @Slf4j
 public class ChronoFlowApplication {
     public static void main(String[] args) {
