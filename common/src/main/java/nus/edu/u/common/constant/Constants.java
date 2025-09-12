@@ -24,4 +24,9 @@ public class Constants
      *  Common delimiter
      */
     public static final String DEFAULT_DELIMITER = ",";
+
+    /**
+     * Session Tenant id key
+     */
+    public static final String SESSION_TENANT_ID = "tenantId";
 }
