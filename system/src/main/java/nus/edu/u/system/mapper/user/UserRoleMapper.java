@@ -17,18 +17,16 @@ import java.util.List;
 public interface UserRoleMapper extends BaseMapper<UserRoleDO> {
 
 
-    // 当前有效角色（deleted = 0）
     List<Long> selectAliveRoleIdsByUser(@Param("userId") Long userId);
 
-    // 批量逻辑删除：deleted=1
     int batchLogicalDelete(@Param("userId") Long userId,
-                           @Param("roleIds") Collection<Long> roleIds);
+                           @Param("roleIds") Collection<Long> roleIds,
+                           @Param("operator") String operator);
 
-    // 批量复活：deleted=0
     int batchRevive(@Param("userId") Long userId,
-                    @Param("roleIds") Collection<Long> roleIds);
+                    @Param("roleIds") Collection<Long> roleIds,
+                    @Param("operator") String operator);
 
-    // 幂等插入：存在则复活（依赖唯一键）
-    int batchUpsertUserRoles(@Param("userId") Long userId,
-                             @Param("roleIds") Collection<Long> roleIds);
+    // 传实体，保证每行都有独立 id/tenantId/creator/updater
+    int batchUpsertUserRoles(@Param("records") List<UserRoleDO> records);
 }

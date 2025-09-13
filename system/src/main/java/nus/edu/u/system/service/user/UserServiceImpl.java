@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import jakarta.annotation.Resource;
@@ -373,16 +374,29 @@ public class UserServiceImpl implements UserService{
         Set<Long> toRemove = new HashSet<>(current); toRemove.removeAll(target);
         Set<Long> toAdd    = new HashSet<>(target);  toAdd.removeAll(current);
 
-        // 删除多余（逻辑删）
+        String operator = StpUtil.getLoginIdAsString();
+        Long tenantId = Long.valueOf(StpUtil.getSession().get(SESSION_TENANT_ID).toString());    // 当前租户
+        // 2) 逻辑删除
         if (!toRemove.isEmpty()) {
-            userRoleMapper.batchLogicalDelete(userId, toRemove);
+            userRoleMapper.batchLogicalDelete(userId, toRemove, operator);
         }
 
+        // 3) 复活 + Upsert
         if (!toAdd.isEmpty()) {
-            // 先尝试复活（针对历史已存在但 deleted=1 的）
-            userRoleMapper.batchRevive(userId, toAdd);
-            // 再批量 Upsert（不存在则插入；存在则复活）
-            userRoleMapper.batchUpsertUserRoles(userId, toAdd);
+            userRoleMapper.batchRevive(userId, toAdd, operator);
+
+            // 构造每条记录，预生成 id（MP 雪花）
+            List<UserRoleDO> records = toAdd.stream().map(rid -> UserRoleDO.builder()
+                    .id(IdWorker.getId())    // 关键：MP 生成主键
+                    .userId(userId)
+                    .roleId(rid)
+                    .tenantId(tenantId)
+                    .creator(operator)
+                    .updater(operator)
+                    .deleted(false)
+                    .build()).toList();
+
+            userRoleMapper.batchUpsertUserRoles(records);
         }
     }
 

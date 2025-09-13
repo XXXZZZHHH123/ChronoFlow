@@ -3,7 +3,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="nus.edu.u.system.mapper.user.UserRoleMapper">
 
-    <!-- 当前有效角色（租户条件由拦截器自动追加） -->
     <select id="selectAliveRoleIdsByUser" resultType="java.lang.Long">
         SELECT role_id
         FROM sys_user_role
@@ -11,10 +10,11 @@
           AND deleted = 0
     </select>
 
-    <!-- 批量逻辑删除：注意去掉多余的逗号 -->
     <update id="batchLogicalDelete">
         UPDATE sys_user_role
-        SET deleted = 1
+        SET deleted = 1,
+        update_time = NOW(),
+        updater = #{operator}
         WHERE user_id = #{userId}
         AND deleted = 0
         AND role_id IN
@@ -23,10 +23,11 @@
         </foreach>
     </update>
 
-    <!-- 批量复活 -->
     <update id="batchRevive">
         UPDATE sys_user_role
-        SET deleted = 0
+        SET deleted = 0,
+        update_time = NOW(),
+        updater = #{operator}
         WHERE user_id = #{userId}
         AND deleted = 1
         AND role_id IN
@@ -35,17 +36,19 @@
         </foreach>
     </update>
 
-    <!-- 幂等插入（Upsert）：唯一键(user_id, role_id, tenant_id) 冲突则复活 -->
+    <!-- 批量 Upsert：显式写 id/user_id/role_id/tenant_id/creator/updater -->
     <insert id="batchUpsertUserRoles">
         INSERT INTO sys_user_role
-        (user_id, role_id, tenant_id, creator, create_time, updater, update_time, deleted)
+        (id, user_id, role_id, tenant_id, creator, create_time, updater, update_time, deleted)
         VALUES
-        <foreach collection="roleIds" item="rid" separator=",">
-            (#{userId}, #{rid}, DEFAULT, DEFAULT, NOW(), DEFAULT, NOW(), 0)
+        <foreach collection="records" item="r" separator=",">
+            (#{r.id}, #{r.userId}, #{r.roleId}, #{r.tenantId},
+            #{r.creator}, NOW(), #{r.updater}, NOW(), 0)
         </foreach>
         ON DUPLICATE KEY UPDATE
         deleted = 0,
-        update_time = NOW()
+        update_time = NOW(),
+        updater = VALUES(updater)
     </insert>
 
 </mapper>
