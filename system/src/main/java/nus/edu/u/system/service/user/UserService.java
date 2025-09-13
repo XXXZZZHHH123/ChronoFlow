@@ -1,9 +1,11 @@
 package nus.edu.u.system.service.user;
 
 import nus.edu.u.system.domain.dataobject.user.UserDO;
-import nus.edu.u.system.domain.dto.UserRoleDTO;
-import nus.edu.u.system.domain.dto.UserCreateDTO;
-import nus.edu.u.system.domain.dto.UserUpdateDTO;
+import nus.edu.u.system.domain.dto.*;
+import nus.edu.u.system.domain.vo.user.OrganizerCreateUserReqVO;
+import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
+
+import java.util.List;
 
 /**
  * User service interface
@@ -37,7 +39,19 @@ public interface UserService {
      */
     UserRoleDTO selectUserWithRole(Long userId);
 
-    UserDO createUser(UserCreateDTO dto);
+    Long createUserWithRoleIds(OrganizerCreateUserDTO dto);
+    UserDO updateUserWithRoleIds(OrganizerUpdateUserDTO dto);
 
+    UserDO createUser(UserCreateDTO dto);
     UserDO updateUser(UserUpdateDTO dto);
+
+    void softDeleteUser(Long userId);
+    void restoreUser(Long id);
+    void disableUser(Long id);
+    void enableUser(Long id);
+
+    List<UserProfileRespVO> getAllUserProfiles();
+
+
+
 }

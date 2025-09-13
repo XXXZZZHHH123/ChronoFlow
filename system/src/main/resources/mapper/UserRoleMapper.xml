@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="nus.edu.u.system.mapper.user.UserRoleMapper">
+
+    <!-- 当前有效角色（租户条件由拦截器自动追加） -->
+    <select id="selectAliveRoleIdsByUser" resultType="java.lang.Long">
+        SELECT role_id
+        FROM sys_user_role
+        WHERE user_id = #{userId}
+          AND deleted = 0
+    </select>
+
+    <!-- 批量逻辑删除：注意去掉多余的逗号 -->
+    <update id="batchLogicalDelete">
+        UPDATE sys_user_role
+        SET deleted = 1
+        WHERE user_id = #{userId}
+        AND deleted = 0
+        AND role_id IN
+        <foreach collection="roleIds" item="rid" open="(" separator="," close=")">
+            #{rid}
+        </foreach>
+    </update>
+
+    <!-- 批量复活 -->
+    <update id="batchRevive">
+        UPDATE sys_user_role
+        SET deleted = 0
+        WHERE user_id = #{userId}
+        AND deleted = 1
+        AND role_id IN
+        <foreach collection="roleIds" item="rid" open="(" separator="," close=")">
+            #{rid}
+        </foreach>
+    </update>
+
+    <!-- 幂等插入（Upsert）：唯一键(user_id, role_id, tenant_id) 冲突则复活 -->
+    <insert id="batchUpsertUserRoles">
+        INSERT INTO sys_user_role
+        (user_id, role_id, tenant_id, creator, create_time, updater, update_time, deleted)
+        VALUES
+        <foreach collection="roleIds" item="rid" separator=",">
+            (#{userId}, #{rid}, DEFAULT, DEFAULT, NOW(), DEFAULT, NOW(), 0)
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        deleted = 0,
+        update_time = NOW()
+    </insert>
+
+</mapper>

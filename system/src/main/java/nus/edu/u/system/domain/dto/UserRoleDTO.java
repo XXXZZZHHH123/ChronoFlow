@@ -23,6 +23,10 @@ public class UserRoleDTO {
 
     private String email;
 
+    private String phone;
+
+    private Integer status;
+
     private Long tenantId;
 
     private List<RoleDTO> roles;

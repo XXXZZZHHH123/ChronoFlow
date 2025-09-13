@@ -56,7 +56,7 @@ spring:
       fail-on-empty-beans: false # Allow serialization of beans without attributes
 
 mybatis-plus:
-  mapper-locations: classpath*:mapper/*.xml
+  mapper-locations: classpath*:mapper/**/*.xml
   configuration:
     map-underscore-to-camel-case: true            # db: user_name -> java: userName
     cache-enabled: false
