@@ -70,5 +70,5 @@ jobs:
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.organization="${SONAR_ORGANIZATION}" \
           -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
-          -Dsonar.junit.reportPaths=**/target/surefire-reports \
-          -Dsonar.coverage.jacoco.xmlReportPaths=**/target/site/jacoco/jacoco.xml
+          -Dsonar.junit.reportPaths=system/target/surefire-reports \
+          -Dsonar.coverage.jacoco.xmlReportPaths=system/target/site/jacoco/jacoco.xml
