@@ -69,7 +69,7 @@
                 </configuration>
             </plugin>
         </plugins>
-        <finalName>${project.artifactId}</finalName>
+        <finalName>${project.artifactId}-${revision}</finalName>
     </build>
 
 </project>
