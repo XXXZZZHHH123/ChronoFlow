@@ -72,4 +72,8 @@
         <finalName>${project.artifactId}</finalName>
     </build>
 
+    <properties>
+        <sonar.organization>xxxzzzhhh123</sonar.organization>
+    </properties>
+
 </project>
