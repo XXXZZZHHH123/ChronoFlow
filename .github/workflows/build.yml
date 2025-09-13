@@ -143,8 +143,5 @@ jobs:
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}    # 建议用 Project Token
     steps:
-      - name: Whoami (debug)
-        run: railway whoami
-
       - name: Redeploy service (non-interactive)
         run: railway redeploy --service ${{ secrets.RAILWAY_SERVICE_ID }} --yes
