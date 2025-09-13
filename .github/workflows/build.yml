@@ -2,12 +2,13 @@ name: SonarQube
 on:
   push:
     branches:
+      - main
       - feature/ci
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
   build:
-    name: Build and analyze
+    name: Build and analyzeß
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
