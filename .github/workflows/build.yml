@@ -82,11 +82,13 @@ jobs:
       contents: read
       packages: write   # 允许推送到 GHCR
     env:
-      IMAGE_NAME: ghcr.io/${{ toLower(github.repository) }}/app
       DOCKERFILE_PATH: ./Dockerfile   # 如果Dockerfile在子目录，改成 ./backend/Dockerfile
       CONTEXT_PATH: .                 # 子目录项目改成 ./backend
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set IMAGE_NAME (lowercase)
+        run: echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}/app" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
