@@ -8,7 +8,7 @@ on:
     types: [opened, synchronize, reopened]
 jobs:
   build:
-    name: Build & JUnit
+    name: Build & JUnit & Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +27,9 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
+
+      - name: Lint (Spotless + Checkstyle)
+        run: mvn -B spotless:check checkstyle:check
 
       - name: Build & Run tests
         run: mvn -B clean verify
