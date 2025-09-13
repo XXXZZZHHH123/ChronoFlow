@@ -2,12 +2,11 @@ package nus.edu.u.system.domain.dataobject.task;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import java.io.Serializable;
+import java.math.BigDecimal;
 import lombok.*;
 import nus.edu.u.common.core.domain.base.TenantBaseDO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
-
-import java.io.Serializable;
-import java.math.BigDecimal;
 
 /**
  * Task log data object for table task_log
@@ -23,25 +22,19 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class TaskLogDO extends TenantBaseDO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    @TableId
-    private Long id;
+  @TableId private Long id;
 
-    /**
-     * Related to {@link TaskDO#getId()}
-     */
-    private Long taskId;
+  /** Related to {@link TaskDO#getId()} */
+  private Long taskId;
 
-    /**
-     * Related to {@link TaskActionEnum}
-     */
-    private Integer action;
+  /** Related to {@link TaskActionEnum} */
+  private Integer action;
 
-    private BigDecimal moneyCost;
+  private BigDecimal moneyCost;
 
-    private BigDecimal laborCost;
+  private BigDecimal laborCost;
 
-    private String remark;
-
+  private String remark;
 }

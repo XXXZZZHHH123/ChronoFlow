@@ -13,16 +13,16 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true); // 允许携带 Cookie
-        config.addAllowedOriginPattern("*"); // 允许所有来源（生产环境建议改成具体域名）
-        config.addAllowedHeader("*"); // 允许所有请求头
-        config.addAllowedMethod("*"); // 允许所有请求方法 (GET, POST, PUT, DELETE...)
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowCredentials(true); // 允许携带 Cookie
+    config.addAllowedOriginPattern("*"); // 允许所有来源（生产环境建议改成具体域名）
+    config.addAllowedHeader("*"); // 允许所有请求头
+    config.addAllowedMethod("*"); // 允许所有请求方法 (GET, POST, PUT, DELETE...)
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
+  }
 }

@@ -13,9 +13,9 @@ import lombok.Data;
 @Builder
 public class TokenDTO {
 
-    private Long userId;
+  private Long userId;
 
-    private String accessToken;
+  private String accessToken;
 
-    private Long expireTime;
+  private Long expireTime;
 }

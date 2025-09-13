@@ -1,10 +1,9 @@
 package nus.edu.u.system.enums.task;
 
+import java.util.Arrays;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nus.edu.u.common.core.ArrayValuable;
-
-import java.util.Arrays;
 
 /**
  * @author Lu Shuwen
@@ -13,17 +12,17 @@ import java.util.Arrays;
 @Getter
 @AllArgsConstructor
 public enum TaskActionEnum implements ArrayValuable<Integer> {
+  ASSIGN(1, "Assign");
 
-    ASSIGN(1, "Assign");
+  public static final Integer[] ARRAYS =
+      Arrays.stream(values()).map(TaskActionEnum::getCode).toArray(Integer[]::new);
 
-    public static final Integer[] ARRAYS = Arrays.stream(values()).map(TaskActionEnum::getCode).toArray(Integer[]::new);
+  private final Integer code;
 
-    private final Integer code;
+  private final String action;
 
-    private final String action;
-
-    @Override
-    public Integer[] array() {
-        return ARRAYS;
-    }
+  @Override
+  public Integer[] array() {
+    return ARRAYS;
+  }
 }
