@@ -40,7 +40,7 @@ public class MybatisPlusConfig {
             @Override
             public boolean ignoreTable(String tableName) {
                 // Return true to ignore the table and not join the tenant conditions.
-                return "sys_dict_data".equals(tableName) || "sys_dict_type".equals(tableName);
+                return "sys_dict_data".equals(tableName) || "sys_dict_type".equals(tableName) || "sys_tenant".equals(tableName);
             }
         }));
 
