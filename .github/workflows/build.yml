@@ -127,21 +127,11 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
   deploy:
-    name: Redeploy on Railway (pull latest image)
     runs-on: ubuntu-latest
     needs: docker_image
     container: ghcr.io/railwayapp/cli:latest
     env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}         # 必填：Railway 账户 Token
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
     steps:
-      - name: Show CLI version (debug)
-        run: railway --version
-
-      - name: Login to Railway
-        run: railway login --token "$RAILWAY_TOKEN"
-
-      - name: Link project & service (writes .railway context)
-        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --service ${{ secrets.RAILWAY_SERVICE_ID }}
-
-      - name: Redeploy (pull latest image)
-        run: railway redeploy
+      - name: Redeploy service
+        run: railway redeploy --service ${{ secrets.RAILWAY_SERVICE_ID }}
