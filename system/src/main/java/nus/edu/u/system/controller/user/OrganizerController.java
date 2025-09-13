@@ -36,7 +36,7 @@ public class OrganizerController {
     @Resource
     private UserRoleMapper userRoleMapper;
 
-    @PostMapping("/createUsers")
+    @PostMapping("/create/user")
     public CommonResult<Long> createUserForOrganizer(
             @Valid @RequestBody OrganizerCreateUserReqVO req) {
         OrganizerCreateUserDTO dto = userConvert.toDTO(req);
@@ -44,7 +44,7 @@ public class OrganizerController {
         return CommonResult.success(userId);
     }
 
-    @PatchMapping("/updateUsers/{id}")
+    @PatchMapping("/update/user/{id}")
     public CommonResult<OrganizerUpdateUserRespVO> updateUserForOrganizer(
             @PathVariable("id") Long id,
             @Valid @RequestBody OrganizerUpdateUserReqVO vo) {
@@ -65,29 +65,29 @@ public class OrganizerController {
         return CommonResult.success(respVO);
     }
 
-    @PostMapping("/createUser")
-    public CommonResult<UserCreateRespVO> createUser(@Valid @RequestBody UserCreateReqVO reqVO) {
-        var dto = userConvert.toDTO(reqVO);
-        UserDO user = userService.createUser(dto);
-        UserCreateRespVO respVO = userConvert.toCreateRespVO(user);
-        return CommonResult.success(respVO);
-    }
-
-    @PatchMapping("/updateUser/{id}")
-    public CommonResult<UserUpdateRespVO> updateUser(
-            @PathVariable("id") Long id,
-            @Valid @RequestBody UserUpdateReqVO reqVO) {
-
-        // VO -> DTO（并补上 id）
-        UserUpdateDTO dto = userConvert.toUpdateDTO(reqVO);
-        dto.setId(id);
-
-        // 调用 Service，拿到最新 DO
-        UserDO updated = userService.updateUser(dto);
-
-        // DO -> RespVO
-        return CommonResult.success(userConvert.toUpdateRespVO(updated));
-    }
+//    @PostMapping("/createUser")
+//    public CommonResult<UserCreateRespVO> createUser(@Valid @RequestBody UserCreateReqVO reqVO) {
+//        var dto = userConvert.toDTO(reqVO);
+//        UserDO user = userService.createUser(dto);
+//        UserCreateRespVO respVO = userConvert.toCreateRespVO(user);
+//        return CommonResult.success(respVO);
+//    }
+//
+//    @PatchMapping("/updateUser/{id}")
+//    public CommonResult<UserUpdateRespVO> updateUser(
+//            @PathVariable("id") Long id,
+//            @Valid @RequestBody UserUpdateReqVO reqVO) {
+//
+//        // VO -> DTO（并补上 id）
+//        UserUpdateDTO dto = userConvert.toUpdateDTO(reqVO);
+//        dto.setId(id);
+//
+//        // 调用 Service，拿到最新 DO
+//        UserDO updated = userService.updateUser(dto);
+//
+//        // DO -> RespVO
+//        return CommonResult.success(userConvert.toUpdateRespVO(updated));
+//    }
 
     @DeleteMapping("/deleteUser/{id}")
     public CommonResult<Boolean> softDeleteUser(@PathVariable("id") Long id) {
@@ -101,10 +101,6 @@ public class OrganizerController {
         return CommonResult.success(Boolean.TRUE);
     }
 
-    @GetMapping("/users")
-    public CommonResult<List<UserProfileRespVO>> getAllUserProfiles() {
-        return CommonResult.success(userService.getAllUserProfiles());
-    }
 
     @PatchMapping("/disableUser/{id}")
     public CommonResult<Boolean> disableUser(@PathVariable("id") Long id) {
@@ -116,5 +112,10 @@ public class OrganizerController {
     public CommonResult<Boolean> enableUser(@PathVariable("id") Long id) {
         userService.enableUser(id);
         return CommonResult.success(true);
+    }
+
+    @GetMapping("/users")
+    public CommonResult<List<UserProfileRespVO>> getAllUserProfiles() {
+        return CommonResult.success(userService.getAllUserProfiles());
     }
 }

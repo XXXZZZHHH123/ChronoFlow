@@ -1,8 +1,6 @@
 package nus.edu.u.system.domain.dataobject.user;
 
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.*;
 import nus.edu.u.common.core.domain.base.TenantBaseDO;
 import nus.edu.u.system.domain.dataobject.role.RoleDO;
@@ -37,8 +35,10 @@ public class UserRoleDO extends TenantBaseDO implements Serializable {
     private Long roleId;
 
     private Long tenantId;
-
+    @TableField(fill = FieldFill.INSERT)
     private String creator;
+
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private String updater;
     @TableLogic
     private Boolean deleted;

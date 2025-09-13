@@ -296,6 +296,8 @@ public class UserServiceImpl implements UserService{
                         .eq(UserDO::getId, id)
                         .eq(UserDO::getDeleted, false));
         if (rows <= 0) throw exception(UPDATE_FAILURE);
+        // 2) 物理删除用户-角色关联（带租户隔离）
+        userRoleMapper.deleteByUserIdAndTenantId(id, db.getTenantId());
     }
 
     @Override

@@ -2,6 +2,7 @@ package nus.edu.u.system.mapper.user;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nus.edu.u.system.domain.dataobject.user.UserRoleDO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -29,4 +30,9 @@ public interface UserRoleMapper extends BaseMapper<UserRoleDO> {
 
     // 传实体，保证每行都有独立 id/tenantId/creator/updater
     int batchUpsertUserRoles(@Param("records") List<UserRoleDO> records);
+
+    @Delete("DELETE FROM sys_user_role " +
+            "WHERE user_id = #{userId} AND tenant_id = #{tenantId}")
+    int deleteByUserIdAndTenantId(@Param("userId") Long userId,
+                                  @Param("tenantId") Long tenantId);
 }

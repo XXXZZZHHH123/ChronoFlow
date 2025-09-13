@@ -61,5 +61,4 @@ public class UserDO extends TenantBaseDO implements Serializable {
     @TableField(typeHandler = JacksonTypeHandler.class, value = "post_list")
     private List<Integer> postList;
 
-    /** Logical deletion flag: 0 = not deleted, 1 = deleted */
 }
