@@ -16,27 +16,24 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Slf4j
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
-    @Resource
-    private UserMapper userMapper;
+  @Resource private UserMapper userMapper;
 
-    @Resource
-    private PasswordEncoder passwordEncoder;
+  @Resource private PasswordEncoder passwordEncoder;
 
-    @Override
-    public UserDO getUserByUsername(String username) {
-        return userMapper.selectByUsername(username);
-    }
+  @Override
+  public UserDO getUserByUsername(String username) {
+    return userMapper.selectByUsername(username);
+  }
 
-    @Override
-    public boolean isPasswordMatch(String rawPassword, String encodedPassword) {
-        return passwordEncoder.matches(rawPassword, encodedPassword);
-    }
+  @Override
+  public boolean isPasswordMatch(String rawPassword, String encodedPassword) {
+    return passwordEncoder.matches(rawPassword, encodedPassword);
+  }
 
-    @Override
-    public UserRoleDTO selectUserWithRole(Long userId) {
-        return userMapper.selectUserWithRole(userId);
-    }
-
+  @Override
+  public UserRoleDTO selectUserWithRole(Long userId) {
+    return userMapper.selectUserWithRole(userId);
+  }
 }

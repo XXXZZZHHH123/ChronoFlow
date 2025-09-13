@@ -14,18 +14,18 @@ import nus.edu.u.common.enums.CommonStatusEnum;
 @NoArgsConstructor
 public class RoleDTO {
 
-    private Long id;
+  private Long id;
 
-    private String name;
+  private String name;
 
-    private String roleKey;
+  private String roleKey;
 
-    /**
-     * Role status
-     *
-     * Enum {@link CommonStatusEnum}
-     */
-    private Integer status;
+  /**
+   * Role status
+   *
+   * <p>Enum {@link CommonStatusEnum}
+   */
+  private Integer status;
 
-    private String remark;
+  private String remark;
 }

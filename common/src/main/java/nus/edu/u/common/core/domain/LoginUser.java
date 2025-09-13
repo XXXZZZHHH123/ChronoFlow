@@ -13,11 +13,11 @@ import lombok.Data;
 @Builder
 public class LoginUser {
 
-    private Long id;
+  private Long id;
 
-    private Long roleId;
+  private Long roleId;
 
-    private Long tenantId;
+  private Long tenantId;
 
-    private Long expireTime;
+  private Long expireTime;
 }
