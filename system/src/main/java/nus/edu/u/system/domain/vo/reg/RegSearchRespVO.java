@@ -1,4 +1,4 @@
-package nus.edu.u.system.domain.vo.auth;
+package nus.edu.u.system.domain.vo.reg;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,19 +7,15 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author Lu Shuwen
- * @date 2025-09-01
+ * @date 2025-09-10
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserVO {
+public class RegSearchRespVO {
 
-    private Long id;
-
-    private String name;
+    private String organizationName;
 
     private String email;
-
-    private String role;
 }
