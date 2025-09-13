@@ -68,12 +68,33 @@
                     <warName>${project.artifactId}</warName>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <!-- 在 test 阶段附加 JaCoCo agent -->
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <!-- 在 verify 阶段生成 XML/HTML 报告 -->
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <finalName>${project.artifactId}</finalName>
     </build>
 
-    <properties>
-        <sonar.organization>xxxzzzhhh123</sonar.organization>
-    </properties>
+<!--    <properties>-->
+<!--        <sonar.organization>xxxzzzhhh123</sonar.organization>-->
+<!--    </properties>-->
 
 </project>
