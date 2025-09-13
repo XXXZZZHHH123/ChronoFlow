@@ -77,18 +77,26 @@ jobs:
   docker_image:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    needs: build   # 只有 build job 成功才执行
+    needs: build
     permissions:
       contents: read
-      packages: write   # 允许推送到 GHCR
+      packages: write
     env:
-      DOCKERFILE_PATH: ./Dockerfile   # 如果Dockerfile在子目录，改成 ./backend/Dockerfile
-      CONTEXT_PATH: .                 # 子目录项目改成 ./backend
+      DOCKERFILE_PATH: ./Dockerfile
+      CONTEXT_PATH: .
     steps:
       - uses: actions/checkout@v4
 
       - name: Set IMAGE_NAME (lowercase)
         run: echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}/app" >> $GITHUB_ENV
+
+      - name: Set VERSION
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+          else
+            echo "VERSION=1.0.${GITHUB_RUN_NUMBER}-SNAPSHOT" >> $GITHUB_ENV
+          fi
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -103,13 +111,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & Push (latest + sha)
+      - name: Build & Push (latest + sha + version)
         uses: docker/build-push-action@v6
         with:
           context: ${{ env.CONTEXT_PATH }}
           file: ${{ env.DOCKERFILE_PATH }}
           push: true
           platforms: linux/amd64
+          build-args: |
+            REVISION=${{ env.VERSION }}
+            MODULE=system
           tags: |
             ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
             ${{ env.IMAGE_NAME }}:${{ github.sha }}

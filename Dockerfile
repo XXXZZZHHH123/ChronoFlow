@@ -1,11 +1,20 @@
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
+
+ARG REVISION=1.0.0
+ARG MODULE=system
+
 COPY . .
-RUN mvn -B -DskipTests -pl :system -am clean package
+RUN mvn -B -Drevision=${REVISION} -pl ${MODULE} -am clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-COPY --from=build /app/system/target/system.jar /app/app.jar
+
+ARG REVISION=1.0.0
+ARG MODULE=system
+
+COPY --from=build /app/${MODULE}/target/${MODULE}-${REVISION}.jar app.jar
+
 ENV PORT=8080
 EXPOSE 8080
-ENTRYPOINT ["sh","-c","java -Dserver.port=${PORT} -jar /app/app.jar"]
+ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-jar", "/app/app.jar"]
