@@ -10,27 +10,28 @@ import nus.edu.u.system.domain.dto.UserRoleDTO;
  * @date 2025-08-30
  */
 public interface UserService {
-    /**
-     * Select one UserDO object from db
-     *
-     * @param username name
-     * @return UserDO
-     */
-    UserDO getUserByUsername(String username);
+  /**
+   * Select one UserDO object from db
+   *
+   * @param username name
+   * @return UserDO
+   */
+  UserDO getUserByUsername(String username);
 
-    /**
-     * Check if two password are matched
-     *
-     * @param rawPassword   Unencrypted password
-     * @param encodedPassword   Encrypted password
-     * @return  Match result
-     */
-    boolean isPasswordMatch(String rawPassword, String encodedPassword);
+  /**
+   * Check if two password are matched
+   *
+   * @param rawPassword Unencrypted password
+   * @param encodedPassword Encrypted password
+   * @return Match result
+   */
+  boolean isPasswordMatch(String rawPassword, String encodedPassword);
 
-    /**
-     * Select user and his role by userId
-     * @param userId user id
-     * @return UserRoleDTO
-     */
-    UserRoleDTO selectUserWithRole(Long userId);
+  /**
+   * Select user and his role by userId
+   *
+   * @param userId user id
+   * @return UserRoleDTO
+   */
+  UserRoleDTO selectUserWithRole(Long userId);
 }

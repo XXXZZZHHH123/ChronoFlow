@@ -6,19 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
-/**
- * User login response VO
- */
+/** User login response VO */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class LoginRespVO {
 
-    private UserVO user;
+  private UserVO user;
 
-    @JsonIgnore
-    private String refreshToken;
-
+  @JsonIgnore private String refreshToken;
 }

@@ -13,19 +13,20 @@ import nus.edu.u.system.domain.vo.reg.RegSearchRespVO;
  */
 public interface RegService {
 
-    /**
-     * Search user info when sign up
-     *
-     * @param regSearchReqVO Organization id and user id
-     * @return RegSearchRespVO
-     */
-    RegSearchRespVO search(RegSearchReqVO regSearchReqVO);
+  /**
+   * Search user info when sign up
+   *
+   * @param regSearchReqVO Organization id and user id
+   * @return RegSearchRespVO
+   */
+  RegSearchRespVO search(RegSearchReqVO regSearchReqVO);
 
-    /**
-     * User register as member after getting organization info
-     * @param regMemberReqVO register property
-     */
-    boolean registerAsMember(RegMemberReqVO regMemberReqVO);
+  /**
+   * User register as member after getting organization info
+   *
+   * @param regMemberReqVO register property
+   */
+  boolean registerAsMember(RegMemberReqVO regMemberReqVO);
 
-    boolean registerAsOrganizer(RegOrganizerReqVO regOrganizerReqVO);
+  boolean registerAsOrganizer(RegOrganizerReqVO regOrganizerReqVO);
 }
