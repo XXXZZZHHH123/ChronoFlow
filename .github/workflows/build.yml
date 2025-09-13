@@ -133,18 +133,8 @@ jobs:
     container: ghcr.io/railwayapp/cli:latest
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      SVC_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Railway CLI
-        run: curl -fsSL https://railway.app/install.sh | sh
-
-      - name: Login to Railway
-        run: railway login --token ${{ secrets.RAILWAY_TOKEN }}
-
-      - name: Link Project & Service
-        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --service ${{ secrets.RAILWAY_SERVICE_ID }}
-
       - name: Redeploy
-        run: railway redeploy --service ${{ secrets.RAILWAY_SERVICE_ID }}
+        run: railway redeploy \
+          --project ${{ secrets.RAILWAY_PROJECT_ID }} \
+          --service ${{ secrets.RAILWAY_SERVICE_ID }}
