@@ -1,14 +1,14 @@
 spring:
   datasource:
-    url: jdbc:mysql://${TEST_DB_HOST}:${TEST_DB_PORT}/${TEST_DB_NAME}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-    username: ${TEST_DB_USER}
-    password: ${TEST_DB_PASSWORD}
+    url: jdbc:mysql://${PORD_DB_HOST}:${PORD_DB_PORT}/${PORD_DB_NAME}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    username: ${PORD_DB_USER}
+    password: ${PORD_DB_PASSWORD}
   data:
     redis:
-      host: ${TEST_REDIS_HOST}
-      port: ${TEST_REDIS_PORT}
-      database: ${TEST_REDIS_DATABASE}
-      password: ${TEST_REDIS_PASSWORD}
+      host: ${PORD_REDIS_HOST}
+      port: ${PORD_REDIS_PORT}
+      database: ${PORD_REDIS_DATABASE}
+      password: ${PORD_REDIS_PASSWORD}
 
 # log config
 logging:
@@ -22,3 +22,6 @@ chronoflow:
     mock-enable: true
   captcha:
     enable: false
+  cookie:
+    http-only: false
+    security: false

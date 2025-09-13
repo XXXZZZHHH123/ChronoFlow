@@ -12,14 +12,6 @@ import nus.edu.u.system.domain.dto.UserTokenDTO;
 public interface TokenService {
 
     /**
-     * Create an access token and store in redis
-     *
-     * @param userTokenDTO parameters to create token
-     * @return token
-     */
-    TokenDTO createAccessToken(UserTokenDTO userTokenDTO);
-
-    /**
      * Create a refresh token and store in redis
      *
      * @param userTokenDTO parameters to create token
@@ -35,11 +27,7 @@ public interface TokenService {
     void removeToken(String token);
 
     /**
-     * Refresh access token
-     *
-     * @param refreshToken refresh token
-     * @return TokenDTO
+     * Get userId in refresh token from redis
      */
-    TokenDTO refreshToken(String refreshToken);
-
+    Long getUserIdFromRefreshToken(String refreshToken);
 }
