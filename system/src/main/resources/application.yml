@@ -23,29 +23,40 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev} # Default is dev  Can modified by environment variable
+    active: ${SPRING_PROFILES_ACTIVE:test} # Default is dev  Can modified by environment variable
   data:
     redis:
       repositories:
         enabled: false
+      lettuce:
+        pool:
+          # Maximum number of connections in the connection pool
+          max-active: 200
+          # The maximum blocking wait time of the connection pool (a negative value indicates no limit)
+          max-wait: -1ms
+          # Maximum idle connections in the connection pool
+          max-idle: 10
+          # Minimum number of idle connections in the connection pool
+          min-idle: 0
   main:
     allow-circular-references: true
-  # Servlet 配置
+  # Servlet Config
   servlet:
-    # 文件上传相关配置项
+    # File upload related configuration items
     multipart:
-      max-file-size: 16MB # 单个文件大小
-      max-request-size: 32MB # 设置总上传的文件大小
+      max-file-size: 16MB # Single file size
+      max-request-size: 32MB # Set the total uploaded file size
 
-  # Jackson 配置项
+  # Jackson config
   jackson:
     serialization:
-      write-dates-as-timestamps: true # 设置 Date 的格式，使用时间戳
-      write-date-timestamps-as-nanoseconds: false # 设置不使用 nanoseconds 的格式。例如说 1611460870.401，而是直接 1611460870401
-      write-durations-as-timestamps: true # 设置 Duration 的格式，使用时间戳
-      fail-on-empty-beans: false # 允许序列化无属性的 Bean
+      write-dates-as-timestamps: true # Set the Date format to use a timestamp
+      write-date-timestamps-as-nanoseconds: false
+      write-durations-as-timestamps: true # Set the Duration format to use timestamp
+      fail-on-empty-beans: false # Allow serialization of beans without attributes
 
 mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true            # db: user_name -> java: userName
     cache-enabled: false
@@ -55,27 +66,13 @@ mybatis-plus:
       id-type: ASSIGN_ID     # snowflake-style; or AUTO for DB auto-increment
       table-underline: true
 
-# 项目相关配置
+# Project config
 chronoflow:
   name: ChronoFlow
   version: 1.0.0
   base-package: nus.edu.u
-  captcha:
-    enable: false
   security:
-    token-header: Authentication
-    token-parameter: token
-    mock-enable: false
-    mock-secret: mock_secret
-    permit-all-urls:
-      - /system/auth/login
-      - /system/auth/refresh
-      - /system/captcha/*
-  cors:
-    origins:
-      - "http://172.20.10.9:5173"
-      - "http://localhost:5173"
-      - "https://chronoflow-frontend-production.up.railway.app"
+    refresh-token-expire: 604800
   swagger:
     title: ChronoFLow Platform
     version: ${chronoflow.version}
@@ -84,7 +81,7 @@ server:
   servlet:
     encoding:
       enabled: true
-      charset: UTF-8 # 必须设置 UTF-8，避免 WebFlux 流式返回（AI 场景）会乱码问题
+      charset: UTF-8
       force: true
 
 --- #################### API doc configuration ####################
@@ -108,26 +105,29 @@ logging:
   file:
     name: ${user.home}/logs/${spring.application.name}.log
 
-# Jwt
-jwt:
-  secret: my-super-secret-key
-  access-expire: 1800
-  refresh-expire: 604800
-
-# Captcha
-aj:
-  captcha:
-    jigsaw: classpath:images/jigsaw # 滑动验证，底图路径，不配置将使用默认图片；以 classpath: 开头，取 resource 目录下路径
-    pic-click: classpath:images/pic-click # 滑动验证，底图路径，不配置将使用默认图片；以 classpath: 开头，取 resource 目录下路径
-    cache-type: redis # 缓存 local/redis...
-    cache-number: 1000 # local 缓存的阈值,达到这个值，清除缓存
-    timing-clear: 180 # local定时清除过期缓存(单位秒),设置为0代表不执行
-    type: blockPuzzle # 验证码类型 default 三种都实例化。blockPuzzle 滑块拼图、clickWord 文字点选、pictureWord 文本输入
-    water-mark: ChronoFlow # 右下角水印文字(我的水印)，可使用 https://tool.chinaz.com/tools/unicode.aspx 中文转 Unicode，Linux 可能需要转 unicode
-    interference-options: 1 # 滑动干扰项(0/1/2)
-    req-frequency-limit-enable: false # 接口请求次数一分钟限制是否开启 true|false
-    req-get-lock-limit: 5 # 验证失败 5 次，get接口锁定
-    req-get-lock-seconds: 10 # 验证失败后，锁定时间间隔
-    req-get-minute-limit: 30 # get 接口一分钟内请求数限制
-    req-check-minute-limit: 60 # check 接口一分钟内请求数限制
-    req-verify-minute-limit: 60 # verify 接口一分钟内请求数限制
+############## Sa-Token config (文档: https://sa-token.cc) ##############
+sa-token:
+  # token name
+  token-name: Authorization
+  # token validity period (unit: seconds) The default is 30 days, -1 means permanent validity
+  timeout: 1800
+  # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结
+  # Minimum active frequency (unit: seconds). If the token does not access the system within this time,
+  # it will be frozen. The default value of -1 means no limit and never freeze.
+  active-timeout: -1
+  # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
+  # Whether to allow multiple logins from the same account at the same time
+  # (if true, multiple logins are allowed; if false, new logins will replace old logins)
+  is-concurrent: true
+  # 在多人登录同一账号时，是否共用一个 token （为 true 时所有登录共用一个 token, 为 false 时每次登录新建一个 token）
+  # When multiple people log into the same account, do they share a token?
+  # (If true, all logins share a token; if false, a new token is created for each login.)
+  is-share: true
+  # Whether to output operation logs
+  is-log: true
+  # Jwt key
+  jwt-secret-key: chronoflow123
+  # Token style
+  token-style: uuid
+  cookie:
+    http-only: true

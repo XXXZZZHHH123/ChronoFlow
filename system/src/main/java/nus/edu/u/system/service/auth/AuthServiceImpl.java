@@ -1,27 +1,26 @@
 package nus.edu.u.system.service.auth;
 
+import static nus.edu.u.common.constant.Constants.DEFAULT_DELIMITER;
+import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.*;
+
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
-import com.anji.captcha.model.common.ResponseModel;
-import com.anji.captcha.model.vo.CaptchaVO;
-import com.anji.captcha.service.CaptchaService;
+import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Validator;
-import lombok.Setter;
+import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
-import nus.edu.u.system.domain.dto.TokenDTO;
+import nus.edu.u.system.domain.dto.RoleDTO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.dto.UserTokenDTO;
 import nus.edu.u.system.domain.vo.auth.*;
 import nus.edu.u.system.service.user.UserService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import nus.edu.u.common.utils.validation.ValidationUtils;
-
-import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.EXPIRED_LOGIN_CREDENTIALS;
-import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
 /**
  * Authentication service implementation
@@ -33,100 +32,82 @@ import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    @Resource
-    private UserService userService;
+  @Resource private UserService userService;
 
-    @Resource
-    private CaptchaService captchaService;
+  @Resource private TokenService tokenService;
 
-    @Resource
-    private TokenService tokenService;
-
-    @Resource
-    private Validator validator;
-
-    @Value("${chronoflow.captcha.enable:true}")
-    @Setter
-    private Boolean captchaEnable;
-
-    @Override
-    public UserDO authenticate(String username, String password) {
-        // 1.Check username first
-        UserDO userDO = userService.getUserByUsername(username);
-        if (userDO == null) {
-            throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
-        }
-        // 2.Check password
-        if (!userService.isPasswordMatch(password, userDO.getPassword())) {
-            throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
-        }
-        // 3.Check if user is disabled
-        if (CommonStatusEnum.isDisable(userDO.getStatus())) {
-            throw exception(AUTH_LOGIN_USER_DISABLED);
-        }
-        return userDO;
+  @Override
+  public UserDO authenticate(String username, String password) {
+    // 1.Check username first
+    UserDO userDO = userService.getUserByUsername(username);
+    if (userDO == null) {
+      throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
     }
-
-    @Override
-    public LoginRespVO login(LoginReqVO reqVO) {
-        // 1.Verify captcha
-        ResponseModel response = validateCaptcha(reqVO);
-        if (!response.isSuccess()) {
-            throw exception(AUTH_LOGIN_CAPTCHA_CODE_ERROR, response.getRepMsg());
-        }
-        // 2.Verify username and password
-        UserDO userDO = authenticate(reqVO.getUsername(), reqVO.getPassword());
-        // 3.Create token
-        return createTokenAfterLoginSuccess(userDO);
+    // 2.Check password
+    if (!userService.isPasswordMatch(password, userDO.getPassword())) {
+      throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
     }
-
-    /**
-     * Second verification of captcha
-     */
-    private ResponseModel validateCaptcha(CaptchaVerificationReqVO reqVO) {
-        if (!captchaEnable) {
-            return ResponseModel.success();
-        }
-        ValidationUtils.validate(validator, reqVO, CaptchaVerificationReqVO.CodeEnableGroup.class);
-        CaptchaVO captchaVO = new CaptchaVO();
-        captchaVO.setCaptchaVerification(reqVO.getCaptchaVerification());
-        return captchaService.verification(captchaVO);
+    // 3.Check if user is disabled
+    if (CommonStatusEnum.isDisable(userDO.getStatus())) {
+      throw exception(AUTH_LOGIN_USER_DISABLED);
     }
+    return userDO;
+  }
 
-    private LoginRespVO createTokenAfterLoginSuccess(UserDO userDO) {
-        // 1.Create UserTokenDTO which contains parameters required to create a token
-        UserTokenDTO userTokenDTO = new UserTokenDTO();
-        BeanUtil.copyProperties(userDO, userTokenDTO);
-        // 2.Create two token and set parameters into response object
-        TokenDTO accessToken = tokenService.createAccessToken(userTokenDTO);
-        String refreshToken = tokenService.createRefreshToken(userTokenDTO);
-        UserVO userVO = UserVO.builder().id(userDO.getId()).build();
-        return LoginRespVO.builder()
-                .accessToken(accessToken.getAccessToken())
-                .accessTokenExpireTime(accessToken.getAccessTokenExpireTime())
-                .refreshToken(refreshToken)
-                .user(userVO).build();
-    }
+  @Override
+  public LoginRespVO login(LoginReqVO reqVO) {
+    // 1.Verify username and password
+    UserDO userDO = authenticate(reqVO.getUsername(), reqVO.getPassword());
+    // 2.Update user login time
+    userDO.setLoginTime(LocalDateTime.now());
+    // 3.Create token
+    return handleLogin(userDO, reqVO.isRemember(), reqVO.getRefreshToken());
+  }
 
-    @Override
-    public void logout(String token) {
-        tokenService.removeToken(token);
+  private LoginRespVO handleLogin(UserDO userDO, boolean rememberMe, String refreshToken) {
+    // 1.Create UserTokenDTO which contains parameters required to create a token
+    UserTokenDTO userTokenDTO = new UserTokenDTO();
+    BeanUtil.copyProperties(userDO, userTokenDTO);
+    userTokenDTO.setRemember(rememberMe);
+    // 2.Create two token and set parameters into response object
+    StpUtil.login(userDO.getId());
+    // 2.1 Set tenant id into context
+    StpUtil.getSession().set(SESSION_TENANT_ID, userDO.getTenantId());
+    // 3.Check if there already is a refresh token
+    if (StrUtil.isEmpty(refreshToken)) {
+      refreshToken = tokenService.createRefreshToken(userTokenDTO);
     }
+    UserRoleDTO userRoleDTO = userService.selectUserWithRole(userDO.getId());
+    UserVO userVO =
+        UserVO.builder()
+            .id(userDO.getId())
+            .email(userDO.getEmail())
+            .name(userDO.getUsername())
+            .role(
+                userRoleDTO.getRoles().stream()
+                    .map(RoleDTO::getRoleKey)
+                    .collect(Collectors.joining(DEFAULT_DELIMITER)))
+            .build();
+    return LoginRespVO.builder().refreshToken(refreshToken).user(userVO).build();
+  }
 
-    @Override
-    public LoginRespVO refresh(String refreshToken) {
-        // 1.Create access token and expire time
-        TokenDTO tokenDTO = tokenService.refreshToken(refreshToken);
-        // 2.If tokenDTO == null, throw an exception to re-login
-        if (tokenDTO == null) {
-            throw exception(EXPIRED_LOGIN_CREDENTIALS);
-        }
-        // 3.Build response object
-        LoginRespVO loginRespVO = new LoginRespVO();
-        BeanUtil.copyProperties(tokenDTO, loginRespVO);
-        loginRespVO.setRefreshToken(refreshToken);
-        UserVO userVO = UserVO.builder().id(tokenDTO.getUserId()).build();
-        loginRespVO.setUser(userVO);
-        return loginRespVO;
+  @Override
+  public void logout(String token) {
+    tokenService.removeToken(token);
+    StpUtil.logout();
+  }
+
+  @Override
+  public LoginRespVO refresh(String refreshToken) {
+    // 1.Create access token and expire time
+    Long userId = tokenService.getUserIdFromRefreshToken(refreshToken);
+    if (ObjUtil.isNull(userId)) {
+      throw exception(REFRESH_TOKEN_WRONG);
     }
+    // 2.Login user
+    StpUtil.login(userId);
+    // 3.Build response object
+    UserVO userVO = UserVO.builder().id(userId).build();
+    return LoginRespVO.builder().refreshToken(refreshToken).user(userVO).build();
+  }
 }

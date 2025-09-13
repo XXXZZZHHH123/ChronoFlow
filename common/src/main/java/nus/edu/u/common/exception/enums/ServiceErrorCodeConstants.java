@@ -3,16 +3,15 @@ package nus.edu.u.common.exception.enums;
 /**
  * Service error code enums
  *
- * Use 3 segment to define
+ * <p>Use 3 segment to define
  *
- * 1.First segment for module code
+ * <p>1.First segment for module code
  *
- * 2.Second segment for sub-module code
+ * <p>2.Second segment for sub-module code
  *
- * 3.Third segment for error code
+ * <p>3.Third segment for error code
  *
  * @author Lu Shuwen
  * @date 2025-08-28
  */
-public interface ServiceErrorCodeConstants {
-}
+public interface ServiceErrorCodeConstants {}

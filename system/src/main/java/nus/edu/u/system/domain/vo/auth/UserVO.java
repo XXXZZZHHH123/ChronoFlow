@@ -14,5 +14,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UserVO {
-    private Long id;
+
+  private Long id;
+
+  private String name;
+
+  private String email;
+
+  private String role;
 }

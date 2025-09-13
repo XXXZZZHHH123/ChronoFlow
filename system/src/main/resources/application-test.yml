@@ -16,3 +16,8 @@ logging:
   level:
     nus.edu.u: info
     org.springframework: warn
+
+chronoflow:
+  cookie:
+    http-only: true
+    security: false

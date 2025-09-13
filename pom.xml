@@ -24,19 +24,19 @@
 		<commons.io.version>2.19.0</commons.io.version>
 		<poi.version>4.1.2</poi.version>
 		<jwt.version>0.9.1</jwt.version>
-		<captcha.version>1.4.0</captcha.version>
 		<guava.version>33.4.0-jre</guava.version>
 		<jakarta-validation.version>3.0.2</jakarta-validation.version>
 		<redisson.version>3.41.0</redisson.version>
 		<springdoc.version>2.7.0</springdoc.version>
 		<lombok.version>1.18.34</lombok.version>
 		<hutool.version>5.8.35</hutool.version>
+		<satoken.version>1.44.0</satoken.version>
 	</properties>
-	<!-- 依赖声明 -->
+
 	<dependencyManagement>
 		<dependencies>
 
-			<!-- SpringBoot的依赖配置-->
+			<!-- SpringBoot-->
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
@@ -45,6 +45,7 @@
 				<scope>import</scope>
 			</dependency>
 
+			<!-- SQL connector -->
 			<dependency>
 				<groupId>com.mysql</groupId>
 				<artifactId>mysql-connector-j</artifactId>
@@ -58,6 +59,7 @@
 				<version>${mybatis-plus.version}</version>
 			</dependency>
 
+			<!-- Google Utils -->
 			<dependency>
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
@@ -85,25 +87,11 @@
 				<version>${redisson.version}</version>
 			</dependency>
 
-			<!-- 阿里JSON解析器 -->
+			<!-- Alibaba JSON parser -->
 			<dependency>
 				<groupId>com.alibaba.fastjson2</groupId>
 				<artifactId>fastjson2</artifactId>
 				<version>${fastjson.version}</version>
-			</dependency>
-
-			<!-- Token生成与解析-->
-			<dependency>
-				<groupId>io.jsonwebtoken</groupId>
-				<artifactId>jjwt</artifactId>
-				<version>${jwt.version}</version>
-			</dependency>
-
-			<!-- captcha for login -->
-			<dependency>
-				<groupId>com.anji-plus</groupId>
-				<artifactId>captcha-spring-boot-starter</artifactId>
-				<version>${captcha.version}</version>
 			</dependency>
 
 			<!-- hutool utils -->
@@ -113,14 +101,14 @@
 				<version>${hutool.version}</version>
 			</dependency>
 
-			<!-- io常用工具类 -->
+			<!-- io Utils -->
 			<dependency>
 				<groupId>commons-io</groupId>
 				<artifactId>commons-io</artifactId>
 				<version>${commons.io.version}</version>
 			</dependency>
 
-			<!-- excel工具 -->
+			<!-- excel Utils -->
 			<dependency>
 				<groupId>org.apache.poi</groupId>
 				<artifactId>poi-ooxml</artifactId>
@@ -134,21 +122,34 @@
 				<version>${lombok.version}</version>
 			</dependency>
 
-			<!-- 核心模块-->
+			<!-- sa-token -->
+			<dependency>
+				<groupId>cn.dev33</groupId>
+				<artifactId>sa-token-spring-boot3-starter</artifactId>
+				<version>${satoken.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>cn.dev33</groupId>
+				<artifactId>sa-token-redis-template</artifactId>
+				<version>1.44.0</version>
+			</dependency>
+
+			<!-- Framework module -->
 			<dependency>
 				<groupId>nus.edu.u</groupId>
 				<artifactId>framework</artifactId>
 				<version>${revision}</version>
 			</dependency>
 
-			<!-- 系统模块-->
+			<!-- System module -->
 			<dependency>
 				<groupId>nus.edu.u</groupId>
 				<artifactId>system</artifactId>
 				<version>${revision}</version>
 			</dependency>
 
-			<!-- 通用工具-->
+			<!-- Common module -->
 			<dependency>
 				<groupId>nus.edu.u</groupId>
 				<artifactId>common</artifactId>
@@ -157,6 +158,48 @@
 
 		</dependencies>
 	</dependencyManagement>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>com.diffplug.spotless</groupId>
+					<artifactId>spotless-maven-plugin</artifactId>
+					<version>2.43.0</version>
+					<configuration>
+						<java>
+							<googleJavaFormat/>
+						</java>
+					</configuration>
+					<executions>
+						<execution>
+							<id>spotless-check</id>
+							<goals><goal>check</goal></goals>
+							<phase>verify</phase>
+						</execution>
+					</executions>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-checkstyle-plugin</artifactId>
+					<version>3.3.1</version>
+					<configuration>
+						<configLocation>google_checks.xml</configLocation>
+						<consoleOutput>true</consoleOutput>
+						<failOnViolation>true</failOnViolation>
+					</configuration>
+					<executions>
+						<execution>
+							<id>checkstyle-verify</id>
+							<phase>verify</phase>
+							<goals><goal>check</goal></goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
 
 	<modules>
 		<module>framework</module>

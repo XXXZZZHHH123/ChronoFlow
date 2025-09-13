@@ -9,5 +9,4 @@ import org.apache.ibatis.annotations.Mapper;
  * @date 2025-08-31
  */
 @Mapper
-public interface PostMapper extends BaseMapper<PostDO> {
-}
+public interface PostMapper extends BaseMapper<PostDO> {}

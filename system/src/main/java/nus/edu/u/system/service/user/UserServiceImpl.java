@@ -3,6 +3,7 @@ package nus.edu.u.system.service.user;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.mapper.user.UserMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,22 +16,24 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Slf4j
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
-    @Resource
-    private UserMapper userMapper;
+  @Resource private UserMapper userMapper;
 
-    @Resource
-    private PasswordEncoder passwordEncoder;
+  @Resource private PasswordEncoder passwordEncoder;
 
-    @Override
-    public UserDO getUserByUsername(String username) {
-        return userMapper.selectByUsername(username);
-    }
+  @Override
+  public UserDO getUserByUsername(String username) {
+    return userMapper.selectByUsername(username);
+  }
 
-    @Override
-    public boolean isPasswordMatch(String rawPassword, String encodedPassword) {
-        return passwordEncoder.matches(rawPassword, encodedPassword);
-    }
+  @Override
+  public boolean isPasswordMatch(String rawPassword, String encodedPassword) {
+    return passwordEncoder.matches(rawPassword, encodedPassword);
+  }
 
+  @Override
+  public UserRoleDTO selectUserWithRole(Long userId) {
+    return userMapper.selectUserWithRole(userId);
+  }
 }

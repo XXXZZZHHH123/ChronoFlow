@@ -1,37 +1,28 @@
 package nus.edu.u.framework.security.config;
 
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * @author Lu Shuwen
- * @date 2025-09-01
+ * @date 2025-09-09
  */
 @Configuration
-@ConfigurationProperties(prefix = "chronoflow.cors")
-@Data
 public class CorsConfig {
 
-    private List<String> origins;
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowCredentials(true); // Allow Cookie
+    config.addAllowedOriginPattern("*"); // Allow all sources
+    config.addAllowedHeader("*"); // Allow all request headers
+    config.addAllowedMethod("*"); // Allow all request methods (GET, POST, PUT, DELETE...)
 
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOriginPatterns(origins.toArray(new String[0]))
-                        .allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true)
-                        .maxAge(3600);
-            }
-        };
-    }
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
+  }
 }

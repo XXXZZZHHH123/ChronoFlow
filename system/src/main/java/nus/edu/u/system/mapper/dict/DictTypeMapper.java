@@ -9,5 +9,4 @@ import org.apache.ibatis.annotations.Mapper;
  * @date 2025-08-31
  */
 @Mapper
-public interface DictTypeMapper extends BaseMapper<DictTypeDO> {
-}
+public interface DictTypeMapper extends BaseMapper<DictTypeDO> {}
