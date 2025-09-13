@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrganizerUpdateUserRespVO {
+public class UpdateUserRespVO {
     private Long id;
 
     private String email;

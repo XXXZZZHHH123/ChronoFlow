@@ -33,7 +33,7 @@
         WHERE u.id = #{userId}
     </select>
 
-    <!-- RoleDTO 的映射 -->
+    <!-- RoleDTO mapping -->
     <resultMap id="RoleDTOMap" type="nus.edu.u.system.domain.dto.RoleDTO">
         <id property="id" column="role_id"/>
         <result property="name" column="role_name"/>
@@ -42,7 +42,7 @@
         <result property="remark" column="role_remark"/>
     </resultMap>
 
-    <!-- UserRoleDTO 的映射，包含角色列表 -->
+    <!-- Mapping of UserRoleDTO, containing a list of roles -->
     <resultMap id="UserRoleDTOMap" type="nus.edu.u.system.domain.dto.UserRoleDTO">
         <id property="userId" column="user_id"/>
         <result property="username" column="username"/>
@@ -51,11 +51,11 @@
         <result property="tenantId" column="tenant_id"/>
         <result property="status" column="status"/>
 
-        <!-- 一对多关系：roles -->
+        <!-- one to more ：roles -->
         <collection property="roles" ofType="nus.edu.u.system.domain.dto.RoleDTO" resultMap="RoleDTOMap"/>
     </resultMap>
 
-    <!-- 查询所有用户及其角色 -->
+    <!-- Query all users and their roles -->
     <select id="selectAllUsersWithRoles" resultMap="UserRoleDTOMap">
         SELECT
             u.id        AS user_id,

@@ -35,11 +35,13 @@ public class UserRoleDO extends TenantBaseDO implements Serializable {
     private Long roleId;
 
     private Long tenantId;
+
     @TableField(fill = FieldFill.INSERT)
     private String creator;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private String updater;
+
     @TableLogic
     private Boolean deleted;
 }

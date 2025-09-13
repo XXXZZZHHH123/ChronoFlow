@@ -31,7 +31,7 @@ public interface UserMapper extends BaseMapper<UserDO> {
 
     UserRoleDTO selectUserWithRole(Long userId);
 
-    // ===== exists 系列，供 Service 复用，避免重复 count 代码 =====
+    // ===== exists series, for Service reuse to avoid duplication of count code =====
     default boolean existsUsername(String username, Long excludeId) {
         return this.selectCount(new LambdaQueryWrapper<UserDO>()
                 .eq(UserDO::getUsername, username)
@@ -54,7 +54,7 @@ public interface UserMapper extends BaseMapper<UserDO> {
     }
 
 
-    /** 直接查原始记录（包含 deleted=1），不走 MP 自动条件 */
+    /** Directly query the original record (including deleted=1), bypassing the MP automatic condition */
     @Select("SELECT * FROM sys_user WHERE id = #{id} LIMIT 1")
     UserDO selectRawById(@Param("id") Long id);
 

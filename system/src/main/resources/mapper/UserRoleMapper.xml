@@ -36,7 +36,7 @@
         </foreach>
     </update>
 
-    <!-- 批量 Upsert：显式写 id/user_id/role_id/tenant_id/creator/updater -->
+    <!-- Batch Upsert: Explicitly write id/user_id/role_id/tenant_id/creator/updater -->
     <insert id="batchUpsertUserRoles">
         INSERT INTO sys_user_role
         (id, user_id, role_id, tenant_id, creator, create_time, updater, update_time, deleted)

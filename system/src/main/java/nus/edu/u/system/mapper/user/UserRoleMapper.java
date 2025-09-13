@@ -28,7 +28,7 @@ public interface UserRoleMapper extends BaseMapper<UserRoleDO> {
                     @Param("roleIds") Collection<Long> roleIds,
                     @Param("operator") String operator);
 
-    // 传实体，保证每行都有独立 id/tenantId/creator/updater
+    // Pass entities, ensuring each row has a unique id/tenantId/creator/updater
     int batchUpsertUserRoles(@Param("records") List<UserRoleDO> records);
 
     @Delete("DELETE FROM sys_user_role " +

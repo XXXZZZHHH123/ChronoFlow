@@ -1,15 +1,11 @@
 package nus.edu.u.system.service.user;
 
 import cn.dev33.satoken.stp.StpUtil;
-import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.utils.validation.ValidationUtils;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dataobject.user.UserRoleDO;
@@ -24,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
@@ -81,7 +76,7 @@ public class UserServiceImpl implements UserService{
             vo.setEmail(dto.getEmail());
             vo.setPhone(dto.getPhone());
 
-            // 转换 roles (RoleDTO → id)
+            // (RoleDTO → id)
             List<Long> roleIds = (dto.getRoles() == null)
                     ? Collections.emptyList()
                     : dto.getRoles().stream()
@@ -89,7 +84,7 @@ public class UserServiceImpl implements UserService{
                     .toList();
             vo.setRoles(roleIds);
 
-            // 注册状态：status=2(PENDING) → 未注册；否则算已注册
+            // Registration status: status=2(PENDING) → Not registered; otherwise it is considered registered
             boolean isRegistered = !Objects.equals(dto.getStatus(), UserStatusEnum.PENDING.getCode());
             vo.setRegistered(isRegistered);
 
@@ -100,22 +95,22 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
-    public Long createUserWithRoleIds(OrganizerCreateUserDTO dto) {
+    public Long createUserWithRoleIds(CreateUserDTO dto) {
         String email = dto.getEmail().trim();
         List<Long> roleIds = dto.getRoleIds().stream().distinct().toList();
 
-        // 1) 邮箱唯一性校验
+        // 1) Email uniqueness check
         if (userMapper.existsEmail(email, null)) {
             throw exception(EMAIL_EXIST);
         }
 
-        // 2) 校验角色是否存在
+        // 2) Check if the role exists
         int count = roleMapper.countByIds(roleIds);
         if (count != roleIds.size()) {
             throw exception(ROLE_NOT_FOUND);
         }
 
-        // 3) 创建用户
+        // 3) Create a user
         UserDO user = UserDO.builder()
                 .email(email)
                 .remark(dto.getRemark())
@@ -128,7 +123,7 @@ public class UserServiceImpl implements UserService{
         }
 
 
-        // 4) 绑定角色
+        // 4) Bind the role
         if (!roleIds.isEmpty()) {
             for (Long roleId : roleIds) {
                 UserRoleDO ur = UserRoleDO.builder()
@@ -138,7 +133,7 @@ public class UserServiceImpl implements UserService{
 
                 int rows = userRoleMapper.insert(ur);
                 if (rows <= 0) {
-                    throw exception(USER_ROLE_BIND_FAILURE); // 插入失败时抛出异常
+                    throw exception(USER_ROLE_BIND_FAILURE);
                 }
             }
         }
@@ -149,19 +144,19 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
-    public UserDO updateUserWithRoleIds(OrganizerUpdateUserDTO dto) {
+    public UserDO updateUserWithRoleIds(UpdateUserDTO dto) {
         UserDO dbUser = userMapper.selectById(dto.getId());
         if (dbUser == null || Boolean.TRUE.equals(dbUser.getDeleted())) {
             throw exception(USER_NOT_FOUND);
         }
 
-        // 邮箱唯一性校验
+        //Email uniqueness check
         if (dto.getEmail() != null && userMapper.existsEmail(dto.getEmail(), dto.getId())) {
             throw exception(EMAIL_EXIST);
         }
 
 
-        // 更新用户
+        // Update user
         LambdaUpdateWrapper<UserDO> uw = Wrappers.<UserDO>lambdaUpdate()
                 .eq(UserDO::getId, dto.getId());
         if (dto.getEmail() != null) uw.set(UserDO::getEmail, dto.getEmail());
@@ -170,9 +165,9 @@ public class UserServiceImpl implements UserService{
             throw exception(UPDATE_FAILURE);
         }
 
-        // 同步角色（null 不改；空集合 = 清空）
+        // Synchronize roles (null does not change; empty collection = clear)
         if (dto.getRoleIds() != null) {
-            // 校验角色存在性
+            // Check if the role exists
             List<Long> targetList = dto.getRoleIds().stream()
                     .filter(Objects::nonNull).distinct().toList();
             if (!targetList.isEmpty()) {
@@ -181,102 +176,9 @@ public class UserServiceImpl implements UserService{
             }
             syncUserRoles(dto.getId(), targetList);
         }
-
-        // 返回最新用户信息
         return userMapper.selectById(dto.getId());
     }
 
-
-    @Override
-    @Transactional
-    public UserDO createUser(UserCreateDTO dto) {
-        if (dto.getPhone() != null && !ValidationUtils.isMobile(dto.getPhone())){
-            throw exception(WRONG_MOBILE);
-        }
-        // Username/email/phone uniqueness check
-        if (userMapper.existsUsername(dto.getUsername(), null)) {
-            throw exception(USERNAME_EXIST);
-        }
-        if (userMapper.existsEmail(dto.getEmail(), null)) {
-            throw exception(EMAIL_EXIST);
-        }
-        if (userMapper.existsPhone(dto.getPhone(), null)) {
-            throw exception(PHONE_EXIST);
-        }
-
-            UserDO user = UserDO.builder()
-                    .username(dto.getUsername())
-                    .password(passwordEncoder.encode(dto.getPassword()))
-                    .email(dto.getEmail())
-                    .phone(dto.getPhone())
-                    .remark(dto.getRemark())
-                    .status(UserStatusEnum.PENDING.getCode()) // 默认pending
-                    .build();
-            user.setTenantId(Long.parseLong(StpUtil.getSession().get(SESSION_TENANT_ID).toString()));
-            int rows = userMapper.insert(user);
-            if (rows <= 0) {
-                throw exception(USER_INSERT_FAILURE);
-            }
-            return user;
-        }
-
-
-    @Override
-    @Transactional
-    public UserDO updateUser(UserUpdateDTO dto) {
-        // 0) 预处理：trim，并把 "" 转成 null（表示“不更新该字段”）
-        dto.setUsername(trimToNull(dto.getUsername()));
-        dto.setPassword(trimToNull(dto.getPassword()));
-        dto.setEmail(trimToNull(dto.getEmail()));
-        dto.setPhone(trimToNull(dto.getPhone()));
-        dto.setRemark(trimToNull(dto.getRemark()));
-
-        // 1) 存在性校验
-        UserDO db = userMapper.selectById(dto.getId());
-        if (db == null) {
-            throw exception(USER_NOTFOUND);
-        }
-
-        // 2) 可选字段的业务校验
-        if (dto.getPhone() != null && !ValidationUtils.isMobile(dto.getPhone())) {
-            throw exception(WRONG_MOBILE);
-        }
-
-        // 3) 业务唯一性校验（排除自己）
-        if (dto.getUsername() != null && userMapper.existsUsername(dto.getUsername(), dto.getId())) {
-            throw exception(USERNAME_EXIST);
-        }
-        if (dto.getEmail() != null && userMapper.existsEmail(dto.getEmail(), dto.getId())) {
-            throw exception(EMAIL_EXIST);
-        }
-        if (dto.getPhone() != null && userMapper.existsPhone(dto.getPhone(), dto.getId())) {
-            throw exception(PHONE_EXIST);
-        }
-
-        // 4) 只更新非空字段
-        LambdaUpdateWrapper<UserDO> uw = Wrappers.<UserDO>lambdaUpdate()
-                .eq(UserDO::getId, dto.getId());
-
-        boolean hasUpdate = false;
-        if (dto.getUsername() != null) { uw.set(UserDO::getUsername, dto.getUsername()); hasUpdate = true; }
-        if (dto.getEmail() != null)    { uw.set(UserDO::getEmail, dto.getEmail());       hasUpdate = true; }
-        if (dto.getPhone() != null)    { uw.set(UserDO::getPhone, dto.getPhone());       hasUpdate = true; }
-        if (dto.getRemark() != null)   { uw.set(UserDO::getRemark, dto.getRemark());     hasUpdate = true; }
-        if (dto.getPassword() != null) {
-            uw.set(UserDO::getPassword, passwordEncoder.encode(dto.getPassword()));
-            hasUpdate = true;
-        }
-
-        // 若没有任何可更新字段，直接返回当前数据，避免无意义的 UPDATE
-        if (hasUpdate) {
-            if (userMapper.update(new UserDO(), uw) <= 0) {
-                throw exception(UPDATE_FAILURE);
-            }
-        }
-
-        // 5) 返回最新数据
-        return userMapper.selectById(dto.getId());
-    }
 
 
     @Override
@@ -287,7 +189,6 @@ public class UserServiceImpl implements UserService{
             throw exception(USER_NOTFOUND);
         }
         if (Boolean.TRUE.equals(db.getDeleted())) {
-            // 已是删除状态，按需抛错或直接返回
             throw exception(USER_ALREADY_DELETED);
         }
         int rows = userMapper.update(new UserDO(),
@@ -296,24 +197,24 @@ public class UserServiceImpl implements UserService{
                         .eq(UserDO::getId, id)
                         .eq(UserDO::getDeleted, false));
         if (rows <= 0) throw exception(UPDATE_FAILURE);
-        // 2) 物理删除用户-角色关联（带租户隔离）
+        // 2) Physically delete the user-role association (with tenant isolation)
         userRoleMapper.deleteByUserIdAndTenantId(id, db.getTenantId());
     }
 
     @Override
     @Transactional
     public void restoreUser(Long id) {
-        // 1) 查用户是否存在且已删除
+        // 1) Check if the user exists and has been deleted
         UserDO db = userMapper.selectRawById(id);
         if (db == null) {
             throw exception(USER_NOTFOUND);
         }
         if (Boolean.FALSE.equals(db.getDeleted())) {
-            // 未删除，无法恢复
+            // Not deleted, cannot be restored
             throw exception(USER_NOT_DELETED);
         }
 
-        // 2) 恢复 deleted=0
+        // 2) Restore deleted=0
         int rows = userMapper.restoreRawById(id, StpUtil.getLoginIdAsString());
         if (rows <= 0) {
             throw exception(UPDATE_FAILURE);
@@ -330,7 +231,6 @@ public class UserServiceImpl implements UserService{
         }
 
         if (Objects.equals(db.getStatus(), UserStatusEnum.DISABLE.getCode())) {
-            // 已经是禁用状态
             throw exception(USER_ALREADY_DISABLED);
         }
 
@@ -359,7 +259,99 @@ public class UserServiceImpl implements UserService{
     }
 
 
-    /** 工具：去空白；空串 => null */
+//    @Override
+//    @Transactional
+//    public UserDO createUser(CreateProfileDTO dto) {
+//        if (dto.getPhone() != null && !ValidationUtils.isMobile(dto.getPhone())){
+//            throw exception(WRONG_MOBILE);
+//        }
+//        // Username/email/phone uniqueness check
+//        if (userMapper.existsUsername(dto.getUsername(), null)) {
+//            throw exception(USERNAME_EXIST);
+//        }
+//        if (userMapper.existsEmail(dto.getEmail(), null)) {
+//            throw exception(EMAIL_EXIST);
+//        }
+//        if (userMapper.existsPhone(dto.getPhone(), null)) {
+//            throw exception(PHONE_EXIST);
+//        }
+//
+//        UserDO user = UserDO.builder()
+//                .username(dto.getUsername())
+//                .password(passwordEncoder.encode(dto.getPassword()))
+//                .email(dto.getEmail())
+//                .phone(dto.getPhone())
+//                .remark(dto.getRemark())
+//                .status(UserStatusEnum.PENDING.getCode()) // 默认pending
+//                .build();
+//        user.setTenantId(Long.parseLong(StpUtil.getSession().get(SESSION_TENANT_ID).toString()));
+//        int rows = userMapper.insert(user);
+//        if (rows <= 0) {
+//            throw exception(USER_INSERT_FAILURE);
+//        }
+//        return user;
+//    }
+//
+//
+//    @Override
+//    @Transactional
+//    public UserDO updateUser(UpdateProfileDTO dto) {
+//        // 0) 预处理：trim，并把 "" 转成 null（表示“不更新该字段”）
+//        dto.setUsername(trimToNull(dto.getUsername()));
+//        dto.setPassword(trimToNull(dto.getPassword()));
+//        dto.setEmail(trimToNull(dto.getEmail()));
+//        dto.setPhone(trimToNull(dto.getPhone()));
+//        dto.setRemark(trimToNull(dto.getRemark()));
+//
+//        // 1) 存在性校验
+//        UserDO db = userMapper.selectById(dto.getId());
+//        if (db == null) {
+//            throw exception(USER_NOTFOUND);
+//        }
+//
+//        // 2) 可选字段的业务校验
+//        if (dto.getPhone() != null && !ValidationUtils.isMobile(dto.getPhone())) {
+//            throw exception(WRONG_MOBILE);
+//        }
+//
+//        // 3) 业务唯一性校验（排除自己）
+//        if (dto.getUsername() != null && userMapper.existsUsername(dto.getUsername(), dto.getId())) {
+//            throw exception(USERNAME_EXIST);
+//        }
+//        if (dto.getEmail() != null && userMapper.existsEmail(dto.getEmail(), dto.getId())) {
+//            throw exception(EMAIL_EXIST);
+//        }
+//        if (dto.getPhone() != null && userMapper.existsPhone(dto.getPhone(), dto.getId())) {
+//            throw exception(PHONE_EXIST);
+//        }
+//
+//        // 4) 只更新非空字段
+//        LambdaUpdateWrapper<UserDO> uw = Wrappers.<UserDO>lambdaUpdate()
+//                .eq(UserDO::getId, dto.getId());
+//
+//        boolean hasUpdate = false;
+//        if (dto.getUsername() != null) { uw.set(UserDO::getUsername, dto.getUsername()); hasUpdate = true; }
+//        if (dto.getEmail() != null)    { uw.set(UserDO::getEmail, dto.getEmail());       hasUpdate = true; }
+//        if (dto.getPhone() != null)    { uw.set(UserDO::getPhone, dto.getPhone());       hasUpdate = true; }
+//        if (dto.getRemark() != null)   { uw.set(UserDO::getRemark, dto.getRemark());     hasUpdate = true; }
+//        if (dto.getPassword() != null) {
+//            uw.set(UserDO::getPassword, passwordEncoder.encode(dto.getPassword()));
+//            hasUpdate = true;
+//        }
+//
+//        // 若没有任何可更新字段，直接返回当前数据，避免无意义的 UPDATE
+//        if (hasUpdate) {
+//            if (userMapper.update(new UserDO(), uw) <= 0) {
+//                throw exception(UPDATE_FAILURE);
+//            }
+//        }
+//
+//        // 5) 返回最新数据
+//        return userMapper.selectById(dto.getId());
+//    }
+
+
+    /** Tool: remove whitespace; empty string => null */
     private static String trimToNull(String s) {
         if (s == null) return null;
         String t = s.trim();
@@ -367,9 +359,9 @@ public class UserServiceImpl implements UserService{
     }
 
 
-    /** 核心：只增/只删/复活 */
+    /** Core: add only/delete only/revive */
     private void syncUserRoles(Long userId, List<Long> targetList) {
-        // 当前有效角色
+        //Currently valid roles
         Set<Long> current = new HashSet<>(userRoleMapper.selectAliveRoleIdsByUser(userId));
         Set<Long> target  = new HashSet<>(targetList);
 
@@ -377,19 +369,19 @@ public class UserServiceImpl implements UserService{
         Set<Long> toAdd    = new HashSet<>(target);  toAdd.removeAll(current);
 
         String operator = StpUtil.getLoginIdAsString();
-        Long tenantId = Long.valueOf(StpUtil.getSession().get(SESSION_TENANT_ID).toString());    // 当前租户
-        // 2) 逻辑删除
+        Long tenantId = Long.valueOf(StpUtil.getSession().get(SESSION_TENANT_ID).toString());
+        // 2) Logical deletion
         if (!toRemove.isEmpty()) {
             userRoleMapper.batchLogicalDelete(userId, toRemove, operator);
         }
 
-        // 3) 复活 + Upsert
+        // 3) Resurrection + Upsert
         if (!toAdd.isEmpty()) {
             userRoleMapper.batchRevive(userId, toAdd, operator);
 
-            // 构造每条记录，预生成 id（MP 雪花）
+            // Construct each record and pre-generate id (MP snowflake)
             List<UserRoleDO> records = toAdd.stream().map(rid -> UserRoleDO.builder()
-                    .id(IdWorker.getId())    // 关键：MP 生成主键
+                    .id(IdWorker.getId())
                     .userId(userId)
                     .roleId(rid)
                     .tenantId(tenantId)

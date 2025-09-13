@@ -2,22 +2,19 @@ package nus.edu.u.system.domain.dto;
 
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@AllArgsConstructor
-@NoArgsConstructor
+import java.util.List;
+
 @Data
-public class UserUpdateDTO {
-    private long id;
-
-    private String username;
-
-    private String password;
-
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UpdateUserDTO {
+    private Long id;
     private String email;
-
-    private String phone;
-
     private String remark;
+    private List<Long> roleIds;
 }

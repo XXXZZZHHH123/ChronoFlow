@@ -3,7 +3,7 @@ package nus.edu.u.system.domain.vo.user;
 import lombok.Data;
 
 @Data
-public class UserUpdateRespVO {
+public class UpdateProfileRespVO {
     private Long id;
     private String username;
     private String email;

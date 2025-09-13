@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrganizerCreateUserDTO {
+public class CreateUserDTO {
     private String email;
     private List<Long> roleIds;
     private String remark;
