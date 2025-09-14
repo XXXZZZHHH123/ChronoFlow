@@ -376,46 +376,25 @@ public class UserServiceImpl implements UserService{
 //    }
 
 
-    /** Tool: remove whitespace; empty string => null */
-    private static String trimToNull(String s) {
-        if (s == null) return null;
-        String t = s.trim();
-        return t.isEmpty() ? null : t;
-    }
-
-
     /** Core: add only/delete only/revive */
     private void syncUserRoles(Long userId, List<Long> targetList) {
-        //Currently valid roles
         Set<Long> current = new HashSet<>(userRoleMapper.selectAliveRoleIdsByUser(userId));
-        Set<Long> target  = new HashSet<>(targetList);
+        Set<Long> target  = new HashSet<>(Optional.ofNullable(targetList).orElseGet(List::of));
 
         Set<Long> toRemove = new HashSet<>(current); toRemove.removeAll(target);
         Set<Long> toAdd    = new HashSet<>(target);  toAdd.removeAll(current);
 
-        String operator = StpUtil.getLoginIdAsString();
-        Long tenantId = Long.valueOf(StpUtil.getSession().get(SESSION_TENANT_ID).toString());
-        // 2) Logical deletion
+        // 1) 逻辑删除多余
         if (!toRemove.isEmpty()) {
-            userRoleMapper.batchLogicalDelete(userId, toRemove, operator);
+            userRoleMapper.batchLogicalDelete(userId, toRemove);
         }
 
-        // 3) Resurrection + Upsert
         if (!toAdd.isEmpty()) {
-            userRoleMapper.batchRevive(userId, toAdd, operator);
+            // 2) 先复活历史记录（deleted = true 的那批）
+            userRoleMapper.batchRevive(userId, toAdd);
 
-            // Construct each record and pre-generate id (MP snowflake)
-            List<UserRoleDO> records = toAdd.stream().map(rid -> UserRoleDO.builder()
-                    .id(IdWorker.getId())
-                    .userId(userId)
-                    .roleId(rid)
-                    .tenantId(tenantId)
-                    .creator(operator)
-                    .updater(operator)
-                    .deleted(false)
-                    .build()).toList();
-
-            userRoleMapper.batchUpsertUserRoles(records);
+            // 3) 再只插入仍不存在的（避免唯一索引冲突）
+            userRoleMapper.insertMissing(userId, toAdd);
         }
     }
 
@@ -507,6 +486,11 @@ public class UserServiceImpl implements UserService{
             createUserWithRoleIds(row);
             return true;
         }
+    }
+
+    @Override
+    public List<Long> getAliveRoleIdsByUserId(Long userId) {
+        return userRoleMapper.selectRoleIdsByUserId(userId);
     }
 
     private String normalizeEmail(String email) {

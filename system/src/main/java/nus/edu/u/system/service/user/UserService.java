@@ -55,5 +55,6 @@ public interface UserService {
     BulkUpsertUsersRespVO bulkUpsertUsers(List<CreateUserDTO> rawRows);
     boolean processSingleRowWithNewTx(CreateUserDTO row, boolean dbExists);
 
+    List<Long> getAliveRoleIdsByUserId(Long userId);
 
 }

@@ -58,11 +58,7 @@ public class OrganizerController {
 
         UserDO updated = userService.updateUserWithRoleIds(dto);
         // Query the user's role ID
-        List<Long> roleIds = userRoleMapper.selectList(
-                Wrappers.<UserRoleDO>lambdaQuery()
-                        .eq(UserRoleDO::getUserId, updated.getId())
-                        .eq(UserRoleDO::getDeleted, false) // Only take the undeleted ones
-        ).stream().map(UserRoleDO::getRoleId).toList();
+        List<Long> roleIds = userService.getAliveRoleIdsByUserId(updated.getId());
 
         UpdateUserRespVO respVO = userConvert.toUpdateUserRespVO(updated);
         respVO.setRoleIds(roleIds);
