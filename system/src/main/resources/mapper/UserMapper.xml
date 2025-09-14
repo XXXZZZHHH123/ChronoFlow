@@ -63,6 +63,7 @@
         <collection property="roles" ofType="nus.edu.u.system.domain.dto.RoleDTO" resultMap="RoleDTOMap"/>
     </resultMap>
 
+
     <!-- Query all users and their roles -->
     <select id="selectAllUsersWithRoles" resultMap="UserRoleDTOMap">
         SELECT
@@ -78,8 +79,12 @@
             r.status    AS role_status,
             r.remark    AS role_remark
         FROM sys_user u
-                 LEFT JOIN sys_user_role ur ON u.id = ur.user_id
-                 LEFT JOIN sys_role r ON ur.role_id = r.id
+                 LEFT JOIN sys_user_role ur
+                           ON u.id = ur.user_id
+                               AND ur.deleted = 0
+                 LEFT JOIN sys_role r
+                           ON ur.role_id = r.id
+                               AND r.deleted = 0
         WHERE u.deleted = 0
     </select>
 </mapper>

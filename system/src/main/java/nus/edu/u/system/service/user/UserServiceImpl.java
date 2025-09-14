@@ -1,6 +1,8 @@
 package nus.edu.u.system.service.user;
+
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
+
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -11,7 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dataobject.user.UserRoleDO;
-import nus.edu.u.system.domain.dto.*;
+import nus.edu.u.system.domain.dto.CreateUserDTO;
+import nus.edu.u.system.domain.dto.RoleDTO;
+import nus.edu.u.system.domain.dto.UpdateUserDTO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
 import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 import nus.edu.u.system.enums.user.UserStatusEnum;
