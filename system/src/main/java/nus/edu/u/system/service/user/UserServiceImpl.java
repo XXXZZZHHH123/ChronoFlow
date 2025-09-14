@@ -61,37 +61,6 @@ public class UserServiceImpl implements UserService{
         return userMapper.selectUserWithRole(userId);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<UserProfileRespVO> getAllUserProfiles() {
-        List<UserRoleDTO> list = userMapper.selectAllUsersWithRoles();
-        if (list.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return list.stream().map(dto -> {
-            UserProfileRespVO vo = new UserProfileRespVO();
-            vo.setId(dto.getUserId());
-            vo.setName(dto.getUsername());
-            vo.setEmail(dto.getEmail());
-            vo.setPhone(dto.getPhone());
-
-            // (RoleDTO → id)
-            List<Long> roleIds = (dto.getRoles() == null)
-                    ? Collections.emptyList()
-                    : dto.getRoles().stream()
-                    .map(RoleDTO::getId)
-                    .toList();
-            vo.setRoles(roleIds);
-
-            // Registration status: status=2(PENDING) → Not registered; otherwise it is considered registered
-            boolean isRegistered = !Objects.equals(dto.getStatus(), UserStatusEnum.PENDING.getCode());
-            vo.setRegistered(isRegistered);
-
-            return vo;
-        }).toList();
-    }
-
 
     @Override
     @Transactional
@@ -256,6 +225,39 @@ public class UserServiceImpl implements UserService{
         if (rows <= 0) {
             throw exception(UPDATE_FAILURE);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserProfileRespVO> getAllUserProfiles() {
+        List<UserRoleDTO> list = userMapper.selectAllUsersWithRoles();
+        if (list.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return list.stream()
+                .filter(dto -> !Objects.equals(dto.getUserId(), StpUtil.getLoginIdAsLong())) // Exclude myself
+                .map(dto -> {
+            UserProfileRespVO vo = new UserProfileRespVO();
+            vo.setId(dto.getUserId());
+            vo.setName(dto.getUsername());
+            vo.setEmail(dto.getEmail());
+            vo.setPhone(dto.getPhone());
+
+            // (RoleDTO → id)
+            List<Long> roleIds = (dto.getRoles() == null)
+                    ? Collections.emptyList()
+                    : dto.getRoles().stream()
+                    .map(RoleDTO::getId)
+                    .toList();
+            vo.setRoles(roleIds);
+
+            // Registration status: status=2(PENDING) → Not registered; otherwise it is considered registered
+            boolean isRegistered = !Objects.equals(dto.getStatus(), UserStatusEnum.PENDING.getCode());
+            vo.setRegistered(isRegistered);
+
+            return vo;
+        }).toList();
     }
 
 
