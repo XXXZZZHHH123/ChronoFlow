@@ -1,7 +1,6 @@
 package nus.edu.u.system.domain.dataobject.user;
 
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import lombok.*;
 import nus.edu.u.common.core.domain.base.TenantBaseDO;

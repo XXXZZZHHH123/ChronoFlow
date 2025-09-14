@@ -1,7 +1,10 @@
 package nus.edu.u.system.service.user;
 
+import java.util.List;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
-import nus.edu.u.system.domain.dto.UserRoleDTO;
+import nus.edu.u.system.domain.dto.*;
+import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
+import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 
 /**
  * User service interface
@@ -34,4 +37,27 @@ public interface UserService {
    * @return UserRoleDTO
    */
   UserRoleDTO selectUserWithRole(Long userId);
+
+  Long createUserWithRoleIds(CreateUserDTO dto);
+
+  UserDO updateUserWithRoleIds(UpdateUserDTO dto);
+
+  //    UserDO createUser(CreateProfileDTO dto);
+  //    UserDO updateUser(UpdateProfileDTO dto);
+
+  void softDeleteUser(Long userId);
+
+  void restoreUser(Long id);
+
+  void disableUser(Long id);
+
+  void enableUser(Long id);
+
+  List<UserProfileRespVO> getAllUserProfiles();
+
+  BulkUpsertUsersRespVO bulkUpsertUsers(List<CreateUserDTO> rawRows);
+
+  boolean processSingleRowWithNewTx(CreateUserDTO row, boolean dbExists);
+
+  List<Long> getAliveRoleIdsByUserId(Long userId);
 }

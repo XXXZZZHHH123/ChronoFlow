@@ -52,6 +52,6 @@ public class UserDO extends TenantBaseDO implements Serializable {
   /** Related to {@link DeptDO#getId()} */
   private Long DeptId;
 
-  @TableField(typeHandler = JacksonTypeHandler.class)
+  @TableField(typeHandler = JacksonTypeHandler.class, value = "post_list")
   private List<Integer> postList;
 }
