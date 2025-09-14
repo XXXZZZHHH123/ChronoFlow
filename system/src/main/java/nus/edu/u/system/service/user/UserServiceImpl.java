@@ -6,20 +6,25 @@ import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.common.utils.validation.ValidationUtils;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dataobject.user.UserRoleDO;
 import nus.edu.u.system.domain.dto.*;
+import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
 import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 import nus.edu.u.system.enums.user.UserStatusEnum;
 import nus.edu.u.system.mapper.role.RoleMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.mapper.user.UserRoleMapper;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
@@ -45,6 +50,11 @@ public class UserServiceImpl implements UserService{
 
     @Resource
     private PasswordEncoder passwordEncoder;
+
+    // ✅ 自注入代理，避免同类方法内部调用导致事务增强失效
+    @Resource @Lazy
+    private UserService self;
+
 
     @Override
     public UserDO getUserByUsername(String username) {
@@ -85,8 +95,6 @@ public class UserServiceImpl implements UserService{
                 .remark(dto.getRemark())
                 .status(UserStatusEnum.PENDING.getCode())
                 .build();
-        user.setTenantId(Long.parseLong(StpUtil.getSession().get(SESSION_TENANT_ID).toString()));
-
         if (userMapper.insert(user) <= 0) {
             throw exception(USER_INSERT_FAILURE);
         }
@@ -396,4 +404,95 @@ public class UserServiceImpl implements UserService{
         }
     }
 
+
+    @Override
+    public BulkUpsertUsersRespVO bulkUpsertUsers(List<CreateUserDTO> rawRows) {
+        if (rawRows == null || rawRows.isEmpty()) {
+            return BulkUpsertUsersRespVO.builder()
+                    .totalRows(0).createdCount(0).updatedCount(0).failedCount(0)
+                    .failures(Collections.emptyList())
+                    .build();
+        }
+
+        // 0) 预清洗：按邮箱去重（保留首条），角色去重
+        Map<String, CreateUserDTO> byEmail = new LinkedHashMap<>();
+        int rowIdx = 1; // 如果你在解析阶段就带了行号，这里不需要
+        for (CreateUserDTO r : rawRows) {
+            rowIdx++;
+            if (r == null || r.getEmail() == null) continue;
+            String email = r.getEmail().trim();
+            if (email.isEmpty()) continue;
+
+            List<Long> roles = Optional.ofNullable(r.getRoleIds())
+                    .orElse(Collections.emptyList())
+                    .stream().filter(Objects::nonNull).distinct().toList();
+
+            r.setEmail(email);
+            r.setRoleIds(roles);
+            // 你也可以 r.setRowIndex(rowIdx); 方便失败回传
+            byEmail.putIfAbsent(email, r);
+        }
+        List<CreateUserDTO> rows = new ArrayList<>(byEmail.values());
+        int total = rows.size();
+
+        int created = 0, updated = 0;
+        List<BulkUpsertUsersRespVO.RowFailure> failures = new ArrayList<>();
+
+        // 1) 一次性查 DB 已存在邮箱，决定走 create 还是 update（可选优化）
+        List<String> emails = rows.stream().map(CreateUserDTO::getEmail).toList();
+        Set<String> exists = new HashSet<>(userMapper.selectExistingEmails(emails));
+
+        for (CreateUserDTO r : rows) {
+            try {
+                // ✅ 走代理（self），确保 @Transactional(REQUIRES_NEW) 生效
+                boolean isCreated = self.processSingleRowWithNewTx(r, exists.contains(r.getEmail()));
+                if (isCreated) created++; else updated++;
+            } catch (ServiceException e) {
+                failures.add(BulkUpsertUsersRespVO.RowFailure.builder()
+                        .rowIndex(0)               // 若维护了行号，这里换成 r.getRowIndex()
+                        .email(r.getEmail())
+                        .reason(e.getMessage())
+                        .build());
+            } catch (Exception e) {
+                failures.add(BulkUpsertUsersRespVO.RowFailure.builder()
+                        .rowIndex(0)
+                        .email(r.getEmail())
+                        .reason("INTERNAL_ERROR: " + e.getClass().getSimpleName())
+                        .build());
+            }
+        }
+
+        return BulkUpsertUsersRespVO.builder()
+                .totalRows(total)
+                .createdCount(created)
+                .updatedCount(updated)
+                .failedCount(failures.size())
+                .failures(failures)
+                .build();
+    }
+
+    /**
+     * 单行处理：新事务。返回 true=创建；false=更新
+     */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public boolean processSingleRowWithNewTx(CreateUserDTO row, boolean dbExists) {
+        if (dbExists) {
+            // 更新：用邮箱找 id，然后复用你的更新方法
+            Long userId = userMapper.selectIdByEmail(row.getEmail());
+            UpdateUserDTO u = UpdateUserDTO.builder()
+                    .id(userId)
+                    // 邮箱通常不改；如果要改，这里放 null 即“不改邮箱”
+                    .email(null)
+                    .remark(row.getRemark())
+                    .roleIds(row.getRoleIds())
+                    .build();
+            updateUserWithRoleIds(u); // 你现有的更新逻辑（含角色差异同步）
+            return false;
+        } else {
+            // 创建：复用你现有的单条创建
+            createUserWithRoleIds(row);
+            return true;
+        }
+    }
 }

@@ -67,4 +67,19 @@ public interface UserMapper extends BaseMapper<UserDO> {
     int updateUserStatus(@Param("id") Long id, @Param("status") Integer status);
 
     List<UserRoleDTO> selectAllUsersWithRoles();
+
+
+    @Select("SELECT id FROM sys_user WHERE email = #{email} AND deleted = 0 LIMIT 1")
+    Long selectIdByEmail(@Param("email") String email);
+
+    @Select({
+            "<script>",
+            "SELECT email FROM sys_user WHERE deleted = 0 AND email IN",
+            "<foreach collection='emails' item='e' open='(' separator=',' close=')'>",
+            "  #{e}",
+            "</foreach>",
+            "</script>"
+    })
+    List<String> selectExistingEmails(@Param("emails") List<String> emails);
+
 }
