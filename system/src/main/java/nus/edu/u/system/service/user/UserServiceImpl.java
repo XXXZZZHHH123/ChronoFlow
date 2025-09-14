@@ -1,8 +1,6 @@
 package nus.edu.u.system.service.user;
-
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
-
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;

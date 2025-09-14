@@ -1,31 +1,31 @@
-//import static org.junit.jupiter.api.Assertions.*;
-//import static org.mockito.Mockito.*;
+// import static org.junit.jupiter.api.Assertions.*;
+// import static org.mockito.Mockito.*;
 //
-//import cn.dev33.satoken.stp.StpUtil;
-//import java.util.*;
-//import nus.edu.u.common.exception.ServiceException;
-//import nus.edu.u.system.domain.dataobject.user.UserDO;
-//import nus.edu.u.system.domain.dataobject.user.UserRoleDO;
-//import nus.edu.u.system.domain.dto.*;
-//import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
-//import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
-//import nus.edu.u.system.enums.user.UserStatusEnum;
-//import nus.edu.u.system.mapper.role.RoleMapper;
-//import nus.edu.u.system.mapper.user.UserMapper;
-//import nus.edu.u.system.mapper.user.UserRoleMapper;
-//import nus.edu.u.system.service.user.UserServiceImpl;
-//import org.junit.jupiter.api.*;
-//import org.mockito.*;
-//import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.test.util.ReflectionTestUtils;
+// import cn.dev33.satoken.stp.StpUtil;
+// import java.util.*;
+// import nus.edu.u.common.exception.ServiceException;
+// import nus.edu.u.system.domain.dataobject.user.UserDO;
+// import nus.edu.u.system.domain.dataobject.user.UserRoleDO;
+// import nus.edu.u.system.domain.dto.*;
+// import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
+// import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
+// import nus.edu.u.system.enums.user.UserStatusEnum;
+// import nus.edu.u.system.mapper.role.RoleMapper;
+// import nus.edu.u.system.mapper.user.UserMapper;
+// import nus.edu.u.system.mapper.user.UserRoleMapper;
+// import nus.edu.u.system.service.user.UserServiceImpl;
+// import org.junit.jupiter.api.*;
+// import org.mockito.*;
+// import org.springframework.boot.test.context.SpringBootTest;
+// import org.springframework.test.util.ReflectionTestUtils;
 //
-///**
+/// **
 // * 单元测试覆盖 UserServiceImpl 的核心逻辑： - createUserWithRoleIds - updateUserWithRoleIds（含角色差异同步） -
 // * softDeleteUser / restoreUser - disableUser / enableUser - bulkUpsertUsers（含 self 代理与
 // * REQUIRES_NEW） - processSingleRowWithNewTx - getAllUserProfiles（mock 静态 StpUtil）
 // */
-//@SpringBootTest(classes = UserServiceImpl.class)
-//class UserServiceImplTest {
+// @SpringBootTest(classes = UserServiceImpl.class)
+// class UserServiceImplTest {
 //
 //  @Mock private UserMapper userMapper;
 //  @Mock private UserRoleMapper userRoleMapper;
@@ -335,4 +335,4 @@
 //      assertFalse(vo.isRegistered()); // PENDING → 未注册
 //    }
 //  }
-//}
+// }
