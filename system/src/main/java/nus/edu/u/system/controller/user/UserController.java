@@ -9,4 +9,5 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/users")
 @Validated
 @Slf4j
-public class UserController {}
+public class UserController {
+}

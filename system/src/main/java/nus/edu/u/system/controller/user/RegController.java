@@ -1,9 +1,5 @@
 package nus.edu.u.system.controller.user;
 
-import static nus.edu.u.common.core.domain.CommonResult.error;
-import static nus.edu.u.common.core.domain.CommonResult.success;
-import static nus.edu.u.system.enums.ErrorCodeConstants.REG_FAIL;
-
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static nus.edu.u.common.core.domain.CommonResult.error;
+import static nus.edu.u.common.core.domain.CommonResult.success;
+import static nus.edu.u.system.enums.ErrorCodeConstants.REG_FAIL;
+
 /**
  * Registration controller
  *
@@ -31,23 +31,24 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class RegController {
 
-  @Resource private RegService regService;
+    @Resource
+    private RegService regService;
 
-  @PostMapping("/search")
-  public CommonResult<RegSearchRespVO> search(@RequestBody @Valid RegSearchReqVO regSearchReqVO) {
-    return success(regService.search(regSearchReqVO));
-  }
+    @PostMapping("/search")
+    public CommonResult<RegSearchRespVO> search(@RequestBody @Valid RegSearchReqVO regSearchReqVO) {
+        return success(regService.search(regSearchReqVO));
+    }
 
-  @PostMapping("/member")
-  public CommonResult<Boolean> registerAsMember(@RequestBody @Valid RegMemberReqVO regMemberReqVO) {
-    boolean isSuccess = regService.registerAsMember(regMemberReqVO);
-    return isSuccess ? success(true) : error(REG_FAIL);
-  }
+    @PostMapping("/member")
+    public CommonResult<Boolean> registerAsMember(@RequestBody @Valid RegMemberReqVO regMemberReqVO) {
+        boolean isSuccess = regService.registerAsMember(regMemberReqVO);
+        return isSuccess ? success(true) : error(REG_FAIL);
+    }
 
-  @PostMapping("/organizer")
-  public CommonResult<Boolean> registerAsOrganizer(
-      @RequestBody @Valid RegOrganizerReqVO regOrganizerReqVO) {
-    boolean isSuccess = regService.registerAsOrganizer(regOrganizerReqVO);
-    return isSuccess ? success(true) : error(REG_FAIL);
-  }
+    @PostMapping("/organizer")
+    public CommonResult<Boolean> registerAsOrganizer(
+            @RequestBody @Valid RegOrganizerReqVO regOrganizerReqVO) {
+        boolean isSuccess = regService.registerAsOrganizer(regOrganizerReqVO);
+        return isSuccess ? success(true) : error(REG_FAIL);
+    }
 }

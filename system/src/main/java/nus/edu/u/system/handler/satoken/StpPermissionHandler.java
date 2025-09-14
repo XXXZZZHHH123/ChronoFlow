@@ -7,11 +7,7 @@ import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dto.RoleDTO;
 import nus.edu.u.system.domain.dto.UserPermissionDTO;
 import nus.edu.u.system.domain.dto.UserRoleDTO;
-import nus.edu.u.system.mapper.permission.PermissionMapper;
-import nus.edu.u.system.mapper.role.RoleMapper;
-import nus.edu.u.system.mapper.role.RolePermissionMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
-import nus.edu.u.system.mapper.user.UserRoleMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

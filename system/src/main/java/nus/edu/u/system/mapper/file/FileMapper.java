@@ -9,4 +9,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @date 2025-08-31
  */
 @Mapper
-public interface FileMapper extends BaseMapper<FileDO> {}
+public interface FileMapper extends BaseMapper<FileDO> {
+}
