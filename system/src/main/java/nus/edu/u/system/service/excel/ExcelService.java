@@ -17,9 +17,9 @@ import java.util.stream.Collectors;
 public class ExcelService {
 
     /**
-     * 解析 Excel，输出 CreateUserDTO 列表
-     * 要求表头包含：email | roleIds | remark
-     * roleIds 支持逗号分隔：1,2,3
+     * Parse Excel and output a CreateUserDTO list
+     * Requires the table header to contain: email | roleIds | remark
+     * RoleIds supports comma separation: 1, 2, 3
      */
     public List<CreateUserDTO> parseCreateOrUpdateRows(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
@@ -29,14 +29,14 @@ public class ExcelService {
         final List<CreateUserDTO> rows = new ArrayList<>();
 
         EasyExcel.read(file.getInputStream(), new AnalysisEventListener<Map<Integer, String>>() {
-            // 记录表头（index -> headerName）
+            // Record header (index -> headerName)
             private final Map<Integer, String> headerIndexMap = new HashMap<>();
             private boolean headerInitialized = false;
-            private int currentRowIndex = 0; // 从0开始计；数据第一行是2
+            private int currentRowIndex = 0; // Start counting from 0; the first row of data is 2
 
             @Override
             public void invokeHeadMap(Map<Integer, String> headMap, AnalysisContext context) {
-                // 读取表头
+
                 headerIndexMap.clear();
                 headMap.forEach((idx, name) -> headerIndexMap.put(idx, safe(name)));
                 headerInitialized = true;
@@ -44,25 +44,25 @@ public class ExcelService {
 
             @Override
             public void invoke(Map<Integer, String> data, AnalysisContext context) {
-                currentRowIndex++; // 包括表头行
+                currentRowIndex++; // Include header row
                 if (!headerInitialized) {
-                    // 有些表没有单独 head 事件时，第一行当作表头
+                    // When some tables do not have a separate head event, the first row is used as the table header
                     headerIndexMap.clear();
                     data.forEach((idx, val) -> headerIndexMap.put(idx, safe(val)));
                     headerInitialized = true;
                     return;
                 }
 
-                // 真实数据行（表头下一行），Excel 行号用于回传错误
-                int excelRow = currentRowIndex + 1; // EasyExcel内部从0开始；这里约定：Excel第一行为1
+                // Actual data row (the row below the header), Excel row number is used to return errors
+                int excelRow = currentRowIndex + 1; // EasyExcel starts from 0 internally; here it is agreed that the first line of Excel is 1
 
-                // 找出列索引（不区分大小写）
+                // Find out the column index (case-insensitive)）
                 Integer emailIdx  = colIndexOf("email");
-                Integer rolesIdx  = colIndexOf("roleids");
+                Integer rolesIdx  = colIndexOf("roleIds");
                 Integer remarkIdx = colIndexOf("remark");
 
                 if (emailIdx == null) {
-                    // 没有 email 列就跳过
+                    // Skip if there is no email column
                     log.warn("Row {} skipped: header 'email' not found", excelRow);
                     return;
                 }
@@ -72,7 +72,7 @@ public class ExcelService {
                 String remark = remarkIdx == null ? "" : safe(data.get(remarkIdx));
 
                 if (email.isBlank()) {
-                    // 空行跳过
+                    // Skip blank lines
                     return;
                 }
 
@@ -82,17 +82,8 @@ public class ExcelService {
                         .email(email.trim())
                         .roleIds(roleIds)
                         .remark(remark)
+                        .rowIndex(excelRow)
                         .build();
-                // 可选：把行号塞进 DTO（如果你在 DTO 里加了这个字段）
-                try {
-                    var field = CreateUserDTO.class.getDeclaredField("rowIndex");
-                    field.setAccessible(true);
-                    field.set(dto, excelRow);
-                } catch (NoSuchFieldException ignored) {
-                    // 你的 DTO 没这个字段就忽略
-                } catch (IllegalAccessException e) {
-                    log.warn("set rowIndex failed: {}", e.getMessage());
-                }
 
                 rows.add(dto);
             }
@@ -123,12 +114,5 @@ public class ExcelService {
         }).sheet().doRead();
 
         return rows;
-    }
-
-    /**
-     * 生成导入模板的表头（如果你想提供“下载模板”的功能，可用该表头写一个空文件）
-     */
-    public List<String> templateHeaders() {
-        return List.of("email", "roleIds", "remark");
     }
 }
