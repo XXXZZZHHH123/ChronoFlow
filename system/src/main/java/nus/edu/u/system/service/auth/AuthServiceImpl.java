@@ -12,7 +12,9 @@ import nus.edu.u.system.domain.dto.RoleDTO;
 import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.dto.UserTokenDTO;
 import nus.edu.u.system.domain.vo.auth.*;
+import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.user.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -110,10 +112,11 @@ public class AuthServiceImpl implements AuthService {
         StpUtil.login(userId);
         // 3.Build response object
         UserRoleDTO userRoleDTO = userService.selectUserWithRole(userId);
+        UserDO user = userService.selectUserById(userId);
         UserVO userVO = UserVO.builder()
                 .id(userId)
-                .email(userRoleDTO.getEmail())
-                .name(userRoleDTO.getUsername())
+                .email(user.getEmail())
+                .name(user.getUsername())
                 .role(userRoleDTO.getRoles().stream().map(RoleDTO::getRoleKey).collect(Collectors.joining(DEFAULT_DELIMITER)))
                 .build();
         return LoginRespVO.builder()

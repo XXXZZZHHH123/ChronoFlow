@@ -33,4 +33,11 @@ public interface UserService {
      * @return UserRoleDTO
      */
     UserRoleDTO selectUserWithRole(Long userId);
+
+    /**
+     * Select user by id
+     * @param userId
+     * @return UserDO
+     */
+    UserDO selectUserById(Long userId);
 }

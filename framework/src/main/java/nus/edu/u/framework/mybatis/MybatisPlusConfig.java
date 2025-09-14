@@ -49,9 +49,6 @@ public class MybatisPlusConfig {
         // ✅ Pagination
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
 
-        // ✅ Add illegal SQL interceptor
-        interceptor.addInnerInterceptor(new IllegalSQLInnerInterceptor());
-
         // ✅ Avoid update or delete all data in table
         interceptor.addInnerInterceptor(new BlockAttackInnerInterceptor());
 
