@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public abstract class TenantBaseDO  extends BaseDO {
+public abstract class TenantBaseDO extends BaseDO {
 
-    private Long tenantId;
+  private Long tenantId;
 }

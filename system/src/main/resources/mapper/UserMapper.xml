@@ -19,6 +19,14 @@
         </collection>
     </resultMap>
 
+
+    <select id="selectRawById" resultType="nus.edu.u.system.mapper.user.UserMapper">
+        SELECT *
+        FROM sys_user
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
     <select id="selectUserWithRole" resultMap="UserWithRoleMap">
         SELECT u.id AS user_id,
         u.username,
@@ -60,5 +68,52 @@
         LEFT JOIN ChronoFlow.sys_role_permission rp ON r.id = rp.role_id
         LEFT JOIN ChronoFlow.sys_permission p ON rp.permission_id = p.id
         WHERE u.deleted = 0 and ur.deleted = 0 and r.deleted = 0 and rp.deleted = 0 and p.deleted = 0 and u.id = #{userId}
+    </select>
+
+    <!-- RoleDTO mapping -->
+    <resultMap id="RoleDTOMap" type="nus.edu.u.system.domain.dto.RoleDTO">
+        <id property="id" column="role_id"/>
+        <result property="name" column="role_name"/>
+        <result property="roleKey" column="role_key"/>
+        <result property="status" column="role_status"/>
+        <result property="remark" column="role_remark"/>
+    </resultMap>
+
+    <!-- Mapping of UserRoleDTO, containing a list of roles -->
+    <resultMap id="UserRoleDTOMap" type="nus.edu.u.system.domain.dto.UserRoleDTO">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="status" column="status"/>
+
+        <!-- one to more ：roles -->
+        <collection property="roles" ofType="nus.edu.u.system.domain.dto.RoleDTO" resultMap="RoleDTOMap"/>
+    </resultMap>
+
+
+    <!-- Query all users and their roles -->
+    <select id="selectAllUsersWithRoles" resultMap="UserRoleDTOMap">
+        SELECT
+            u.id        AS user_id,
+            u.username  AS username,
+            u.email     AS email,
+            u.phone     AS phone,
+            u.tenant_id AS tenant_id,
+            u.status    AS status,
+            r.id        AS role_id,
+            r.name      AS role_name,
+            r.role_key  AS role_key,
+            r.status    AS role_status,
+            r.remark    AS role_remark
+        FROM sys_user u
+                 LEFT JOIN sys_user_role ur
+                           ON u.id = ur.user_id
+                               AND ur.deleted = 0
+                 LEFT JOIN sys_role r
+                           ON ur.role_id = r.id
+                               AND r.deleted = 0
+        WHERE u.deleted = 0
     </select>
 </mapper>

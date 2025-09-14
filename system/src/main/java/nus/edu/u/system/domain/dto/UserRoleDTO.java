@@ -1,10 +1,9 @@
 package nus.edu.u.system.domain.dto;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 /**
  * Use for store union table query result
@@ -17,14 +16,17 @@ import java.util.List;
 @NoArgsConstructor
 public class UserRoleDTO {
 
-    private Long userId;
+  private Long userId;
 
-    private String username;
+  private String username;
 
-    private String email;
+  private String email;
 
-    private Long tenantId;
+  private String phone;
 
-    private List<RoleDTO> roles;
+  private Integer status;
 
+  private Long tenantId;
+
+  private List<RoleDTO> roles;
 }

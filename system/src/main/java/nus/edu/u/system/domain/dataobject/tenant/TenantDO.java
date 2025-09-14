@@ -2,12 +2,11 @@ package nus.edu.u.system.domain.dataobject.tenant;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.*;
-import nus.edu.u.common.enums.CommonStatusEnum;
-import nus.edu.u.common.core.domain.base.BaseDO;
-import nus.edu.u.system.domain.dataobject.user.UserDO;
-
 import java.io.Serializable;
+import lombok.*;
+import nus.edu.u.common.core.domain.base.BaseDO;
+import nus.edu.u.common.enums.CommonStatusEnum;
+import nus.edu.u.system.domain.dataobject.user.UserDO;
 
 /**
  * Tenant data object for table sys_tenant
@@ -24,31 +23,27 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class TenantDO extends BaseDO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    @TableId
-    private Long id;
+  @TableId private Long id;
 
-    private String name;
+  private String name;
 
-    /**
-     * Related to {@link UserDO#getId()}
-     */
-    private Long contactUserId;
+  /** Related to {@link UserDO#getId()} */
+  private Long contactUserId;
 
-    private String contactName;
+  private String contactName;
 
-    private String contactMobile;
+  private String contactMobile;
 
-    private String address;
+  private String address;
 
-    /**
-     * Tenant status
-     *
-     * Enum {@link CommonStatusEnum}
-     */
-    private Integer status;
+  /**
+   * Tenant status
+   *
+   * <p>Enum {@link CommonStatusEnum}
+   */
+  private Integer status;
 
-    private String tenantCode;
-
+  private String tenantCode;
 }

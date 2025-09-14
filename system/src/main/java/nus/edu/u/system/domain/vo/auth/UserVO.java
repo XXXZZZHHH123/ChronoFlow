@@ -15,11 +15,11 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserVO {
 
-    private Long id;
+  private Long id;
 
-    private String name;
+  private String name;
 
-    private String email;
+  private String email;
 
-    private String role;
+  private String role;
 }

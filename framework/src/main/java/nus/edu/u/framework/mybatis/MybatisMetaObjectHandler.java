@@ -1,9 +1,11 @@
 package nus.edu.u.framework.mybatis;
 
+import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
+
 import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import java.time.LocalDateTime;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
@@ -20,26 +22,26 @@ import static nus.edu.u.framework.mybatis.MybatisPlusConfig.getCurrentTenantId;
  */
 @Component
 public class MybatisMetaObjectHandler implements MetaObjectHandler {
-    @Override
-    public void insertFill(MetaObject metaObject) {
-        // Fill time automatically
-        this.strictInsertFill(metaObject, "createTime", LocalDateTime.class, LocalDateTime.now());
-        this.strictInsertFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
+  @Override
+  public void insertFill(MetaObject metaObject) {
+    // Fill time automatically
+    this.strictInsertFill(metaObject, "createTime", LocalDateTime.class, LocalDateTime.now());
+    this.strictInsertFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
 
-        // Fill user automatically
-        String currentUser = getCurrentUserId();
-        this.strictInsertFill(metaObject, "creator", String.class, currentUser);
-        this.strictInsertFill(metaObject, "updater", String.class, currentUser);
+    // Fill user automatically
+    String currentUser = getCurrentUserId();
+    this.strictInsertFill(metaObject, "creator", String.class, currentUser);
+    this.strictInsertFill(metaObject, "updater", String.class, currentUser);
 
-        this.strictInsertFill(metaObject, "tenant_id", Long.class, getCurrentTenantId());
-        this.strictInsertFill(metaObject, "deleted", Boolean.class, false);
-    }
+    this.strictInsertFill(metaObject, "tenant_id", Long.class, getCurrentTenantId());
+    this.strictInsertFill(metaObject, "deleted", Boolean.class, false);
+  }
 
-    @Override
-    public void updateFill(MetaObject metaObject) {
-        this.strictUpdateFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
-        this.strictUpdateFill(metaObject, "updater", String.class, getCurrentUserId());
-    }
+  @Override
+  public void updateFill(MetaObject metaObject) {
+    this.strictUpdateFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
+    this.strictUpdateFill(metaObject, "updater", String.class, getCurrentUserId());
+  }
 
     private String getCurrentUserId() {
         // Get login user id
