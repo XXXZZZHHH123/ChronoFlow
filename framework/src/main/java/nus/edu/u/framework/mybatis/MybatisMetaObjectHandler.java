@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 
 import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
+import static nus.edu.u.framework.mybatis.MybatisPlusConfig.getCurrentTenantId;
 
 /**
  * Config to fill common properties automatically
@@ -49,16 +50,5 @@ public class MybatisMetaObjectHandler implements MetaObjectHandler {
             }
         } catch (Exception ignored) {}
         return "system"; // Default value
-    }
-
-    private Long getCurrentTenantId() {
-        try {
-            Object tenantIdObject = StpUtil.getSession().get(SESSION_TENANT_ID);
-            Long tenantId = Long.parseLong(tenantIdObject.toString());
-            if (ObjectUtil.isNotNull(tenantId)) {
-                return tenantId;
-            }
-        } catch (Exception ignored) {}
-        return 1L; // Default value
     }
 }
