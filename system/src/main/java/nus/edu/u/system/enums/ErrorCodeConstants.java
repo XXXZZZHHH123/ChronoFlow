@@ -26,6 +26,8 @@ public interface ErrorCodeConstants {
     ErrorCode USER_INSERT_FAILURE = new ErrorCode(12_01_004, "Insert failure");
     ErrorCode PHONE_EXIST = new ErrorCode(12_01_005, "Phone already exists");
     ErrorCode USER_NOTFOUND = new ErrorCode(12_01_006, "User not found");
+    ErrorCode USER_DISABLE_FAILURE = new ErrorCode(12_01_014, "User disabled failure");
+    ErrorCode USER_ENABLE_FAILURE = new ErrorCode(12_01_015, "User enable failure");
     ErrorCode UPDATE_FAILURE = new ErrorCode(12_01_007, "Update failure");
     ErrorCode USER_NOT_DELETED = new ErrorCode(12_01_008, "User not deleted");
     ErrorCode USER_ALREADY_DELETED = new ErrorCode(12_01_009, "User already deleted");

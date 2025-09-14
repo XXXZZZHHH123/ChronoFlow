@@ -5,6 +5,8 @@ import lombok.*;
 import nus.edu.u.common.core.domain.base.TenantBaseDO;
 import nus.edu.u.system.domain.dataobject.role.RoleDO;
 
+import java.io.Serializable;
+
 /**
  * @author Lu Shuwen
  * @date 2025-09-10

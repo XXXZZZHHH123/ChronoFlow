@@ -2,6 +2,7 @@ package nus.edu.u.system.mapper.user;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.UserRoleDTO;
 import org.apache.ibatis.annotations.Mapper;
@@ -9,7 +10,11 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 /**
@@ -21,6 +26,13 @@ import java.util.List;
 @Mapper
 public interface UserMapper extends BaseMapper<UserDO> {
 
+    UserRoleDTO selectUserWithRole(Long userId);
+
+    /** Directly query the original record (including deleted=1), bypassing the MP automatic condition */
+    UserDO selectRawById(@Param("id") Long id);
+
+    List<UserRoleDTO> selectAllUsersWithRoles();
+
     default UserDO selectByUsername(String username) {
         return this.selectOne(
                 new LambdaQueryWrapper<UserDO>()
@@ -28,8 +40,6 @@ public interface UserMapper extends BaseMapper<UserDO> {
                         .eq(UserDO::getDeleted, false)
         );
     }
-
-    UserRoleDTO selectUserWithRole(Long userId);
 
     // ===== exists series, for Service reuse to avoid duplication of count code =====
     default boolean existsUsername(String username, Long excludeId) {
@@ -53,33 +63,28 @@ public interface UserMapper extends BaseMapper<UserDO> {
                 .ne(excludeId != null, UserDO::getId, excludeId)) > 0;
     }
 
+    /** Find id by email (only find undeleted ones) */
+    default Long selectIdByEmail(String email) {
+        UserDO one = this.selectOne(
+                Wrappers.<UserDO>lambdaQuery()
+                        .select(UserDO::getId)
+                        .eq(UserDO::getEmail, email)
+                        .eq(UserDO::getDeleted, 0)
+                        .last("LIMIT 1")
+        );
+        return one == null ? null : one.getId();
+    }
 
-    /** Directly query the original record (including deleted=1), bypassing the MP automatic condition */
-    @Select("SELECT * FROM sys_user WHERE id = #{id} LIMIT 1")
-    UserDO selectRawById(@Param("id") Long id);
-
-    @Update("UPDATE sys_user SET deleted = 0, update_time = NOW(), updater = #{updater} " +
-            "WHERE id = #{id} AND deleted = 1")
-    int restoreRawById(@Param("id") Long id, @Param("updater") String updater);
-
-
-    @Update("UPDATE sys_user SET status = #{status} WHERE id = #{id} AND deleted = 0")
-    int updateUserStatus(@Param("id") Long id, @Param("status") Integer status);
-
-    List<UserRoleDTO> selectAllUsersWithRoles();
-
-
-    @Select("SELECT id FROM sys_user WHERE email = #{email} AND deleted = 0 LIMIT 1")
-    Long selectIdByEmail(@Param("email") String email);
-
-    @Select({
-            "<script>",
-            "SELECT email FROM sys_user WHERE deleted = 0 AND email IN",
-            "<foreach collection='emails' item='e' open='(' separator=',' close=')'>",
-            "  #{e}",
-            "</foreach>",
-            "</script>"
-    })
-    List<String> selectExistingEmails(@Param("emails") List<String> emails);
+    /** Batch check existing emails (only check non-deleted emails), return Set<String> */
+    default Set<String> selectExistingEmails(Collection<String> emails) {
+        if (emails == null || emails.isEmpty()) return Collections.emptySet();
+        List<Object> list = this.selectObjs(
+                Wrappers.<UserDO>lambdaQuery()
+                        .select(UserDO::getEmail)
+                        .in(UserDO::getEmail, emails)
+                        .eq(UserDO::getDeleted, 0)
+        );
+        return list.stream().map(o -> (String) o).collect(Collectors.toSet());
+    }
 
 }

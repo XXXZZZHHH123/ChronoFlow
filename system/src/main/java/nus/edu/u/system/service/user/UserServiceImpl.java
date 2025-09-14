@@ -1,6 +1,7 @@
 package nus.edu.u.system.service.user;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -174,8 +175,10 @@ public class UserServiceImpl implements UserService{
                         .eq(UserDO::getId, id)
                         .eq(UserDO::getDeleted, false));
         if (rows <= 0) throw exception(UPDATE_FAILURE);
-        // 2) Physically delete the user-role association (with tenant isolation)
-        userRoleMapper.deleteByUserIdAndTenantId(id, db.getTenantId());
+        userRoleMapper.delete(
+                new LambdaQueryWrapper<UserRoleDO>()
+                        .eq(UserRoleDO::getUserId, id)
+        );
     }
 
     @Override
@@ -191,8 +194,12 @@ public class UserServiceImpl implements UserService{
             throw exception(USER_NOT_DELETED);
         }
 
-        // 2) Restore deleted=0
-        int rows = userMapper.restoreRawById(id, StpUtil.getLoginIdAsString());
+// 2) Restore deleted=0
+        int rows = userMapper.update(new UserDO(),
+                new LambdaUpdateWrapper<UserDO>()
+                        .set(UserDO::getDeleted, 0)
+                        .eq(UserDO::getId, id)
+        );
         if (rows <= 0) {
             throw exception(UPDATE_FAILURE);
         }
@@ -211,9 +218,13 @@ public class UserServiceImpl implements UserService{
             throw exception(USER_ALREADY_DISABLED);
         }
 
-        int rows = userMapper.updateUserStatus(id, UserStatusEnum.DISABLE.getCode());
+        int rows = userMapper.update(new UserDO(),
+                new LambdaUpdateWrapper<UserDO>()
+                        .set(UserDO::getStatus, UserStatusEnum.DISABLE.getCode())
+                        .eq(UserDO::getId, id)
+        );
         if (rows <= 0) {
-            throw exception(UPDATE_FAILURE);
+            throw exception(USER_DISABLE_FAILURE);
         }
     }
 
@@ -229,9 +240,13 @@ public class UserServiceImpl implements UserService{
             throw exception(USER_ALREADY_ENABLED);
         }
 
-        int rows = userMapper.updateUserStatus(id, UserStatusEnum.ENABLE.getCode());
+        int rows = userMapper.update(new UserDO(),
+                new LambdaUpdateWrapper<UserDO>()
+                        .set(UserDO::getStatus, UserStatusEnum.ENABLE.getCode())
+                        .eq(UserDO::getId, id)
+        );
         if (rows <= 0) {
-            throw exception(UPDATE_FAILURE);
+            throw exception(USER_ENABLE_FAILURE);
         }
     }
 

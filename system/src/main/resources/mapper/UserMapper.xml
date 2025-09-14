@@ -17,6 +17,14 @@
             <result property="remark" column="role_remark"/>
         </collection>
     </resultMap>
+
+    <select id="selectRawById" resultType="com.xxx.project.dal.dataobject.UserDO">
+        SELECT *
+        FROM sys_user
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
     <select id="selectUserWithRole" resultMap="UserWithRoleMap">
         SELECT u.id AS user_id,
         u.username,

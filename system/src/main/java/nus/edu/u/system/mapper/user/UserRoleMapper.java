@@ -17,7 +17,6 @@ import java.util.List;
 @Mapper
 public interface UserRoleMapper extends BaseMapper<UserRoleDO> {
 
-
     List<Long> selectAliveRoleIdsByUser(@Param("userId") Long userId);
 
     int batchLogicalDelete(@Param("userId") Long userId,
@@ -31,8 +30,5 @@ public interface UserRoleMapper extends BaseMapper<UserRoleDO> {
     // Pass entities, ensuring each row has a unique id/tenantId/creator/updater
     int batchUpsertUserRoles(@Param("records") List<UserRoleDO> records);
 
-    @Delete("DELETE FROM sys_user_role " +
-            "WHERE user_id = #{userId} AND tenant_id = #{tenantId}")
-    int deleteByUserIdAndTenantId(@Param("userId") Long userId,
-                                  @Param("tenantId") Long tenantId);
+
 }
