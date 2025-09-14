@@ -2,11 +2,10 @@ package nus.edu.u.system.domain.dataobject.dict;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.*;
-import nus.edu.u.common.enums.CommonStatusEnum;
-import nus.edu.u.common.core.domain.base.BaseDO;
-
 import java.io.Serializable;
+import lombok.*;
+import nus.edu.u.common.core.domain.base.BaseDO;
+import nus.edu.u.common.enums.CommonStatusEnum;
 
 /**
  * Dictionary type data object for table sys_dict_type
@@ -14,7 +13,6 @@ import java.io.Serializable;
  * @author Lu Shuwen
  * @date 2025-08-28
  */
-
 @TableName("sys_dict_type")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -24,20 +22,16 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class DictTypeDO extends BaseDO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    @TableId
-    private Long id;
+  @TableId private Long id;
 
-    private String name;
+  private String name;
 
-    private String type;
+  private String type;
 
-    /**
-     * Related to {@link CommonStatusEnum}
-     */
-    private Integer status;
+  /** Related to {@link CommonStatusEnum} */
+  private Integer status;
 
-    private String remark;
-
+  private String remark;
 }

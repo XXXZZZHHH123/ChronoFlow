@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.*;
 import nus.edu.u.system.domain.dataobject.role.RoleDO;
 import nus.edu.u.common.core.domain.base.TenantBaseDO;
@@ -60,5 +63,4 @@ public class UserDO extends TenantBaseDO implements Serializable {
 
     @TableField(typeHandler = JacksonTypeHandler.class, value = "post_list")
     private List<Integer> postList;
-
 }
