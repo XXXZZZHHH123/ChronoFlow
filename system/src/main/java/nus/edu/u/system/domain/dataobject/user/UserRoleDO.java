@@ -1,11 +1,10 @@
 package nus.edu.u.system.domain.dataobject.user;
 
 import com.baomidou.mybatisplus.annotation.*;
+import java.io.Serializable;
 import lombok.*;
 import nus.edu.u.common.core.domain.base.TenantBaseDO;
 import nus.edu.u.system.domain.dataobject.role.RoleDO;
-
-import java.io.Serializable;
 
 /**
  * @author Lu Shuwen
@@ -19,29 +18,13 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class UserRoleDO extends TenantBaseDO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    @TableId
-    private Long id;
+  @TableId private Long id;
 
-    /**
-     * Related to {@link UserDO#getId()}
-     */
-    private Long userId;
+  /** Related to {@link UserDO#getId()} */
+  private Long userId;
 
-    /**
-     * Related to {@link RoleDO#getId()}
-     */
-    private Long roleId;
-
-    private Long tenantId;
-
-    @TableField(fill = FieldFill.INSERT)
-    private String creator;
-
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private String updater;
-
-    @TableLogic
-    private Boolean deleted;
+  /** Related to {@link RoleDO#getId()} */
+  private Long roleId;
 }

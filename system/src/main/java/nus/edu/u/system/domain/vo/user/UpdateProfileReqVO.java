@@ -12,16 +12,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UpdateProfileReqVO {
-    @Size(min = 4, max = 32, message = "Username length must be 4~32")
-    private String username;
+  @Size(min = 4, max = 32, message = "Username length must be 4~32")
+  private String username;
 
-    @Size(min = 8, max = 128, message = "Password length must be 8~128")
-    private String password;
+  @Size(min = 8, max = 128, message = "Password length must be 8~128")
+  private String password;
 
-    @Email(message = "Email format invalid")
-    private String email;
+  @Email(message = "Email format invalid")
+  private String email;
 
-    private String phone;
+  private String phone;
 
-    private String remark;
+  private String remark;
 }

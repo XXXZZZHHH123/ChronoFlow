@@ -9,13 +9,13 @@ import lombok.NoArgsConstructor;
 @Data
 public class CreateProfileDTO {
 
-    private String username;
+  private String username;
 
-    private String password;
+  private String password;
 
-    private String email;
+  private String email;
 
-    private String phone;
+  private String phone;
 
-    private String remark;
+  private String remark;
 }
