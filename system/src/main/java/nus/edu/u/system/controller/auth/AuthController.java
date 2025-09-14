@@ -42,9 +42,6 @@ public class AuthController {
     private AuthService authService;
 
     @Resource
-    private UserMapper userMapper;
-
-    @Resource
     private CookieConfig cookieConfig;
 
     @PostMapping("/login")
@@ -81,11 +78,6 @@ public class AuthController {
             return error(MISSING_COOKIE);
         }
         return success(authService.refresh(refreshToken));
-    }
-
-    @GetMapping("/list")
-    public List<UserDO> list() {
-        return userMapper.selectList(null);
     }
 
 }

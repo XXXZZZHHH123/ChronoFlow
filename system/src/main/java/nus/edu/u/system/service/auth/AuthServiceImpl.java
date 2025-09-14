@@ -109,7 +109,13 @@ public class AuthServiceImpl implements AuthService {
         // 2.Login user
         StpUtil.login(userId);
         // 3.Build response object
-        UserVO userVO = UserVO.builder().id(userId).build();
+        UserRoleDTO userRoleDTO = userService.selectUserWithRole(userId);
+        UserVO userVO = UserVO.builder()
+                .id(userId)
+                .email(userRoleDTO.getEmail())
+                .name(userRoleDTO.getUsername())
+                .role(userRoleDTO.getRoles().stream().map(RoleDTO::getRoleKey).collect(Collectors.joining(DEFAULT_DELIMITER)))
+                .build();
         return LoginRespVO.builder()
                 .refreshToken(refreshToken)
                 .user(userVO).build();
