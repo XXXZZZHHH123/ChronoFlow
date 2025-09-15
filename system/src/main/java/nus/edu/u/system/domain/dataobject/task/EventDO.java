@@ -23,27 +23,27 @@ import nus.edu.u.system.enums.event.EventStatusEnum;
 @NoArgsConstructor
 public class EventDO extends TenantBaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  /** Related to {@link UserDO#getId()} */
-  private Long userId;
+    /** Related to {@link UserDO#getId()} */
+    private Long userId;
 
-  private String name;
+    private String name;
 
-  private String description;
+    private String description;
 
-  private LocalDateTime startTime;
+    private LocalDateTime startTime;
 
-  private LocalDateTime endTime;
+    private LocalDateTime endTime;
 
-  /**
-   * Event status
-   *
-   * <p>Enum {@link EventStatusEnum}
-   */
-  private Integer status;
+    /**
+     * Event status
+     *
+     * <p>Enum {@link EventStatusEnum}
+     */
+    private Integer status;
 
-  private String remark;
+    private String remark;
 }

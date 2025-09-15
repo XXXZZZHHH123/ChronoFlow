@@ -21,20 +21,20 @@ import nus.edu.u.common.enums.CommonStatusEnum;
 @NoArgsConstructor
 public class PostDO extends TenantBaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  private String name;
+    private String name;
 
-  private Integer sort;
+    private Integer sort;
 
-  /**
-   * Post status
-   *
-   * <p>Enum {@link CommonStatusEnum}
-   */
-  private Integer status;
+    /**
+     * Post status
+     *
+     * <p>Enum {@link CommonStatusEnum}
+     */
+    private Integer status;
 
-  private String remark;
+    private String remark;
 }

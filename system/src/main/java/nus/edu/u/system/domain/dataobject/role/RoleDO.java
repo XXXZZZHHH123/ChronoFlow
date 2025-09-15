@@ -21,20 +21,20 @@ import nus.edu.u.common.enums.CommonStatusEnum;
 @NoArgsConstructor
 public class RoleDO extends TenantBaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  private String name;
+    private String name;
 
-  private String roleKey;
+    private String roleKey;
 
-  /**
-   * Role status
-   *
-   * <p>Enum {@link CommonStatusEnum}
-   */
-  private Integer status;
+    /**
+     * Role status
+     *
+     * <p>Enum {@link CommonStatusEnum}
+     */
+    private Integer status;
 
-  private String remark;
+    private String remark;
 }

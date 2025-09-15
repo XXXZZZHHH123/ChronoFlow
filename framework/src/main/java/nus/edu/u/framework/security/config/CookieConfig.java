@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class CookieConfig {
 
-  private boolean httpOnly = true;
+    private boolean httpOnly = true;
 
-  private boolean security = true;
+    private boolean security = true;
 }

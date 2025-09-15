@@ -19,13 +19,13 @@ import nus.edu.u.system.domain.dataobject.permission.PermissionDO;
 @NoArgsConstructor
 public class RolePermissionDO extends TenantBaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  /** Related to {@link RoleDO#getId()} */
-  private Long roleId;
+    /** Related to {@link RoleDO#getId()} */
+    private Long roleId;
 
-  /** Related to {@link PermissionDO#getId()} */
-  private Long permissionId;
+    /** Related to {@link PermissionDO#getId()} */
+    private Long permissionId;
 }
