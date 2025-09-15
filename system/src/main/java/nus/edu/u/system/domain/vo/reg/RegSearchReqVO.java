@@ -16,9 +16,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RegSearchReqVO {
 
-  @NotNull(message = "Organization id can't be empty")
-  private Long organizationId;
+    @NotNull(message = "Organization id can't be empty")
+    private Long organizationId;
 
-  @NotNull(message = "Member id can't be empty")
-  private Long userId;
+    @NotNull(message = "Member id can't be empty")
+    private Long userId;
 }

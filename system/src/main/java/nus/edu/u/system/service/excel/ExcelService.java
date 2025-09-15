@@ -3,14 +3,13 @@ package nus.edu.u.system.service.excel;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.system.domain.dto.CreateUserDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,10 +32,12 @@ public class ExcelService {
                             // Record header (index -> headerName)
                             private final Map<Integer, String> headerIndexMap = new HashMap<>();
                             private boolean headerInitialized = false;
-                            private int currentRowIndex = 0; // Start counting from 0; the first row of data is 2
+                            private int currentRowIndex =
+                                    0; // Start counting from 0; the first row of data is 2
 
                             @Override
-                            public void invokeHeadMap(Map<Integer, String> headMap, AnalysisContext context) {
+                            public void invokeHeadMap(
+                                    Map<Integer, String> headMap, AnalysisContext context) {
 
                                 headerIndexMap.clear();
                                 headMap.forEach((idx, name) -> headerIndexMap.put(idx, safe(name)));
@@ -47,7 +48,8 @@ public class ExcelService {
                             public void invoke(Map<Integer, String> data, AnalysisContext context) {
                                 currentRowIndex++; // Include header row
                                 if (!headerInitialized) {
-                                    // When some tables do not have a separate head event, the first row is used as
+                                    // When some tables do not have a separate head event, the first
+                                    // row is used as
                                     // the table header
                                     headerIndexMap.clear();
                                     data.forEach((idx, val) -> headerIndexMap.put(idx, safe(val)));
@@ -55,11 +57,13 @@ public class ExcelService {
                                     return;
                                 }
 
-                                // Actual data row (the row below the header), Excel row number is used to return
+                                // Actual data row (the row below the header), Excel row number is
+                                // used to return
                                 // errors
                                 int excelRow =
                                         currentRowIndex
-                                                + 1; // EasyExcel starts from 0 internally; here it is agreed that the first
+                                                + 1; // EasyExcel starts from 0 internally; here it
+                                // is agreed that the first
                                 // line of Excel is 1
 
                                 // Find out the column index (case-insensitive)）
@@ -96,8 +100,7 @@ public class ExcelService {
                             }
 
                             @Override
-                            public void doAfterAllAnalysed(AnalysisContext context) {
-                            }
+                            public void doAfterAllAnalysed(AnalysisContext context) {}
 
                             private String safe(String s) {
                                 return s == null ? "" : s.trim();
@@ -105,7 +108,8 @@ public class ExcelService {
 
                             private Integer colIndexOf(String nameLower) {
                                 for (Map.Entry<Integer, String> e : headerIndexMap.entrySet()) {
-                                    if (e.getValue() != null && e.getValue().trim().equalsIgnoreCase(nameLower)) {
+                                    if (e.getValue() != null
+                                            && e.getValue().trim().equalsIgnoreCase(nameLower)) {
                                         return e.getKey();
                                     }
                                 }

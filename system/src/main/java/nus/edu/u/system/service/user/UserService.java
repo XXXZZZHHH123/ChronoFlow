@@ -27,19 +27,19 @@ public interface UserService {
     /**
      * Check if two password are matched
      *
-     * @param rawPassword     Unencrypted password
+     * @param rawPassword Unencrypted password
      * @param encodedPassword Encrypted password
      * @return Match result
      */
     boolean isPasswordMatch(String rawPassword, String encodedPassword);
 
-    /**
-     * Select user and his role by userId
-     *
-     * @param userId user id
-     * @return UserRoleDTO
-     */
-    UserRoleDTO selectUserWithRole(Long userId);
+  /**
+   * Select user and his role by userId
+   *
+   * @param userId user id
+   * @return UserRoleDTO
+   */
+  UserRoleDTO selectUserWithRole(Long userId);
 
     /**
      * Select user by id
@@ -51,24 +51,24 @@ public interface UserService {
 
     Long createUserWithRoleIds(CreateUserDTO dto);
 
-    UserDO updateUserWithRoleIds(UpdateUserDTO dto);
+  UserDO updateUserWithRoleIds(UpdateUserDTO dto);
 
-    //    UserDO createUser(CreateProfileDTO dto);
-    //    UserDO updateUser(UpdateProfileDTO dto);
+  //    UserDO createUser(CreateProfileDTO dto);
+  //    UserDO updateUser(UpdateProfileDTO dto);
 
-    void softDeleteUser(Long userId);
+  void softDeleteUser(Long userId);
 
-    void restoreUser(Long id);
+  void restoreUser(Long id);
 
-    void disableUser(Long id);
+  void disableUser(Long id);
 
-    void enableUser(Long id);
+  void enableUser(Long id);
 
-    List<UserProfileRespVO> getAllUserProfiles();
+  List<UserProfileRespVO> getAllUserProfiles();
 
-    BulkUpsertUsersRespVO bulkUpsertUsers(List<CreateUserDTO> rawRows);
+  BulkUpsertUsersRespVO bulkUpsertUsers(List<CreateUserDTO> rawRows);
 
-    boolean processSingleRowWithNewTx(CreateUserDTO row, boolean dbExists);
+  boolean processSingleRowWithNewTx(CreateUserDTO row, boolean dbExists);
 
-    List<Long> getAliveRoleIdsByUserId(Long userId);
+  List<Long> getAliveRoleIdsByUserId(Long userId);
 }

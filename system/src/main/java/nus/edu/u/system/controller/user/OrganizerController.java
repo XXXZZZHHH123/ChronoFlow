@@ -3,6 +3,8 @@ package nus.edu.u.system.controller.user;
 import cn.dev33.satoken.annotation.SaCheckRole;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import java.io.IOException;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.system.convert.user.UserConvert;
@@ -17,26 +19,19 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.List;
-
 @RestController
 @RequestMapping("/organizer")
 @Validated
 @Slf4j
 @SaCheckRole("ORGANIZER")
 public class OrganizerController {
-    @Resource
-    private UserService userService;
+    @Resource private UserService userService;
 
-    @Resource
-    private UserConvert userConvert;
+    @Resource private UserConvert userConvert;
 
-    @Resource
-    private UserRoleMapper userRoleMapper;
+    @Resource private UserRoleMapper userRoleMapper;
 
-    @Resource
-    private ExcelService excelService;
+    @Resource private ExcelService excelService;
 
     @PostMapping("/create/user")
     public CommonResult<Long> createUserForOrganizer(@Valid @RequestBody CreateUserReqVO req) {
@@ -99,7 +94,8 @@ public class OrganizerController {
     }
 
     //    @PostMapping("/create/profile")
-    //    public CommonResult<UserCreateRespVO> createUser(@Valid @RequestBody UserCreateReqVO reqVO)
+    //    public CommonResult<UserCreateRespVO> createUser(@Valid @RequestBody UserCreateReqVO
+    // reqVO)
     // {
     //        var dto = userConvert.toDTO(reqVO);
     //        UserDO user = userService.createUser(dto);

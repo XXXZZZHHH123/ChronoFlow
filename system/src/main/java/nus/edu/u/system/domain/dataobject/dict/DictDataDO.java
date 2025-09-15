@@ -20,21 +20,21 @@ import nus.edu.u.common.enums.CommonStatusEnum;
 @NoArgsConstructor
 public class DictDataDO extends BaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  private Integer sort;
+    private Integer sort;
 
-  private String label;
+    private String label;
 
-  private String value;
+    private String value;
 
-  /** Related to {@link DictTypeDO#getType()} */
-  private String dictType;
+    /** Related to {@link DictTypeDO#getType()} */
+    private String dictType;
 
-  /** Related to {@link CommonStatusEnum} */
-  private Integer status;
+    /** Related to {@link CommonStatusEnum} */
+    private Integer status;
 
-  private String remark;
+    private String remark;
 }

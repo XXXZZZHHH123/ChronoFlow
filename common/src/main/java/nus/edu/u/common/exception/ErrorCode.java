@@ -14,9 +14,9 @@ import nus.edu.u.common.exception.enums.GlobalErrorCodeConstants;
 @AllArgsConstructor
 public class ErrorCode {
 
-  /** Error code */
-  private final Integer code;
+    /** Error code */
+    private final Integer code;
 
-  /** Error message */
-  private final String msg;
+    /** Error message */
+    private final String msg;
 }

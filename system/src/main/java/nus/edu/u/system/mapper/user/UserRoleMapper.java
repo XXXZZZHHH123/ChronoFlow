@@ -2,13 +2,12 @@ package nus.edu.u.system.mapper.user;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import nus.edu.u.system.domain.dataobject.user.UserRoleDO;
-import org.apache.ibatis.annotations.Mapper;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import nus.edu.u.system.domain.dataobject.user.UserRoleDO;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * @author Lu Shuwen
@@ -17,9 +16,7 @@ import java.util.Set;
 @Mapper
 public interface UserRoleMapper extends BaseMapper<UserRoleDO> {
 
-    /**
-     * 查当前有效角色ID（deleted = false）
-     */
+    /** 查当前有效角色ID（deleted = false） */
     default List<Long> selectAliveRoleIdsByUser(Long userId) {
         return this.selectList(
                         Wrappers.<UserRoleDO>lambdaQuery()
@@ -31,9 +28,7 @@ public interface UserRoleMapper extends BaseMapper<UserRoleDO> {
                 .toList();
     }
 
-    /**
-     * 批量逻辑删除（置 deleted = true），审计字段由 MetaObjectHandler 更新
-     */
+    /** 批量逻辑删除（置 deleted = true），审计字段由 MetaObjectHandler 更新 */
     default int batchLogicalDelete(Long userId, Collection<Long> roleIds) {
         if (roleIds == null || roleIds.isEmpty()) return 0;
         return this.update(
@@ -45,9 +40,7 @@ public interface UserRoleMapper extends BaseMapper<UserRoleDO> {
                         .in(UserRoleDO::getRoleId, roleIds));
     }
 
-    /**
-     * 批量复活（deleted: true -> false），审计字段由 MetaObjectHandler 更新
-     */
+    /** 批量复活（deleted: true -> false），审计字段由 MetaObjectHandler 更新 */
     default int batchRevive(Long userId, Collection<Long> roleIds) {
         if (roleIds == null || roleIds.isEmpty()) return 0;
         return this.update(
@@ -59,9 +52,7 @@ public interface UserRoleMapper extends BaseMapper<UserRoleDO> {
                         .in(UserRoleDO::getRoleId, roleIds));
     }
 
-    /**
-     * 只插入“确实不存在”的关系（已存在或刚复活的不再插） 返回插入条数
-     */
+    /** 只插入“确实不存在”的关系（已存在或刚复活的不再插） 返回插入条数 */
     default int insertMissing(Long userId, Collection<Long> roleIds) {
         if (roleIds == null || roleIds.isEmpty()) return 0;
 

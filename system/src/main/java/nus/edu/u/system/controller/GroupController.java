@@ -1,7 +1,10 @@
 package nus.edu.u.system.controller;
 
+import static nus.edu.u.common.core.domain.CommonResult.success;
+
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
@@ -10,10 +13,6 @@ import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
 import nus.edu.u.system.service.group.GroupService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-import static nus.edu.u.common.core.domain.CommonResult.success;
 
 /**
  * Group management controller Provides REST APIs for Event Owners to manage groups/departments
@@ -27,8 +26,7 @@ import static nus.edu.u.common.core.domain.CommonResult.success;
 @Slf4j
 public class GroupController {
 
-    @Resource
-    private GroupService groupService;
+    @Resource private GroupService groupService;
 
     /**
      * Create a new group
@@ -73,7 +71,7 @@ public class GroupController {
      * Add member to group
      *
      * @param groupId Group ID
-     * @param userId  User ID
+     * @param userId User ID
      * @return Success indicator
      */
     @PostMapping("/{groupId}/members/{userId}")
@@ -88,7 +86,7 @@ public class GroupController {
      * Remove member from group
      *
      * @param groupId Group ID
-     * @param userId  User ID
+     * @param userId User ID
      * @return Success indicator
      */
     @DeleteMapping("/{groupId}/members/{userId}")

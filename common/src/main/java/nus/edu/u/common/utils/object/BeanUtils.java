@@ -16,53 +16,53 @@ import nus.edu.u.common.utils.collection.CollectionUtils;
  */
 public class BeanUtils {
 
-  public static <T> T toBean(Object source, Class<T> targetClass) {
-    return BeanUtil.toBean(source, targetClass);
-  }
-
-  public static <T> T toBean(Object source, Class<T> targetClass, Consumer<T> peek) {
-    T target = toBean(source, targetClass);
-    if (target != null) {
-      peek.accept(target);
+    public static <T> T toBean(Object source, Class<T> targetClass) {
+        return BeanUtil.toBean(source, targetClass);
     }
-    return target;
-  }
 
-  public static <S, T> List<T> toBean(List<S> source, Class<T> targetType) {
-    if (source == null) {
-      return null;
+    public static <T> T toBean(Object source, Class<T> targetClass, Consumer<T> peek) {
+        T target = toBean(source, targetClass);
+        if (target != null) {
+            peek.accept(target);
+        }
+        return target;
     }
-    return CollectionUtils.convertList(source, s -> toBean(s, targetType));
-  }
 
-  public static <S, T> List<T> toBean(List<S> source, Class<T> targetType, Consumer<T> peek) {
-    List<T> list = toBean(source, targetType);
-    if (list != null) {
-      list.forEach(peek);
+    public static <S, T> List<T> toBean(List<S> source, Class<T> targetType) {
+        if (source == null) {
+            return null;
+        }
+        return CollectionUtils.convertList(source, s -> toBean(s, targetType));
     }
-    return list;
-  }
 
-  public static <S, T> PageResult<T> toBean(PageResult<S> source, Class<T> targetType) {
-    return toBean(source, targetType, null);
-  }
+    public static <S, T> List<T> toBean(List<S> source, Class<T> targetType, Consumer<T> peek) {
+        List<T> list = toBean(source, targetType);
+        if (list != null) {
+            list.forEach(peek);
+        }
+        return list;
+    }
 
-  public static <S, T> PageResult<T> toBean(
-      PageResult<S> source, Class<T> targetType, Consumer<T> peek) {
-    if (source == null) {
-      return null;
+    public static <S, T> PageResult<T> toBean(PageResult<S> source, Class<T> targetType) {
+        return toBean(source, targetType, null);
     }
-    List<T> list = toBean(source.getList(), targetType);
-    if (peek != null) {
-      list.forEach(peek);
-    }
-    return new PageResult<>(list, source.getTotal());
-  }
 
-  public static void copyProperties(Object source, Object target) {
-    if (source == null || target == null) {
-      return;
+    public static <S, T> PageResult<T> toBean(
+            PageResult<S> source, Class<T> targetType, Consumer<T> peek) {
+        if (source == null) {
+            return null;
+        }
+        List<T> list = toBean(source.getList(), targetType);
+        if (peek != null) {
+            list.forEach(peek);
+        }
+        return new PageResult<>(list, source.getTotal());
     }
-    BeanUtil.copyProperties(source, target, false);
-  }
+
+    public static void copyProperties(Object source, Object target) {
+        if (source == null || target == null) {
+            return;
+        }
+        BeanUtil.copyProperties(source, target, false);
+    }
 }

@@ -1,11 +1,17 @@
 package nus.edu.u.system.service.group;
 
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.*;
+
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
@@ -22,13 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.*;
-
 /**
  * Group service implementation Handles all group-related business logic for event management
  *
@@ -38,14 +37,11 @@ import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 @Service
 @Slf4j
 public class GroupServiceImpl implements GroupService {
-    @Resource
-    private DeptMapper deptMapper;
+    @Resource private DeptMapper deptMapper;
 
-    @Resource
-    private UserMapper userMapper;
+    @Resource private UserMapper userMapper;
 
-    @Resource
-    private EventMapper eventMapper;
+    @Resource private EventMapper eventMapper;
 
     @Override
     @Transactional
@@ -196,7 +192,9 @@ public class GroupServiceImpl implements GroupService {
 
         // 5. Update user's department
         LambdaUpdateWrapper<UserDO> updateWrapper =
-                new LambdaUpdateWrapper<UserDO>().eq(UserDO::getId, userId).set(UserDO::getDeptId, groupId);
+                new LambdaUpdateWrapper<UserDO>()
+                        .eq(UserDO::getId, userId)
+                        .set(UserDO::getDeptId, groupId);
 
         userMapper.update(null, updateWrapper);
         log.info("Added user {} to group {}", userId, groupId);
@@ -219,7 +217,9 @@ public class GroupServiceImpl implements GroupService {
 
         // 3. Remove user from group by setting deptId to null
         LambdaUpdateWrapper<UserDO> updateWrapper =
-                new LambdaUpdateWrapper<UserDO>().eq(UserDO::getId, userId).set(UserDO::getDeptId, null);
+                new LambdaUpdateWrapper<UserDO>()
+                        .eq(UserDO::getId, userId)
+                        .set(UserDO::getDeptId, null);
 
         userMapper.update(null, updateWrapper);
         log.info("Removed user {} from group {}", userId, groupId);

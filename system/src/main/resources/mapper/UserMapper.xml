@@ -19,8 +19,14 @@
         </collection>
     </resultMap>
 
+    <resultMap id="UserDOMap" type="nus.edu.u.system.domain.dataobject.user.UserDO">
+        <id    property="id"         column="id"/>
+        <result property="username"  column="username"/>
+        <result property="email"     column="email"/>
+        <result property="status"    column="status"/>
+    </resultMap>
 
-    <select id="selectRawById" resultType="nus.edu.u.system.mapper.user.UserMapper">
+    <select id="selectRawById" resultMap="UserDOMap">
         SELECT *
         FROM sys_user
         WHERE id = #{id}

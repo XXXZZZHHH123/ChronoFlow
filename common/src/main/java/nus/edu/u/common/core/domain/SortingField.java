@@ -16,13 +16,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SortingField implements Serializable {
 
-  /** Order - Ascending */
-  public static final String ORDER_ASC = "asc";
+    /** Order - Ascending */
+    public static final String ORDER_ASC = "asc";
 
-  /** Order - Descending */
-  public static final String ORDER_DESC = "desc";
+    /** Order - Descending */
+    public static final String ORDER_DESC = "desc";
 
-  private String field;
+    private String field;
 
-  private String order;
+    private String order;
 }
