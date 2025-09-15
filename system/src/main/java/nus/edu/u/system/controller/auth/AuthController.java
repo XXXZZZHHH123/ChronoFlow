@@ -1,5 +1,11 @@
 package nus.edu.u.system.controller.auth;
 
+import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_COOKIE_NAME;
+import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE;
+import static nus.edu.u.common.core.domain.CommonResult.error;
+import static nus.edu.u.common.core.domain.CommonResult.success;
+import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.MISSING_COOKIE;
+
 import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,12 +22,6 @@ import nus.edu.u.system.service.auth.AuthService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_COOKIE_NAME;
-import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE;
-import static nus.edu.u.common.core.domain.CommonResult.error;
-import static nus.edu.u.common.core.domain.CommonResult.success;
-import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.MISSING_COOKIE;
-
 /**
  * Authentication controller
  *
@@ -34,11 +34,9 @@ import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.MISSING_
 @Slf4j
 public class AuthController {
 
-    @Resource
-    private AuthService authService;
+    @Resource private AuthService authService;
 
-    @Resource
-    private CookieConfig cookieConfig;
+    @Resource private CookieConfig cookieConfig;
 
     @PostMapping("/login")
     public CommonResult<LoginRespVO> login(
@@ -56,7 +54,8 @@ public class AuthController {
                             REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE);
         } else {
             cookieFactory =
-                    new ZeroLifeRefreshTokenCookie(cookieConfig.isHttpOnly(), cookieConfig.isSecurity());
+                    new ZeroLifeRefreshTokenCookie(
+                            cookieConfig.isHttpOnly(), cookieConfig.isSecurity());
         }
         response.addCookie(cookieFactory.createCookie(loginRespVO.getRefreshToken()));
         return success(loginRespVO);
@@ -69,7 +68,8 @@ public class AuthController {
         authService.logout(refreshToken);
         // Delete refresh token from cookie
         AbstractCookieFactory cookieFactory =
-                new ZeroLifeRefreshTokenCookie(cookieConfig.isHttpOnly(), cookieConfig.isSecurity());
+                new ZeroLifeRefreshTokenCookie(
+                        cookieConfig.isHttpOnly(), cookieConfig.isSecurity());
         response.addCookie(cookieFactory.createCookie(null));
         return success(true);
     }
@@ -82,5 +82,4 @@ public class AuthController {
         }
         return success(authService.refresh(refreshToken));
     }
-
 }

@@ -1,14 +1,13 @@
 package nus.edu.u.framework.mybatis;
 
+import static nus.edu.u.framework.mybatis.MybatisPlusConfig.getCurrentTenantId;
+
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import java.time.LocalDateTime;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
-
-import static nus.edu.u.framework.mybatis.MybatisPlusConfig.getCurrentTenantId;
 
 /**
  * Config to fill common properties automatically

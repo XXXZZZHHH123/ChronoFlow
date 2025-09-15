@@ -15,6 +15,4 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/system/role")
 @Validated
 @Slf4j
-public class RoleController {
-
-}
+public class RoleController {}

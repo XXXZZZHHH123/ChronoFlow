@@ -1,5 +1,7 @@
 package nus.edu.u.framework.mybatis;
 
+import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
+
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
@@ -11,9 +13,6 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
-
 
 /**
  * @author Lu Shuwen
@@ -43,7 +42,8 @@ public class MybatisPlusConfig {
 
                             @Override
                             public boolean ignoreTable(String tableName) {
-                                // Return true to ignore the table and not join the tenant conditions.
+                                // Return true to ignore the table and not join the tenant
+                                // conditions.
                                 return "sys_dict_data".equals(tableName)
                                         || "sys_dict_type".equals(tableName)
                                         || "sys_tenant".equals(tableName);

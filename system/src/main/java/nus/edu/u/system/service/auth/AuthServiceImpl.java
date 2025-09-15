@@ -1,10 +1,17 @@
 package nus.edu.u.system.service.auth;
 
+import static nus.edu.u.common.constant.Constants.DEFAULT_DELIMITER;
+import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.*;
+
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
+import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
@@ -17,14 +24,6 @@ import nus.edu.u.system.domain.vo.auth.UserVO;
 import nus.edu.u.system.service.user.UserService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.stream.Collectors;
-
-import static nus.edu.u.common.constant.Constants.DEFAULT_DELIMITER;
-import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
-import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.*;
-
 /**
  * Authentication service implementation
  *
@@ -35,11 +34,9 @@ import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    @Resource
-    private UserService userService;
+    @Resource private UserService userService;
 
-    @Resource
-    private TokenService tokenService;
+    @Resource private TokenService tokenService;
 
     @Override
     public UserDO authenticate(String username, String password) {
@@ -114,14 +111,16 @@ public class AuthServiceImpl implements AuthService {
         // 3.Build response object
         UserRoleDTO userRoleDTO = userService.selectUserWithRole(userId);
         UserDO user = userService.selectUserById(userId);
-        UserVO userVO = UserVO.builder()
-                .id(userId)
-                .email(user.getEmail())
-                .name(user.getUsername())
-                .role(userRoleDTO.getRoles().stream().map(RoleDTO::getRoleKey).collect(Collectors.joining(DEFAULT_DELIMITER)))
-                .build();
-        return LoginRespVO.builder()
-                .refreshToken(refreshToken)
-                .user(userVO).build();
+        UserVO userVO =
+                UserVO.builder()
+                        .id(userId)
+                        .email(user.getEmail())
+                        .name(user.getUsername())
+                        .role(
+                                userRoleDTO.getRoles().stream()
+                                        .map(RoleDTO::getRoleKey)
+                                        .collect(Collectors.joining(DEFAULT_DELIMITER)))
+                        .build();
+        return LoginRespVO.builder().refreshToken(refreshToken).user(userVO).build();
     }
 }

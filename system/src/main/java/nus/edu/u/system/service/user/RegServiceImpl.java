@@ -1,5 +1,8 @@
 package nus.edu.u.system.service.user;
 
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.*;
+
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
@@ -24,9 +27,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.*;
-
 /**
  * @author Lu Shuwen
  * @date 2025-09-10
@@ -35,23 +35,17 @@ import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 @Slf4j
 public class RegServiceImpl implements RegService {
 
-    @Resource
-    private TenantMapper tenantMapper;
+    @Resource private TenantMapper tenantMapper;
 
-    @Resource
-    private UserMapper userMapper;
+    @Resource private UserMapper userMapper;
 
-    @Resource
-    private PostMapper postMapper;
+    @Resource private PostMapper postMapper;
 
-    @Resource
-    private RoleMapper roleMapper;
+    @Resource private RoleMapper roleMapper;
 
-    @Resource
-    private UserRoleMapper userRoleMapper;
+    @Resource private UserRoleMapper userRoleMapper;
 
-    @Resource
-    private PasswordEncoder passwordEncoder;
+    @Resource private PasswordEncoder passwordEncoder;
 
     public static final String ORGANIZER_REMARK = "Organizer account";
 
@@ -127,12 +121,14 @@ public class RegServiceImpl implements RegService {
         // Select organizer role
         RoleDO role =
                 roleMapper.selectOne(
-                        new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getRoleKey, ORGANIZER_ROLE_KEY));
+                        new LambdaQueryWrapper<RoleDO>()
+                                .eq(RoleDO::getRoleKey, ORGANIZER_ROLE_KEY));
         if (ObjUtil.isNull(role)) {
             throw exception(REG_FAIL);
         }
         // Apply organizer role to this user
-        UserRoleDO userRole = UserRoleDO.builder().userId(user.getId()).roleId(role.getId()).build();
+        UserRoleDO userRole =
+                UserRoleDO.builder().userId(user.getId()).roleId(role.getId()).build();
         isSuccess = userRoleMapper.insert(userRole) > 0;
         if (!isSuccess) {
             throw exception(REG_FAIL);
@@ -146,7 +142,7 @@ public class RegServiceImpl implements RegService {
         int retry = 0;
         while (retry < MAX_RETRY_GENERATE_CODE
                 && tenantMapper.exists(
-                new LambdaQueryWrapper<TenantDO>().eq(TenantDO::getTenantCode, code))) {
+                        new LambdaQueryWrapper<TenantDO>().eq(TenantDO::getTenantCode, code))) {
             code = RandomUtil.randomString(ORGANIZATION_CODE_LENGTH);
             retry++;
         }

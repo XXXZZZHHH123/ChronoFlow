@@ -9,5 +9,4 @@ import org.apache.ibatis.annotations.Mapper;
  * @date 2025-09-14
  */
 @Mapper
-public interface PermissionMapper extends BaseMapper<PermissionDO> {
-}
+public interface PermissionMapper extends BaseMapper<PermissionDO> {}

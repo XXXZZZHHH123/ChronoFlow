@@ -1,6 +1,9 @@
 package nus.edu.u.framework.redis.config;
 
+import static nus.edu.u.framework.redis.config.RedisAutoConfiguration.buildRedisSerializer;
+
 import cn.hutool.core.util.StrUtil;
+import java.util.Objects;
 import nus.edu.u.framework.redis.core.TimeoutRedisCacheManager;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -16,17 +19,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.util.StringUtils;
 
-import java.util.Objects;
-
-import static nus.edu.u.framework.redis.config.RedisAutoConfiguration.buildRedisSerializer;
-
-/**
- * Cache 配置类，基于 Redis 实现
- */
+/** Cache 配置类，基于 Redis 实现 */
 @AutoConfiguration
 @EnableConfigurationProperties({
-        org.springframework.boot.autoconfigure.cache.CacheProperties.class,
-        CacheProperties.class
+    org.springframework.boot.autoconfigure.cache.CacheProperties.class,
+    CacheProperties.class
 })
 @EnableCaching
 public class CacheAutoConfiguration {
@@ -61,7 +58,8 @@ public class CacheAutoConfiguration {
         // 设置使用 JSON 序列化方式
         config =
                 config.serializeValuesWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(buildRedisSerializer()));
+                        RedisSerializationContext.SerializationPair.fromSerializer(
+                                buildRedisSerializer()));
 
         // 设置 CacheProperties.Redis 的属性
         org.springframework.boot.autoconfigure.cache.CacheProperties.Redis redisProperties =
@@ -88,7 +86,8 @@ public class CacheAutoConfiguration {
                 Objects.requireNonNull(redisTemplate.getConnectionFactory());
         RedisCacheWriter cacheWriter =
                 RedisCacheWriter.nonLockingRedisCacheWriter(
-                        connectionFactory, BatchStrategies.scan(yudaoCacheProperties.getRedisScanBatchSize()));
+                        connectionFactory,
+                        BatchStrategies.scan(yudaoCacheProperties.getRedisScanBatchSize()));
         // 创建 TenantRedisCacheManager 对象
         return new TimeoutRedisCacheManager(cacheWriter, redisCacheConfiguration);
     }

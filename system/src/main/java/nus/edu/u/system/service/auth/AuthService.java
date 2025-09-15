@@ -13,8 +13,8 @@ import nus.edu.u.system.domain.vo.auth.LoginRespVO;
 public interface AuthService {
 
     /**
-     * Select by username and match password If matched, return a UserDO object If not matched, throw
-     * exception
+     * Select by username and match password If matched, return a UserDO object If not matched,
+     * throw exception
      *
      * @param username name
      * @param password psd

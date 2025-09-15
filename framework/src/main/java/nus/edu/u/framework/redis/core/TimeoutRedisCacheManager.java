@@ -2,13 +2,12 @@ package nus.edu.u.framework.redis.core;
 
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import java.time.Duration;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheWriter;
-
-import java.time.Duration;
 
 /**
  * 支持自定义过期时间的 {@link RedisCacheManager} 实现类

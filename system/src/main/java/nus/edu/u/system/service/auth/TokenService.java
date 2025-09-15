@@ -25,8 +25,6 @@ public interface TokenService {
      */
     void removeToken(String token);
 
-    /**
-     * Get userId in refresh token from redis
-     */
+    /** Get userId in refresh token from redis */
     Long getUserIdFromRefreshToken(String refreshToken);
 }

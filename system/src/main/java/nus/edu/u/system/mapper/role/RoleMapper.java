@@ -1,11 +1,10 @@
 package nus.edu.u.system.mapper.role;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import java.util.List;
 import nus.edu.u.system.domain.dataobject.role.RoleDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-
-import java.util.List;
 
 /**
  * @author Lu Shuwen

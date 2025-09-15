@@ -1,10 +1,9 @@
 package nus.edu.u.system.service.group;
 
+import java.util.List;
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
 import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
-
-import java.util.List;
 
 /**
  * Group service interface Handles all group-related business logic for event management
