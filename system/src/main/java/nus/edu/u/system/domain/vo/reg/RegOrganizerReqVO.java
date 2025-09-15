@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nus.edu.u.common.annotation.Mobile;
 
 /**
  * @author Lu Shuwen
@@ -18,32 +19,33 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RegOrganizerReqVO {
 
-    @NotEmpty(message = "Organizer name can't be empty")
-    @Size(max = 100, message = "Organizer name length should within 100")
+    @NotEmpty(message = "Organizer name is required")
+    @Size(max = 100, message = "Organizer name must not exceed 100 characters")
     private String name;
 
-    @NotEmpty(message = "Username can't be empty")
-    @Size(min = 6, max = 100, message = "Username length should between 6 and 100")
+    @NotEmpty(message = "Username is required")
+    @Size(min = 6, max = 100, message = "Username must be between 6 and 100 characters")
     private String username;
 
-    @NotEmpty(message = "Password can't be empty")
-    @Size(min = 8, max = 100, message = "Password length should between 8 and 100")
+    @NotEmpty(message = "Password is required")
+    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
     private String userPassword;
 
-    @NotEmpty(message = "User email can't be empty")
-    @Email(message = "Please input right format email")
+    @NotEmpty(message = "Email is required")
+    @Email(message = "Please enter a valid email address")
     private String userEmail;
 
-    @NotEmpty(message = "User mobile can't be empty")
+    @NotEmpty(message = "Mobile number is required")
+    @Mobile
     private String mobile;
 
-    @NotEmpty(message = "Organization name can't be empty")
-    @Size(max = 100, message = "Organization name length should within 100")
+    @NotEmpty(message = "Organization name is required")
+    @Size(max = 100, message = "Organization name must not exceed 100 characters")
     private String organizationName;
 
-    @Size(max = 500, message = "Organization address length should within 500")
+    @Size(max = 500, message = "Organization address must not exceed 500 characters")
     private String organizationAddress;
 
-    @Size(min = 6, max = 20, message = "Organization code length should between 6 and 20")
+    @Size(min = 6, max = 20, message = "Organization code must be between 6 and 20 characters")
     private String organizationCode;
 }

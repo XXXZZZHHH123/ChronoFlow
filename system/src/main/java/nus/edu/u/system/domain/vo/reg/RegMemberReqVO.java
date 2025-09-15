@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nus.edu.u.common.annotation.Mobile;
 
 /**
  * Register request VO
@@ -21,14 +22,15 @@ public class RegMemberReqVO {
 
     private Long userId;
 
-    @NotEmpty(message = "Please set your username")
-    @Size(min = 6, max = 100, message = "Username length should between 6 and 100")
+    @NotEmpty(message = "Please enter your username")
+    @Size(min = 6, max = 100, message = "Username must be between 6 and 100 characters")
     private String username;
 
-    @NotEmpty(message = "Please set your password")
-    @Size(min = 8, max = 100, message = "Password length should between 8 and 100")
+    @NotEmpty(message = "Please enter your password")
+    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
     private String password;
 
-    @NotEmpty(message = "Please key in your phone number")
+    @NotEmpty(message = "Please enter your phone number")
+    @Mobile
     private String phone;
 }
