@@ -1,6 +1,6 @@
 package nus.edu.u.framework.mybatis;
 
-import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
+import static nus.edu.u.framework.mybatis.MybatisPlusConfig.getCurrentTenantId;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -48,17 +48,5 @@ public class MybatisMetaObjectHandler implements MetaObjectHandler {
         } catch (Exception ignored) {
         }
         return "system"; // Default value
-    }
-
-    private Long getCurrentTenantId() {
-        try {
-            Object tenantIdObject = StpUtil.getSession().get(SESSION_TENANT_ID);
-            Long tenantId = Long.parseLong(tenantIdObject.toString());
-            if (ObjectUtil.isNotNull(tenantId)) {
-                return tenantId;
-            }
-        } catch (Exception ignored) {
-        }
-        return 1L; // Default value
     }
 }

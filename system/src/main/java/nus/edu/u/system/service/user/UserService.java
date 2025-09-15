@@ -2,7 +2,9 @@ package nus.edu.u.system.service.user;
 
 import java.util.List;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
-import nus.edu.u.system.domain.dto.*;
+import nus.edu.u.system.domain.dto.CreateUserDTO;
+import nus.edu.u.system.domain.dto.UpdateUserDTO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
 import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 
@@ -37,6 +39,14 @@ public interface UserService {
      * @return UserRoleDTO
      */
     UserRoleDTO selectUserWithRole(Long userId);
+
+    /**
+     * Select user by id
+     *
+     * @param userId
+     * @return UserDO
+     */
+    UserDO selectUserById(Long userId);
 
     Long createUserWithRoleIds(CreateUserDTO dto);
 

@@ -1,6 +1,7 @@
 package nus.edu.u.system.controller.auth;
 
-import static nus.edu.u.common.constant.SecurityConstants.*;
+import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_COOKIE_NAME;
+import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE;
 import static nus.edu.u.common.core.domain.CommonResult.error;
 import static nus.edu.u.common.core.domain.CommonResult.success;
 import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.MISSING_COOKIE;
@@ -9,17 +10,14 @@ import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.framework.security.config.CookieConfig;
 import nus.edu.u.framework.security.factory.AbstractCookieFactory;
 import nus.edu.u.framework.security.factory.LongLifeRefreshTokenCookie;
 import nus.edu.u.framework.security.factory.ZeroLifeRefreshTokenCookie;
-import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.auth.LoginReqVO;
 import nus.edu.u.system.domain.vo.auth.LoginRespVO;
-import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.auth.AuthService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -37,8 +35,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     @Resource private AuthService authService;
-
-    @Resource private UserMapper userMapper;
 
     @Resource private CookieConfig cookieConfig;
 
@@ -85,10 +81,5 @@ public class AuthController {
             return error(MISSING_COOKIE);
         }
         return success(authService.refresh(refreshToken));
-    }
-
-    @GetMapping("/list")
-    public List<UserDO> list() {
-        return userMapper.selectList(null);
     }
 }

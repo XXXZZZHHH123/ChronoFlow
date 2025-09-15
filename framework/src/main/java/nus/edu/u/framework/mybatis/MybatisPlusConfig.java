@@ -6,6 +6,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
+import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import net.sf.jsqlparser.expression.Expression;
@@ -52,10 +53,13 @@ public class MybatisPlusConfig {
         // ✅ Pagination
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
 
+        // ✅ Avoid update or delete all data in table
+        interceptor.addInnerInterceptor(new BlockAttackInnerInterceptor());
+
         return interceptor;
     }
 
-    private Long getCurrentTenantId() {
+    public static Long getCurrentTenantId() {
         try {
             Object tenantIdObject = StpUtil.getSession().get(SESSION_TENANT_ID);
             Long tenantId = Long.parseLong(tenantIdObject.toString());

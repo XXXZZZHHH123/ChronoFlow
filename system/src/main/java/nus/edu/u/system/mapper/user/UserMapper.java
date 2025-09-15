@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dto.UserPermissionDTO;
 import nus.edu.u.system.domain.dto.UserRoleDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -90,4 +91,6 @@ public interface UserMapper extends BaseMapper<UserDO> {
                                 .eq(UserDO::getDeleted, 0));
         return list.stream().map(o -> (String) o).collect(Collectors.toSet());
     }
+
+    List<UserPermissionDTO> selectUserWithPermission(Long userId);
 }

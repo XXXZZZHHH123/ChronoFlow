@@ -18,7 +18,9 @@ import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.RoleDTO;
 import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.dto.UserTokenDTO;
-import nus.edu.u.system.domain.vo.auth.*;
+import nus.edu.u.system.domain.vo.auth.LoginReqVO;
+import nus.edu.u.system.domain.vo.auth.LoginRespVO;
+import nus.edu.u.system.domain.vo.auth.UserVO;
 import nus.edu.u.system.service.user.UserService;
 import org.springframework.stereotype.Service;
 
@@ -107,7 +109,18 @@ public class AuthServiceImpl implements AuthService {
         // 2.Login user
         StpUtil.login(userId);
         // 3.Build response object
-        UserVO userVO = UserVO.builder().id(userId).build();
+        UserRoleDTO userRoleDTO = userService.selectUserWithRole(userId);
+        UserDO user = userService.selectUserById(userId);
+        UserVO userVO =
+                UserVO.builder()
+                        .id(userId)
+                        .email(user.getEmail())
+                        .name(user.getUsername())
+                        .role(
+                                userRoleDTO.getRoles().stream()
+                                        .map(RoleDTO::getRoleKey)
+                                        .collect(Collectors.joining(DEFAULT_DELIMITER)))
+                        .build();
         return LoginRespVO.builder().refreshToken(refreshToken).user(userVO).build();
     }
 }
