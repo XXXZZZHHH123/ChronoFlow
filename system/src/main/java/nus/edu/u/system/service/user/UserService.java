@@ -13,51 +13,51 @@ import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
  * @date 2025-08-30
  */
 public interface UserService {
-  /**
-   * Select one UserDO object from db
-   *
-   * @param username name
-   * @return UserDO
-   */
-  UserDO getUserByUsername(String username);
+    /**
+     * Select one UserDO object from db
+     *
+     * @param username name
+     * @return UserDO
+     */
+    UserDO getUserByUsername(String username);
 
-  /**
-   * Check if two password are matched
-   *
-   * @param rawPassword Unencrypted password
-   * @param encodedPassword Encrypted password
-   * @return Match result
-   */
-  boolean isPasswordMatch(String rawPassword, String encodedPassword);
+    /**
+     * Check if two password are matched
+     *
+     * @param rawPassword Unencrypted password
+     * @param encodedPassword Encrypted password
+     * @return Match result
+     */
+    boolean isPasswordMatch(String rawPassword, String encodedPassword);
 
-  /**
-   * Select user and his role by userId
-   *
-   * @param userId user id
-   * @return UserRoleDTO
-   */
-  UserRoleDTO selectUserWithRole(Long userId);
+    /**
+     * Select user and his role by userId
+     *
+     * @param userId user id
+     * @return UserRoleDTO
+     */
+    UserRoleDTO selectUserWithRole(Long userId);
 
-  Long createUserWithRoleIds(CreateUserDTO dto);
+    Long createUserWithRoleIds(CreateUserDTO dto);
 
-  UserDO updateUserWithRoleIds(UpdateUserDTO dto);
+    UserDO updateUserWithRoleIds(UpdateUserDTO dto);
 
-  //    UserDO createUser(CreateProfileDTO dto);
-  //    UserDO updateUser(UpdateProfileDTO dto);
+    //    UserDO createUser(CreateProfileDTO dto);
+    //    UserDO updateUser(UpdateProfileDTO dto);
 
-  void softDeleteUser(Long userId);
+    void softDeleteUser(Long userId);
 
-  void restoreUser(Long id);
+    void restoreUser(Long id);
 
-  void disableUser(Long id);
+    void disableUser(Long id);
 
-  void enableUser(Long id);
+    void enableUser(Long id);
 
-  List<UserProfileRespVO> getAllUserProfiles();
+    List<UserProfileRespVO> getAllUserProfiles();
 
-  BulkUpsertUsersRespVO bulkUpsertUsers(List<CreateUserDTO> rawRows);
+    BulkUpsertUsersRespVO bulkUpsertUsers(List<CreateUserDTO> rawRows);
 
-  boolean processSingleRowWithNewTx(CreateUserDTO row, boolean dbExists);
+    boolean processSingleRowWithNewTx(CreateUserDTO row, boolean dbExists);
 
-  List<Long> getAliveRoleIdsByUserId(Long userId);
+    List<Long> getAliveRoleIdsByUserId(Long userId);
 }

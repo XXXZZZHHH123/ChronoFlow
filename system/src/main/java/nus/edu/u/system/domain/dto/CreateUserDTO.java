@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CreateUserDTO {
-  private String email;
-  private List<Long> roleIds;
-  private String remark;
+    private String email;
+    private List<Long> roleIds;
+    private String remark;
 
-  // Excel rowIndex
-  private Integer rowIndex;
+    // Excel rowIndex
+    private Integer rowIndex;
 }

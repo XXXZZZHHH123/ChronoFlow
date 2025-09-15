@@ -23,27 +23,27 @@ import nus.edu.u.system.domain.dataobject.user.UserDO;
 @NoArgsConstructor
 public class TenantDO extends BaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  private String name;
+    private String name;
 
-  /** Related to {@link UserDO#getId()} */
-  private Long contactUserId;
+    /** Related to {@link UserDO#getId()} */
+    private Long contactUserId;
 
-  private String contactName;
+    private String contactName;
 
-  private String contactMobile;
+    private String contactMobile;
 
-  private String address;
+    private String address;
 
-  /**
-   * Tenant status
-   *
-   * <p>Enum {@link CommonStatusEnum}
-   */
-  private Integer status;
+    /**
+     * Tenant status
+     *
+     * <p>Enum {@link CommonStatusEnum}
+     */
+    private Integer status;
 
-  private String tenantCode;
+    private String tenantCode;
 }

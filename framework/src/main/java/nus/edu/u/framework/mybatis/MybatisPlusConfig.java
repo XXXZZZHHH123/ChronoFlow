@@ -20,49 +20,50 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MybatisPlusConfig {
 
-  @Bean
-  public MybatisPlusInterceptor mybatisPlusInterceptor() {
-    MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+    @Bean
+    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
 
-    // ✅ Muti-tenant
-    interceptor.addInnerInterceptor(
-        new TenantLineInnerInterceptor(
-            new TenantLineHandler() {
-              @Override
-              public Expression getTenantId() {
-                Long tenantId = getCurrentTenantId();
-                return new LongValue(tenantId);
-              }
+        // ✅ Muti-tenant
+        interceptor.addInnerInterceptor(
+                new TenantLineInnerInterceptor(
+                        new TenantLineHandler() {
+                            @Override
+                            public Expression getTenantId() {
+                                Long tenantId = getCurrentTenantId();
+                                return new LongValue(tenantId);
+                            }
 
-              @Override
-              public String getTenantIdColumn() {
-                return "tenant_id"; // Tenant field name in the database table
-              }
+                            @Override
+                            public String getTenantIdColumn() {
+                                return "tenant_id"; // Tenant field name in the database table
+                            }
 
-              @Override
-              public boolean ignoreTable(String tableName) {
-                // Return true to ignore the table and not join the tenant conditions.
-                return "sys_dict_data".equals(tableName)
-                    || "sys_dict_type".equals(tableName)
-                    || "sys_tenant".equals(tableName);
-              }
-            }));
+                            @Override
+                            public boolean ignoreTable(String tableName) {
+                                // Return true to ignore the table and not join the tenant
+                                // conditions.
+                                return "sys_dict_data".equals(tableName)
+                                        || "sys_dict_type".equals(tableName)
+                                        || "sys_tenant".equals(tableName);
+                            }
+                        }));
 
-    // ✅ Pagination
-    interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
+        // ✅ Pagination
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
 
-    return interceptor;
-  }
-
-  private Long getCurrentTenantId() {
-    try {
-      Object tenantIdObject = StpUtil.getSession().get(SESSION_TENANT_ID);
-      Long tenantId = Long.parseLong(tenantIdObject.toString());
-      if (ObjectUtil.isNotNull(tenantId)) {
-        return tenantId;
-      }
-    } catch (Exception ignored) {
+        return interceptor;
     }
-    return 1L;
-  }
+
+    private Long getCurrentTenantId() {
+        try {
+            Object tenantIdObject = StpUtil.getSession().get(SESSION_TENANT_ID);
+            Long tenantId = Long.parseLong(tenantIdObject.toString());
+            if (ObjectUtil.isNotNull(tenantId)) {
+                return tenantId;
+            }
+        } catch (Exception ignored) {
+        }
+        return 1L;
+    }
 }

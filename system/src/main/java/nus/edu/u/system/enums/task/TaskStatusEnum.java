@@ -14,19 +14,19 @@ import nus.edu.u.common.core.ArrayValuable;
 @Getter
 @AllArgsConstructor
 public enum TaskStatusEnum implements ArrayValuable<Integer> {
-  WAITING(1, "Waiting"),
-  DOING(2, "Doing"),
-  DONE(3, "Done");
+    WAITING(1, "Waiting"),
+    DOING(2, "Doing"),
+    DONE(3, "Done");
 
-  public static final Integer[] ARRAYS =
-      Arrays.stream(values()).map(TaskStatusEnum::getStatus).toArray(Integer[]::new);
+    public static final Integer[] ARRAYS =
+            Arrays.stream(values()).map(TaskStatusEnum::getStatus).toArray(Integer[]::new);
 
-  private final Integer status;
+    private final Integer status;
 
-  private final String name;
+    private final String name;
 
-  @Override
-  public Integer[] array() {
-    return ARRAYS;
-  }
+    @Override
+    public Integer[] array() {
+        return ARRAYS;
+    }
 }

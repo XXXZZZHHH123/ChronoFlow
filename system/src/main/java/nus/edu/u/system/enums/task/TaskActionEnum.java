@@ -12,17 +12,17 @@ import nus.edu.u.common.core.ArrayValuable;
 @Getter
 @AllArgsConstructor
 public enum TaskActionEnum implements ArrayValuable<Integer> {
-  ASSIGN(1, "Assign");
+    ASSIGN(1, "Assign");
 
-  public static final Integer[] ARRAYS =
-      Arrays.stream(values()).map(TaskActionEnum::getCode).toArray(Integer[]::new);
+    public static final Integer[] ARRAYS =
+            Arrays.stream(values()).map(TaskActionEnum::getCode).toArray(Integer[]::new);
 
-  private final Integer code;
+    private final Integer code;
 
-  private final String action;
+    private final String action;
 
-  @Override
-  public Integer[] array() {
-    return ARRAYS;
-  }
+    @Override
+    public Integer[] array() {
+        return ARRAYS;
+    }
 }

@@ -22,71 +22,72 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface UserMapper extends BaseMapper<UserDO> {
 
-  UserRoleDTO selectUserWithRole(Long userId);
+    UserRoleDTO selectUserWithRole(Long userId);
 
-  /**
-   * Directly query the original record (including deleted=1), bypassing the MP automatic condition
-   */
-  UserDO selectRawById(@Param("id") Long id);
+    /**
+     * Directly query the original record (including deleted=1), bypassing the MP automatic
+     * condition
+     */
+    UserDO selectRawById(@Param("id") Long id);
 
-  List<UserRoleDTO> selectAllUsersWithRoles();
+    List<UserRoleDTO> selectAllUsersWithRoles();
 
-  default UserDO selectByUsername(String username) {
-    return this.selectOne(
-        new LambdaQueryWrapper<UserDO>()
-            .eq(UserDO::getUsername, username)
-            .eq(UserDO::getDeleted, false));
-  }
+    default UserDO selectByUsername(String username) {
+        return this.selectOne(
+                new LambdaQueryWrapper<UserDO>()
+                        .eq(UserDO::getUsername, username)
+                        .eq(UserDO::getDeleted, false));
+    }
 
-  // ===== exists series, for Service reuse to avoid duplication of count code =====
-  default boolean existsUsername(String username, Long excludeId) {
-    return this.selectCount(
-            new LambdaQueryWrapper<UserDO>()
-                .eq(UserDO::getUsername, username)
-                .eq(UserDO::getDeleted, false)
-                .ne(excludeId != null, UserDO::getId, excludeId))
-        > 0;
-  }
+    // ===== exists series, for Service reuse to avoid duplication of count code =====
+    default boolean existsUsername(String username, Long excludeId) {
+        return this.selectCount(
+                        new LambdaQueryWrapper<UserDO>()
+                                .eq(UserDO::getUsername, username)
+                                .eq(UserDO::getDeleted, false)
+                                .ne(excludeId != null, UserDO::getId, excludeId))
+                > 0;
+    }
 
-  default boolean existsEmail(String email, Long excludeId) {
-    return this.selectCount(
-            new LambdaQueryWrapper<UserDO>()
-                .eq(UserDO::getEmail, email)
-                .eq(UserDO::getDeleted, false)
-                .ne(excludeId != null, UserDO::getId, excludeId))
-        > 0;
-  }
+    default boolean existsEmail(String email, Long excludeId) {
+        return this.selectCount(
+                        new LambdaQueryWrapper<UserDO>()
+                                .eq(UserDO::getEmail, email)
+                                .eq(UserDO::getDeleted, false)
+                                .ne(excludeId != null, UserDO::getId, excludeId))
+                > 0;
+    }
 
-  default boolean existsPhone(String phone, Long excludeId) {
-    return this.selectCount(
-            new LambdaQueryWrapper<UserDO>()
-                .eq(UserDO::getPhone, phone)
-                .eq(UserDO::getDeleted, false)
-                .ne(excludeId != null, UserDO::getId, excludeId))
-        > 0;
-  }
+    default boolean existsPhone(String phone, Long excludeId) {
+        return this.selectCount(
+                        new LambdaQueryWrapper<UserDO>()
+                                .eq(UserDO::getPhone, phone)
+                                .eq(UserDO::getDeleted, false)
+                                .ne(excludeId != null, UserDO::getId, excludeId))
+                > 0;
+    }
 
-  /** Find id by email (only find undeleted ones) */
-  default Long selectIdByEmail(String email) {
-    UserDO one =
-        this.selectOne(
-            Wrappers.<UserDO>lambdaQuery()
-                .select(UserDO::getId)
-                .eq(UserDO::getEmail, email)
-                .eq(UserDO::getDeleted, 0)
-                .last("LIMIT 1"));
-    return one == null ? null : one.getId();
-  }
+    /** Find id by email (only find undeleted ones) */
+    default Long selectIdByEmail(String email) {
+        UserDO one =
+                this.selectOne(
+                        Wrappers.<UserDO>lambdaQuery()
+                                .select(UserDO::getId)
+                                .eq(UserDO::getEmail, email)
+                                .eq(UserDO::getDeleted, 0)
+                                .last("LIMIT 1"));
+        return one == null ? null : one.getId();
+    }
 
-  /** Batch check existing emails (only check non-deleted emails), return Set<String> */
-  default Set<String> selectExistingEmails(Collection<String> emails) {
-    if (emails == null || emails.isEmpty()) return Collections.emptySet();
-    List<Object> list =
-        this.selectObjs(
-            Wrappers.<UserDO>lambdaQuery()
-                .select(UserDO::getEmail)
-                .in(UserDO::getEmail, emails)
-                .eq(UserDO::getDeleted, 0));
-    return list.stream().map(o -> (String) o).collect(Collectors.toSet());
-  }
+    /** Batch check existing emails (only check non-deleted emails), return Set<String> */
+    default Set<String> selectExistingEmails(Collection<String> emails) {
+        if (emails == null || emails.isEmpty()) return Collections.emptySet();
+        List<Object> list =
+                this.selectObjs(
+                        Wrappers.<UserDO>lambdaQuery()
+                                .select(UserDO::getEmail)
+                                .in(UserDO::getEmail, emails)
+                                .eq(UserDO::getDeleted, 0));
+        return list.stream().map(o -> (String) o).collect(Collectors.toSet());
+    }
 }

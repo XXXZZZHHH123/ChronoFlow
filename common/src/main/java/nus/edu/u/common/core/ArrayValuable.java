@@ -8,5 +8,5 @@ package nus.edu.u.common.core;
  */
 public interface ArrayValuable<T> {
 
-  T[] array();
+    T[] array();
 }

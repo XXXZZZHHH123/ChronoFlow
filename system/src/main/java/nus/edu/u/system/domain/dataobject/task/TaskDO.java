@@ -23,26 +23,26 @@ import nus.edu.u.system.enums.task.TaskStatusEnum;
 @NoArgsConstructor
 public class TaskDO extends TenantBaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  /** Related to {@link UserDO#getId()} */
-  private Long userId;
+    /** Related to {@link UserDO#getId()} */
+    private Long userId;
 
-  /** Related to {@link EventDO#getId()} */
-  private Long eventId;
+    /** Related to {@link EventDO#getId()} */
+    private Long eventId;
 
-  private String name;
+    private String name;
 
-  private String description;
+    private String description;
 
-  /** Related to {@link TaskStatusEnum} */
-  private String status;
+    /** Related to {@link TaskStatusEnum} */
+    private String status;
 
-  private String remark;
+    private String remark;
 
-  private LocalDateTime startTime;
+    private LocalDateTime startTime;
 
-  private LocalDateTime endDTime;
+    private LocalDateTime endDTime;
 }

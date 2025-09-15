@@ -12,6 +12,6 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class SortablePageParam extends PageParam {
 
-  @Schema(description = "Sorting fields")
-  private List<SortingField> sortingFields;
+    @Schema(description = "Sorting fields")
+    private List<SortingField> sortingFields;
 }

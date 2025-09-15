@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UpdateUserDTO {
-  private Long id;
-  private String email;
-  private String remark;
-  private List<Long> roleIds;
+    private Long id;
+    private String email;
+    private String remark;
+    private List<Long> roleIds;
 }

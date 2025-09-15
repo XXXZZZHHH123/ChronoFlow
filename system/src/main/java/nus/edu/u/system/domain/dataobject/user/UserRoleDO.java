@@ -18,13 +18,13 @@ import nus.edu.u.system.domain.dataobject.role.RoleDO;
 @NoArgsConstructor
 public class UserRoleDO extends TenantBaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  /** Related to {@link UserDO#getId()} */
-  private Long userId;
+    /** Related to {@link UserDO#getId()} */
+    private Long userId;
 
-  /** Related to {@link RoleDO#getId()} */
-  private Long roleId;
+    /** Related to {@link RoleDO#getId()} */
+    private Long roleId;
 }

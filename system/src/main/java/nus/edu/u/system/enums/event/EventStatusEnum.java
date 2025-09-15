@@ -14,21 +14,21 @@ import nus.edu.u.common.core.ArrayValuable;
 @Getter
 @AllArgsConstructor
 public enum EventStatusEnum implements ArrayValuable<Integer> {
-  WAITING(1, "Waiting"),
-  DOING(2, "Doing"),
-  SUSPENDED(3, "Suspended"),
-  DELAYED(4, "Delayed"),
-  CLOSED(5, "Closed");
+    WAITING(1, "Waiting"),
+    DOING(2, "Doing"),
+    SUSPENDED(3, "Suspended"),
+    DELAYED(4, "Delayed"),
+    CLOSED(5, "Closed");
 
-  private final Integer status;
+    private final Integer status;
 
-  private final String name;
+    private final String name;
 
-  private static final Integer[] ARRAYS =
-      Arrays.stream(values()).map(EventStatusEnum::getStatus).toArray(Integer[]::new);
+    private static final Integer[] ARRAYS =
+            Arrays.stream(values()).map(EventStatusEnum::getStatus).toArray(Integer[]::new);
 
-  @Override
-  public Integer[] array() {
-    return ARRAYS;
-  }
+    @Override
+    public Integer[] array() {
+        return ARRAYS;
+    }
 }
