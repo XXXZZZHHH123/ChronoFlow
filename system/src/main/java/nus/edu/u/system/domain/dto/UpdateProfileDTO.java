@@ -8,15 +8,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class UpdateProfileDTO {
-  private long id;
+    private long id;
 
-  private String username;
+    private String username;
 
-  private String password;
+    private String password;
 
-  private String email;
+    private String email;
 
-  private String phone;
+    private String phone;
 
-  private String remark;
+    private String remark;
 }

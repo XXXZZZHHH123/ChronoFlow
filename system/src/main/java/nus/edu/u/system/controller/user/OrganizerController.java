@@ -25,96 +25,97 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @SaCheckRole("ORGANIZER")
 public class OrganizerController {
-  @Resource private UserService userService;
+    @Resource private UserService userService;
 
-  @Resource private UserConvert userConvert;
+    @Resource private UserConvert userConvert;
 
-  @Resource private UserRoleMapper userRoleMapper;
+    @Resource private UserRoleMapper userRoleMapper;
 
-  @Resource private ExcelService excelService;
+    @Resource private ExcelService excelService;
 
-  @PostMapping("/create/user")
-  public CommonResult<Long> createUserForOrganizer(@Valid @RequestBody CreateUserReqVO req) {
-    CreateUserDTO dto = userConvert.toDTO(req);
-    Long userId = userService.createUserWithRoleIds(dto);
-    return CommonResult.success(userId);
-  }
+    @PostMapping("/create/user")
+    public CommonResult<Long> createUserForOrganizer(@Valid @RequestBody CreateUserReqVO req) {
+        CreateUserDTO dto = userConvert.toDTO(req);
+        Long userId = userService.createUserWithRoleIds(dto);
+        return CommonResult.success(userId);
+    }
 
-  @PatchMapping("/update/user/{id}")
-  public CommonResult<UpdateUserRespVO> updateUserForOrganizer(
-      @PathVariable("id") Long id, @Valid @RequestBody UpdateUserReqVO vo) {
-    UpdateUserDTO dto = userConvert.toDTO(vo);
-    dto.setId(id);
+    @PatchMapping("/update/user/{id}")
+    public CommonResult<UpdateUserRespVO> updateUserForOrganizer(
+            @PathVariable("id") Long id, @Valid @RequestBody UpdateUserReqVO vo) {
+        UpdateUserDTO dto = userConvert.toDTO(vo);
+        dto.setId(id);
 
-    UserDO updated = userService.updateUserWithRoleIds(dto);
-    // Query the user's role ID
-    List<Long> roleIds = userService.getAliveRoleIdsByUserId(updated.getId());
+        UserDO updated = userService.updateUserWithRoleIds(dto);
+        // Query the user's role ID
+        List<Long> roleIds = userService.getAliveRoleIdsByUserId(updated.getId());
 
-    UpdateUserRespVO respVO = userConvert.toUpdateUserRespVO(updated);
-    respVO.setRoleIds(roleIds);
-    return CommonResult.success(respVO);
-  }
+        UpdateUserRespVO respVO = userConvert.toUpdateUserRespVO(updated);
+        respVO.setRoleIds(roleIds);
+        return CommonResult.success(respVO);
+    }
 
-  @DeleteMapping("/delete/user/{id}")
-  public CommonResult<Boolean> softDeleteUser(@PathVariable("id") Long id) {
-    userService.softDeleteUser(id);
-    return CommonResult.success(Boolean.TRUE);
-  }
+    @DeleteMapping("/delete/user/{id}")
+    public CommonResult<Boolean> softDeleteUser(@PathVariable("id") Long id) {
+        userService.softDeleteUser(id);
+        return CommonResult.success(Boolean.TRUE);
+    }
 
-  @PatchMapping("/restore/user/{id}")
-  public CommonResult<Boolean> restoreUser(@PathVariable("id") Long id) {
-    userService.restoreUser(id);
-    return CommonResult.success(Boolean.TRUE);
-  }
+    @PatchMapping("/restore/user/{id}")
+    public CommonResult<Boolean> restoreUser(@PathVariable("id") Long id) {
+        userService.restoreUser(id);
+        return CommonResult.success(Boolean.TRUE);
+    }
 
-  @PatchMapping("/disable/user/{id}")
-  public CommonResult<Boolean> disableUser(@PathVariable("id") Long id) {
-    userService.disableUser(id);
-    return CommonResult.success(true);
-  }
+    @PatchMapping("/disable/user/{id}")
+    public CommonResult<Boolean> disableUser(@PathVariable("id") Long id) {
+        userService.disableUser(id);
+        return CommonResult.success(true);
+    }
 
-  @PatchMapping("/enable/user/{id}")
-  public CommonResult<Boolean> enableUser(@PathVariable("id") Long id) {
-    userService.enableUser(id);
-    return CommonResult.success(true);
-  }
+    @PatchMapping("/enable/user/{id}")
+    public CommonResult<Boolean> enableUser(@PathVariable("id") Long id) {
+        userService.enableUser(id);
+        return CommonResult.success(true);
+    }
 
-  @GetMapping("/users")
-  public CommonResult<List<UserProfileRespVO>> getAllUserProfiles() {
-    return CommonResult.success(userService.getAllUserProfiles());
-  }
+    @GetMapping("/users")
+    public CommonResult<List<UserProfileRespVO>> getAllUserProfiles() {
+        return CommonResult.success(userService.getAllUserProfiles());
+    }
 
-  @PostMapping("/users/bulk-upsert")
-  public CommonResult<BulkUpsertUsersRespVO> bulkUpsertUsers(
-      @RequestParam("file") MultipartFile file) throws IOException {
+    @PostMapping("/users/bulk-upsert")
+    public CommonResult<BulkUpsertUsersRespVO> bulkUpsertUsers(
+            @RequestParam("file") MultipartFile file) throws IOException {
 
-    List<CreateUserDTO> rows = excelService.parseCreateOrUpdateRows(file);
-    BulkUpsertUsersRespVO result = userService.bulkUpsertUsers(rows);
-    return CommonResult.success(result);
-  }
+        List<CreateUserDTO> rows = excelService.parseCreateOrUpdateRows(file);
+        BulkUpsertUsersRespVO result = userService.bulkUpsertUsers(rows);
+        return CommonResult.success(result);
+    }
 
-  //    @PostMapping("/create/profile")
-  //    public CommonResult<UserCreateRespVO> createUser(@Valid @RequestBody UserCreateReqVO reqVO)
-  // {
-  //        var dto = userConvert.toDTO(reqVO);
-  //        UserDO user = userService.createUser(dto);
-  //        UserCreateRespVO respVO = userConvert.toCreateRespVO(user);
-  //        return CommonResult.success(respVO);
-  //    }
-  //
-  //    @PatchMapping("/update/profile/{id}")
-  //    public CommonResult<UserUpdateRespVO> updateUser(
-  //            @PathVariable("id") Long id,
-  //            @Valid @RequestBody UserUpdateReqVO reqVO) {
-  //
-  //        // VO -> DTO（并补上 id）
-  //        UserUpdateDTO dto = userConvert.toUpdateDTO(reqVO);
-  //        dto.setId(id);
-  //
-  //        // 调用 Service，拿到最新 DO
-  //        UserDO updated = userService.updateUser(dto);
-  //
-  //        // DO -> RespVO
-  //        return CommonResult.success(userConvert.toUpdateRespVO(updated));
-  //    }
+    //    @PostMapping("/create/profile")
+    //    public CommonResult<UserCreateRespVO> createUser(@Valid @RequestBody UserCreateReqVO
+    // reqVO)
+    // {
+    //        var dto = userConvert.toDTO(reqVO);
+    //        UserDO user = userService.createUser(dto);
+    //        UserCreateRespVO respVO = userConvert.toCreateRespVO(user);
+    //        return CommonResult.success(respVO);
+    //    }
+    //
+    //    @PatchMapping("/update/profile/{id}")
+    //    public CommonResult<UserUpdateRespVO> updateUser(
+    //            @PathVariable("id") Long id,
+    //            @Valid @RequestBody UserUpdateReqVO reqVO) {
+    //
+    //        // VO -> DTO（并补上 id）
+    //        UserUpdateDTO dto = userConvert.toUpdateDTO(reqVO);
+    //        dto.setId(id);
+    //
+    //        // 调用 Service，拿到最新 DO
+    //        UserDO updated = userService.updateUser(dto);
+    //
+    //        // DO -> RespVO
+    //        return CommonResult.success(userConvert.toUpdateRespVO(updated));
+    //    }
 }

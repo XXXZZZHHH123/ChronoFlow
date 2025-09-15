@@ -19,13 +19,13 @@ import nus.edu.u.system.domain.dataobject.user.UserDO;
 @EqualsAndHashCode(callSuper = true)
 public class UserPostDO extends TenantBaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  /** Related to {@link UserDO#getId()} */
-  private Long userId;
+    /** Related to {@link UserDO#getId()} */
+    private Long userId;
 
-  /** Related to {@link PostDO#getId()} */
-  private Long postId;
+    /** Related to {@link PostDO#getId()} */
+    private Long postId;
 }

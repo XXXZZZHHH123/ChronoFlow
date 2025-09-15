@@ -23,34 +23,34 @@ import nus.edu.u.system.domain.dataobject.user.UserDO;
 @NoArgsConstructor
 public class DeptDO extends TenantBaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  private String name;
+    private String name;
 
-  private Integer sort;
+    private Integer sort;
 
-  /** Related to {@link UserDO#getId()} */
-  private Long leadUserId;
+    /** Related to {@link UserDO#getId()} */
+    private Long leadUserId;
 
-  private String phone;
+    private String phone;
 
-  private String email;
+    private String email;
 
-  private String remark;
+    private String remark;
 
-  /**
-   * Department status
-   *
-   * <p>Enum {@link CommonStatusEnum}
-   */
-  private Integer status;
+    /**
+     * Department status
+     *
+     * <p>Enum {@link CommonStatusEnum}
+     */
+    private Integer status;
 
-  /**
-   * Associated event ID
-   *
-   * <p>Related to {@link EventDO#getId()}
-   */
-  private Long eventId;
+    /**
+     * Associated event ID
+     *
+     * <p>Related to {@link EventDO#getId()}
+     */
+    private Long eventId;
 }

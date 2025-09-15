@@ -15,26 +15,26 @@ import nus.edu.u.common.core.ArrayValuable;
 @Getter
 @AllArgsConstructor
 public enum CommonStatusEnum implements ArrayValuable<Integer> {
-  ENABLE(0, "Enable"),
-  DISABLE(1, "Disable");
+    ENABLE(0, "Enable"),
+    DISABLE(1, "Disable");
 
-  public static final Integer[] ARRAYS =
-      Arrays.stream(values()).map(CommonStatusEnum::getStatus).toArray(Integer[]::new);
+    public static final Integer[] ARRAYS =
+            Arrays.stream(values()).map(CommonStatusEnum::getStatus).toArray(Integer[]::new);
 
-  private final Integer status;
+    private final Integer status;
 
-  private final String name;
+    private final String name;
 
-  @Override
-  public Integer[] array() {
-    return ARRAYS;
-  }
+    @Override
+    public Integer[] array() {
+        return ARRAYS;
+    }
 
-  public static boolean isEnable(Integer status) {
-    return ObjUtil.equal(ENABLE.status, status);
-  }
+    public static boolean isEnable(Integer status) {
+        return ObjUtil.equal(ENABLE.status, status);
+    }
 
-  public static boolean isDisable(Integer status) {
-    return ObjUtil.equal(DISABLE.status, status);
-  }
+    public static boolean isDisable(Integer status) {
+        return ObjUtil.equal(DISABLE.status, status);
+    }
 }

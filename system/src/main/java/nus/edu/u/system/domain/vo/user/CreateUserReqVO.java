@@ -9,13 +9,13 @@ import lombok.Data;
 
 @Data
 public class CreateUserReqVO {
-  @NotBlank(message = "Email cannot be blank")
-  @Email(message = "Email format invalid")
-  private String email;
+    @NotBlank(message = "Email cannot be blank")
+    @Email(message = "Email format invalid")
+    private String email;
 
-  /** Directly pass the role ID list, at least one */
-  @NotEmpty(message = "RoleIds cannot be empty")
-  private List<@NotNull Long> roleIds;
+    /** Directly pass the role ID list, at least one */
+    @NotEmpty(message = "RoleIds cannot be empty")
+    private List<@NotNull Long> roleIds;
 
-  private String remark;
+    private String remark;
 }

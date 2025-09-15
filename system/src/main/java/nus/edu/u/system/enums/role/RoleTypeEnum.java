@@ -15,20 +15,20 @@ import nus.edu.u.common.core.ArrayValuable;
 @AllArgsConstructor
 public enum RoleTypeEnum implements ArrayValuable<Integer> {
 
-  /** System role */
-  SYSTEM(1, "System role"),
-  /** Custom role */
-  CUSTOM(2, "Custom role");
+    /** System role */
+    SYSTEM(1, "System role"),
+    /** Custom role */
+    CUSTOM(2, "Custom role");
 
-  private final Integer type;
+    private final Integer type;
 
-  private final String typeName;
+    private final String typeName;
 
-  private static final Integer[] ARRAYS =
-      Arrays.stream(values()).map(RoleTypeEnum::getType).toArray(Integer[]::new);
+    private static final Integer[] ARRAYS =
+            Arrays.stream(values()).map(RoleTypeEnum::getType).toArray(Integer[]::new);
 
-  @Override
-  public Integer[] array() {
-    return ARRAYS;
-  }
+    @Override
+    public Integer[] array() {
+        return ARRAYS;
+    }
 }

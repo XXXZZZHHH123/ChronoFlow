@@ -11,13 +11,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UpdateUserRespVO {
-  private Long id;
+    private Long id;
 
-  private String email;
+    private String email;
 
-  private String remark;
+    private String remark;
 
-  private List<Long> roleIds;
+    private List<Long> roleIds;
 
-  private Integer status;
+    private Integer status;
 }

@@ -19,16 +19,16 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RegMemberReqVO {
 
-  private Long userId;
+    private Long userId;
 
-  @NotEmpty(message = "Please set your username")
-  @Size(min = 6, max = 100, message = "Username length should between 6 and 100")
-  private String username;
+    @NotEmpty(message = "Please set your username")
+    @Size(min = 6, max = 100, message = "Username length should between 6 and 100")
+    private String username;
 
-  @NotEmpty(message = "Please set your password")
-  @Size(min = 8, max = 100, message = "Password length should between 8 and 100")
-  private String password;
+    @NotEmpty(message = "Please set your password")
+    @Size(min = 8, max = 100, message = "Password length should between 8 and 100")
+    private String password;
 
-  @NotEmpty(message = "Please key in your phone number")
-  private String phone;
+    @NotEmpty(message = "Please key in your phone number")
+    private String phone;
 }

@@ -36,57 +36,59 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class AuthController {
 
-  @Resource private AuthService authService;
+    @Resource private AuthService authService;
 
-  @Resource private UserMapper userMapper;
+    @Resource private UserMapper userMapper;
 
-  @Resource private CookieConfig cookieConfig;
+    @Resource private CookieConfig cookieConfig;
 
-  @PostMapping("/login")
-  public CommonResult<LoginRespVO> login(
-      @RequestBody @Valid LoginReqVO reqVO,
-      @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
-      HttpServletResponse response) {
-    reqVO.setRefreshToken(refreshToken);
-    LoginRespVO loginRespVO = authService.login(reqVO);
-    AbstractCookieFactory cookieFactory;
-    if (reqVO.isRemember()) {
-      cookieFactory =
-          new LongLifeRefreshTokenCookie(
-              cookieConfig.isHttpOnly(),
-              cookieConfig.isSecurity(),
-              REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE);
-    } else {
-      cookieFactory =
-          new ZeroLifeRefreshTokenCookie(cookieConfig.isHttpOnly(), cookieConfig.isSecurity());
+    @PostMapping("/login")
+    public CommonResult<LoginRespVO> login(
+            @RequestBody @Valid LoginReqVO reqVO,
+            @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
+            HttpServletResponse response) {
+        reqVO.setRefreshToken(refreshToken);
+        LoginRespVO loginRespVO = authService.login(reqVO);
+        AbstractCookieFactory cookieFactory;
+        if (reqVO.isRemember()) {
+            cookieFactory =
+                    new LongLifeRefreshTokenCookie(
+                            cookieConfig.isHttpOnly(),
+                            cookieConfig.isSecurity(),
+                            REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE);
+        } else {
+            cookieFactory =
+                    new ZeroLifeRefreshTokenCookie(
+                            cookieConfig.isHttpOnly(), cookieConfig.isSecurity());
+        }
+        response.addCookie(cookieFactory.createCookie(loginRespVO.getRefreshToken()));
+        return success(loginRespVO);
     }
-    response.addCookie(cookieFactory.createCookie(loginRespVO.getRefreshToken()));
-    return success(loginRespVO);
-  }
 
-  @PostMapping("/logout")
-  public CommonResult<Boolean> logout(
-      @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
-      HttpServletResponse response) {
-    authService.logout(refreshToken);
-    // Delete refresh token from cookie
-    AbstractCookieFactory cookieFactory =
-        new ZeroLifeRefreshTokenCookie(cookieConfig.isHttpOnly(), cookieConfig.isSecurity());
-    response.addCookie(cookieFactory.createCookie(null));
-    return success(true);
-  }
-
-  @PostMapping("/refresh")
-  public CommonResult<LoginRespVO> refresh(
-      @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken) {
-    if (StrUtil.isBlank(refreshToken)) {
-      return error(MISSING_COOKIE);
+    @PostMapping("/logout")
+    public CommonResult<Boolean> logout(
+            @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
+            HttpServletResponse response) {
+        authService.logout(refreshToken);
+        // Delete refresh token from cookie
+        AbstractCookieFactory cookieFactory =
+                new ZeroLifeRefreshTokenCookie(
+                        cookieConfig.isHttpOnly(), cookieConfig.isSecurity());
+        response.addCookie(cookieFactory.createCookie(null));
+        return success(true);
     }
-    return success(authService.refresh(refreshToken));
-  }
 
-  @GetMapping("/list")
-  public List<UserDO> list() {
-    return userMapper.selectList(null);
-  }
+    @PostMapping("/refresh")
+    public CommonResult<LoginRespVO> refresh(
+            @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken) {
+        if (StrUtil.isBlank(refreshToken)) {
+            return error(MISSING_COOKIE);
+        }
+        return success(authService.refresh(refreshToken));
+    }
+
+    @GetMapping("/list")
+    public List<UserDO> list() {
+        return userMapper.selectList(null);
+    }
 }

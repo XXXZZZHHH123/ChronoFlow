@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class LoginRespVO {
 
-  private UserVO user;
+    private UserVO user;
 
-  @JsonIgnore private String refreshToken;
+    @JsonIgnore private String refreshToken;
 }

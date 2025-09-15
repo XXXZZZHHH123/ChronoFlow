@@ -12,25 +12,25 @@ import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
  * @date 2025-09-09
  */
 public interface GroupService {
-  /**
-   * Create a new group for event organization
-   *
-   * @param reqVO Group creation request
-   * @return Created group ID
-   */
-  Long createGroup(CreateGroupReqVO reqVO);
+    /**
+     * Create a new group for event organization
+     *
+     * @param reqVO Group creation request
+     * @return Created group ID
+     */
+    Long createGroup(CreateGroupReqVO reqVO);
 
-  void updateGroup(UpdateGroupReqVO reqVO);
+    void updateGroup(UpdateGroupReqVO reqVO);
 
-  void deleteGroup(Long id);
+    void deleteGroup(Long id);
 
-  void addMemberToGroup(Long groupId, Long userId);
+    void addMemberToGroup(Long groupId, Long userId);
 
-  void removeMemberFromGroup(Long groupId, Long userId);
+    void removeMemberFromGroup(Long groupId, Long userId);
 
-  List<GroupRespVO.MemberInfo> getGroupMembers(Long groupId);
+    List<GroupRespVO.MemberInfo> getGroupMembers(Long groupId);
 
-  void addMembersToGroup(Long groupId, List<Long> userIds);
+    void addMembersToGroup(Long groupId, List<Long> userIds);
 
-  void removeMembersToGroup(Long groupId, List<Long> userIds);
+    void removeMembersToGroup(Long groupId, List<Long> userIds);
 }

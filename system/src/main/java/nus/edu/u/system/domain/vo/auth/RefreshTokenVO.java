@@ -10,6 +10,6 @@ import lombok.Data;
 @Data
 public class RefreshTokenVO {
 
-  @NotBlank(message = "Refresh token can't be empty")
-  private String refreshToken;
+    @NotBlank(message = "Refresh token can't be empty")
+    private String refreshToken;
 }
