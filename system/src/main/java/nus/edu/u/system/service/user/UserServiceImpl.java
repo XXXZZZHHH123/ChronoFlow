@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
 import java.util.*;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
@@ -51,6 +52,8 @@ public class UserServiceImpl implements UserService {
   // similar methods
   @Resource @Lazy private UserService self;
 
+  private static final Set<Long> FORBIDDEN_ROLE_IDS = Set.of(1L);
+
   @Override
   public UserDO getUserByUsername(String username) {
     return userMapper.selectByUsername(username);
@@ -70,7 +73,12 @@ public class UserServiceImpl implements UserService {
   @Transactional
   public Long createUserWithRoleIds(CreateUserDTO dto) {
     String email = dto.getEmail().trim();
+    // Filter out roleId=1 (admin) and remove duplicates
     List<Long> roleIds = dto.getRoleIds().stream().distinct().toList();
+
+    if (roleIds.stream().anyMatch(FORBIDDEN_ROLE_IDS::contains)) {
+      throw exception(ROLE_NOT_FOUND);
+    }
 
     // 1) Email uniqueness check
     if (userMapper.existsEmail(email, null)) {
@@ -135,6 +143,9 @@ public class UserServiceImpl implements UserService {
       // Check if the role exists
       List<Long> targetList =
           dto.getRoleIds().stream().filter(Objects::nonNull).distinct().toList();
+      if (targetList.stream().anyMatch(FORBIDDEN_ROLE_IDS::contains)) {
+        throw exception(ROLE_NOT_FOUND);
+      }
       if (!targetList.isEmpty()) {
         int n = roleMapper.countByIds(targetList);
         if (n != targetList.size()) throw exception(ROLE_NOT_FOUND);
@@ -271,103 +282,6 @@ public class UserServiceImpl implements UserService {
         .toList();
   }
 
-  //    @Override
-  //    @Transactional
-  //    public UserDO createUser(CreateProfileDTO dto) {
-  //        if (dto.getPhone() != null && !ValidationUtils.isMobile(dto.getPhone())){
-  //            throw exception(WRONG_MOBILE);
-  //        }
-  //        // Username/email/phone uniqueness check
-  //        if (userMapper.existsUsername(dto.getUsername(), null)) {
-  //            throw exception(USERNAME_EXIST);
-  //        }
-  //        if (userMapper.existsEmail(dto.getEmail(), null)) {
-  //            throw exception(EMAIL_EXIST);
-  //        }
-  //        if (userMapper.existsPhone(dto.getPhone(), null)) {
-  //            throw exception(PHONE_EXIST);
-  //        }
-  //
-  //        UserDO user = UserDO.builder()
-  //                .username(dto.getUsername())
-  //                .password(passwordEncoder.encode(dto.getPassword()))
-  //                .email(dto.getEmail())
-  //                .phone(dto.getPhone())
-  //                .remark(dto.getRemark())
-  //                .status(UserStatusEnum.PENDING.getCode()) // 默认pending
-  //                .build();
-  //
-  // user.setTenantId(Long.parseLong(StpUtil.getSession().get(SESSION_TENANT_ID).toString()));
-  //        int rows = userMapper.insert(user);
-  //        if (rows <= 0) {
-  //            throw exception(USER_INSERT_FAILURE);
-  //        }
-  //        return user;
-  //    }
-  //
-  //
-  //    @Override
-  //    @Transactional
-  //    public UserDO updateUser(UpdateProfileDTO dto) {
-  //        // 0) 预处理：trim，并把 "" 转成 null（表示“不更新该字段”）
-  //        dto.setUsername(trimToNull(dto.getUsername()));
-  //        dto.setPassword(trimToNull(dto.getPassword()));
-  //        dto.setEmail(trimToNull(dto.getEmail()));
-  //        dto.setPhone(trimToNull(dto.getPhone()));
-  //        dto.setRemark(trimToNull(dto.getRemark()));
-  //
-  //        // 1) 存在性校验
-  //        UserDO db = userMapper.selectById(dto.getId());
-  //        if (db == null) {
-  //            throw exception(USER_NOTFOUND);
-  //        }
-  //
-  //        // 2) 可选字段的业务校验
-  //        if (dto.getPhone() != null && !ValidationUtils.isMobile(dto.getPhone())) {
-  //            throw exception(WRONG_MOBILE);
-  //        }
-  //
-  //        // 3) 业务唯一性校验（排除自己）
-  //        if (dto.getUsername() != null && userMapper.existsUsername(dto.getUsername(),
-  // dto.getId())) {
-  //            throw exception(USERNAME_EXIST);
-  //        }
-  //        if (dto.getEmail() != null && userMapper.existsEmail(dto.getEmail(), dto.getId())) {
-  //            throw exception(EMAIL_EXIST);
-  //        }
-  //        if (dto.getPhone() != null && userMapper.existsPhone(dto.getPhone(), dto.getId())) {
-  //            throw exception(PHONE_EXIST);
-  //        }
-  //
-  //        // 4) 只更新非空字段
-  //        LambdaUpdateWrapper<UserDO> uw = Wrappers.<UserDO>lambdaUpdate()
-  //                .eq(UserDO::getId, dto.getId());
-  //
-  //        boolean hasUpdate = false;
-  //        if (dto.getUsername() != null) { uw.set(UserDO::getUsername, dto.getUsername());
-  // hasUpdate = true; }
-  //        if (dto.getEmail() != null)    { uw.set(UserDO::getEmail, dto.getEmail());
-  // hasUpdate = true; }
-  //        if (dto.getPhone() != null)    { uw.set(UserDO::getPhone, dto.getPhone());
-  // hasUpdate = true; }
-  //        if (dto.getRemark() != null)   { uw.set(UserDO::getRemark, dto.getRemark());
-  // hasUpdate = true; }
-  //        if (dto.getPassword() != null) {
-  //            uw.set(UserDO::getPassword, passwordEncoder.encode(dto.getPassword()));
-  //            hasUpdate = true;
-  //        }
-  //
-  //        // 若没有任何可更新字段，直接返回当前数据，避免无意义的 UPDATE
-  //        if (hasUpdate) {
-  //            if (userMapper.update(new UserDO(), uw) <= 0) {
-  //                throw exception(UPDATE_FAILURE);
-  //            }
-  //        }
-  //
-  //        // 5) 返回最新数据
-  //        return userMapper.selectById(dto.getId());
-  //    }
-
   /** Core: add only/delete only/revive */
   private void syncUserRoles(Long userId, List<Long> targetList) {
     Set<Long> current = new HashSet<>(userRoleMapper.selectAliveRoleIdsByUser(userId));
@@ -378,16 +292,16 @@ public class UserServiceImpl implements UserService {
     Set<Long> toAdd = new HashSet<>(target);
     toAdd.removeAll(current);
 
-    // 1) 逻辑删除多余
+    // 1) Logic delete redundant
     if (!toRemove.isEmpty()) {
       userRoleMapper.batchLogicalDelete(userId, toRemove);
     }
 
     if (!toAdd.isEmpty()) {
-      // 2) 先复活历史记录（deleted = true 的那批）
+      // 2) Resurrect the historical records first (those with deleted = true)）
       userRoleMapper.batchRevive(userId, toAdd);
 
-      // 3) 再只插入仍不存在的（避免唯一索引冲突）
+      // 3) Then only insert those that do not exist yet (to avoid unique index conflicts）
       userRoleMapper.insertMissing(userId, toAdd);
     }
   }
@@ -404,60 +318,43 @@ public class UserServiceImpl implements UserService {
           .build();
     }
 
-    // 0) Pre-cleaning: deduplication by email (keep the first one), deduplication by role
-    Map<String, CreateUserDTO> byEmail = new LinkedHashMap<>();
-    for (CreateUserDTO r : rawRows) {
-      if (r == null || r.getEmail() == null) continue;
-      String email = normalizeEmail(r.getEmail());
-      if (email.isEmpty()) continue;
-
-      List<Long> roles =
-          Optional.ofNullable(r.getRoleIds()).orElse(Collections.emptyList()).stream()
-              .filter(Objects::nonNull)
-              .distinct()
-              .toList();
-
-      r.setEmail(email);
-      r.setRoleIds(roles);
-      byEmail.putIfAbsent(email, r);
-    }
-    List<CreateUserDTO> rows = new ArrayList<>(byEmail.values());
-    int total = rows.size();
-
     int created = 0, updated = 0;
     List<BulkUpsertUsersRespVO.RowFailure> failures = new ArrayList<>();
 
-    // 1) Check the DB for existing mailboxes at once and decide whether to create or update
-    // (optional optimization)
-    List<String> emails = rows.stream().map(CreateUserDTO::getEmail).toList();
-    Set<String> exists = new HashSet<>(userMapper.selectExistingEmails(emails));
+    for (CreateUserDTO raw : rawRows) {
+      int rowIndex = raw.getRowIndex() != null ? raw.getRowIndex() : 0;
+      String rawEmail = raw.getEmail();
 
-    for (CreateUserDTO r : rows) {
-      int rowIndex = r.getRowIndex() != null ? r.getRowIndex() : 0;
       try {
-        // Use proxy (self) to ensure @Transactional(REQUIRES_NEW) takes effect
-        boolean isCreated = self.processSingleRowWithNewTx(r, exists.contains(r.getEmail()));
+        validateCreateArgs(rawEmail, raw.getRoleIds());
+
+        String email = normalizeEmail(rawEmail);
+        List<Long> roleIds = normalizeAndCheckRoles(raw.getRoleIds());
+        String remark = raw.getRemark();
+
+        boolean isCreated = self.tryCreateOrFallbackToUpdate(email, remark, roleIds);
         if (isCreated) created++;
         else updated++;
+
       } catch (ServiceException e) {
         failures.add(
             BulkUpsertUsersRespVO.RowFailure.builder()
                 .rowIndex(rowIndex)
-                .email(r.getEmail())
+                .email(rawEmail)
                 .reason(e.getMessage())
                 .build());
       } catch (Exception e) {
         failures.add(
             BulkUpsertUsersRespVO.RowFailure.builder()
                 .rowIndex(rowIndex)
-                .email(r.getEmail())
+                .email(rawEmail)
                 .reason("INTERNAL_ERROR: " + e.getClass().getSimpleName())
                 .build());
       }
     }
 
     return BulkUpsertUsersRespVO.builder()
-        .totalRows(total)
+        .totalRows(rawRows.size())
         .createdCount(created)
         .updatedCount(updated)
         .failedCount(failures.size())
@@ -465,29 +362,34 @@ public class UserServiceImpl implements UserService {
         .build();
   }
 
-  /** Single-row transaction: new transaction. Returns true if created; false if updated. */
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public boolean processSingleRowWithNewTx(CreateUserDTO row, boolean dbExists) {
-    if (dbExists) {
-      // Update: Use email to find id, then reuse your update method
-      Long userId = userMapper.selectIdByEmail(row.getEmail());
-      UpdateUserDTO u =
-          UpdateUserDTO.builder()
-              .id(userId)
-              // The mailbox is usually not changed; if you want to change it, put null here to "do
-              // not change the mailbox"
-              .email(null)
-              .remark(row.getRemark())
-              .roleIds(row.getRoleIds())
-              .build();
-      updateUserWithRoleIds(
-          u); // Your existing update logic (including role difference synchronization)
-      return false;
-    } else {
-      // Create: reuse your existing single creation
-      createUserWithRoleIds(row);
+  public boolean tryCreateOrFallbackToUpdate(String email, String remark, List<Long> roleIds) {
+    try {
+      // A) 先尝试创建
+      CreateUserDTO dto =
+          CreateUserDTO.builder().email(email).remark(remark).roleIds(roleIds).build();
+      createUserWithRoleIds(dto);
       return true;
+
+    } catch (ServiceException ex) {
+      if (Objects.equals(ex.getCode(), EMAIL_EXIST.getCode())) {
+        Long userId = userMapper.selectIdByEmail(email);
+        if (userId == null) {
+          throw new ServiceException(NULL_USERID);
+        }
+
+        validateUpdateArgs(email, roleIds);
+
+        UpdateUserDTO u =
+            UpdateUserDTO.builder().id(userId).email(null).remark(remark).roleIds(roleIds).build();
+
+        updateUserWithRoleIds(u);
+        return false;
+      }
+      // Other business exceptions (such as ROLE_NOT_FOUND) continue to be thrown to the outer layer
+      // to record failure
+      throw ex;
     }
   }
 
@@ -498,5 +400,41 @@ public class UserServiceImpl implements UserService {
 
   private String normalizeEmail(String email) {
     return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+  }
+
+  private static final Pattern EMAIL_PATTERN =
+      Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$", Pattern.CASE_INSENSITIVE);
+
+  private boolean isValidEmail(String email) {
+    return email != null && EMAIL_PATTERN.matcher(email).matches();
+  }
+
+  private void validateCreateArgs(String rawEmail, List<Long> rawRoleIds) {
+    String email = normalizeEmail(rawEmail);
+    if (email.isBlank()) {
+      throw new ServiceException(EMAIL_BLANK);
+    }
+    if (!isValidEmail(email)) {
+      throw new ServiceException(INVALID_EMAIL);
+    }
+    if (rawRoleIds == null || rawRoleIds.isEmpty()) {
+      throw new ServiceException(EMPTY_ROLEIDS);
+    }
+  }
+
+  private void validateUpdateArgs(String rawEmail, List<Long> rawRoleIds) {
+    if (rawRoleIds == null || rawRoleIds.isEmpty()) {
+      throw new ServiceException(EMPTY_ROLEIDS);
+    }
+  }
+
+  // Role general business verification (prohibit roles + deduplication normalization)
+  private List<Long> normalizeAndCheckRoles(List<Long> rawRoleIds) {
+    List<Long> roleIds = rawRoleIds.stream().filter(Objects::nonNull).distinct().toList();
+
+    if (roleIds.stream().anyMatch(FORBIDDEN_ROLE_IDS::contains)) {
+      throw exception(ROLE_NOT_FOUND);
+    }
+    return roleIds;
   }
 }

@@ -34,6 +34,10 @@ public interface ErrorCodeConstants {
   ErrorCode USER_ALREADY_ENABLED = new ErrorCode(12_01_0011, "User already enabled");
   ErrorCode ROLE_NOT_FOUND = new ErrorCode(12_01_0012, "Role not found");
   ErrorCode USER_ROLE_BIND_FAILURE = new ErrorCode(12_01_0013, "User role bind failure");
+  ErrorCode EMAIL_BLANK = new ErrorCode(12_01_0014, "Email can not be blank");
+  ErrorCode INVALID_EMAIL = new ErrorCode(12_01_0015, "Invalid email");
+  ErrorCode EMPTY_ROLEIDS = new ErrorCode(12_01_0016, "roleIds can not be blank");
+  ErrorCode NULL_USERID = new ErrorCode(12_01_0017, "Email existed but user not found on update");
 
   // ========= group module 10-02-000 ============
   ErrorCode GROUP_NOT_FOUND = new ErrorCode(10_02_001, "Group not found");

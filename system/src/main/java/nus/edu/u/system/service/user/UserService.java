@@ -2,7 +2,9 @@ package nus.edu.u.system.service.user;
 
 import java.util.List;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
-import nus.edu.u.system.domain.dto.*;
+import nus.edu.u.system.domain.dto.CreateUserDTO;
+import nus.edu.u.system.domain.dto.UpdateUserDTO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
 import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 
@@ -57,7 +59,7 @@ public interface UserService {
 
   BulkUpsertUsersRespVO bulkUpsertUsers(List<CreateUserDTO> rawRows);
 
-  boolean processSingleRowWithNewTx(CreateUserDTO row, boolean dbExists);
+  boolean tryCreateOrFallbackToUpdate(String email, String remark, List<Long> roleIds);
 
   List<Long> getAliveRoleIdsByUserId(Long userId);
 }

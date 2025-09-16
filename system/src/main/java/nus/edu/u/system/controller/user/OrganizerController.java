@@ -92,29 +92,4 @@ public class OrganizerController {
     BulkUpsertUsersRespVO result = userService.bulkUpsertUsers(rows);
     return CommonResult.success(result);
   }
-
-  //    @PostMapping("/create/profile")
-  //    public CommonResult<UserCreateRespVO> createUser(@Valid @RequestBody UserCreateReqVO reqVO)
-  // {
-  //        var dto = userConvert.toDTO(reqVO);
-  //        UserDO user = userService.createUser(dto);
-  //        UserCreateRespVO respVO = userConvert.toCreateRespVO(user);
-  //        return CommonResult.success(respVO);
-  //    }
-  //
-  //    @PatchMapping("/update/profile/{id}")
-  //    public CommonResult<UserUpdateRespVO> updateUser(
-  //            @PathVariable("id") Long id,
-  //            @Valid @RequestBody UserUpdateReqVO reqVO) {
-  //
-  //        // VO -> DTO（并补上 id）
-  //        UserUpdateDTO dto = userConvert.toUpdateDTO(reqVO);
-  //        dto.setId(id);
-  //
-  //        // 调用 Service，拿到最新 DO
-  //        UserDO updated = userService.updateUser(dto);
-  //
-  //        // DO -> RespVO
-  //        return CommonResult.success(userConvert.toUpdateRespVO(updated));
-  //    }
 }
