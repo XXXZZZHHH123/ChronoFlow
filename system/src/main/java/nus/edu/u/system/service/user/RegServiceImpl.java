@@ -9,6 +9,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.role.RoleDO;
 import nus.edu.u.system.domain.dataobject.tenant.TenantDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
@@ -49,7 +50,9 @@ public class RegServiceImpl implements RegService {
 
     public static final String ORGANIZER_REMARK = "Organizer account";
 
-    public static final String ORGANIZER_ROLE_KEY = "organizer";
+    public static final String ORGANIZER_ROLE_NAME = "Organizer";
+
+    public static final String ORGANIZER_ROLE_KEY = "ORGANIZER";
 
     public static final int ORGANIZATION_CODE_LENGTH = 10;
 
@@ -118,12 +121,15 @@ public class RegServiceImpl implements RegService {
         if (!isSuccess) {
             throw exception(REG_FAIL);
         }
-        // Select organizer role
+        // Insert organizer role
         RoleDO role =
-                roleMapper.selectOne(
-                        new LambdaQueryWrapper<RoleDO>()
-                                .eq(RoleDO::getRoleKey, ORGANIZER_ROLE_KEY));
-        if (ObjUtil.isNull(role)) {
+                RoleDO.builder()
+                        .name(ORGANIZER_ROLE_NAME)
+                        .roleKey(ORGANIZER_ROLE_KEY)
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
+        isSuccess = roleMapper.insert(role) > 0;
+        if (!isSuccess) {
             throw exception(REG_FAIL);
         }
         // Apply organizer role to this user
@@ -166,6 +172,8 @@ public class RegServiceImpl implements RegService {
         // Set tenant id into sys_user and sys_user_role
         user.setTenantId(tenant.getId());
         userMapper.updateById(user);
+        role.setTenantId(tenant.getId());
+        roleMapper.updateById(role);
         userRole.setTenantId(tenant.getId());
         userRoleMapper.updateById(userRole);
         return isSuccess;
