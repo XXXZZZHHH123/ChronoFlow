@@ -37,8 +37,8 @@ public interface GlobalErrorCodeConstants {
             new ErrorCode(900, "Repeat request, please try again later"); // 重复请求
     ErrorCode DEMO_DENY = new ErrorCode(901, "Demo mode, write operation disabled");
 
-  ErrorCode UNKNOWN = new ErrorCode(999, "Unknown error");
-  ErrorCode EXCEL_HEADER_MISSING = new ErrorCode(902, "Excel header missing");
-  ErrorCode EXCEL_ROLEID_INVALID = new ErrorCode(903, "Excel roleId invalid");
-  ErrorCode EXCEL_FORMAT_ERROR = new ErrorCode(904, "Excel format error");
+    ErrorCode UNKNOWN = new ErrorCode(999, "Unknown error");
+    ErrorCode EXCEL_HEADER_MISSING = new ErrorCode(902, "Excel header missing");
+    ErrorCode EXCEL_ROLEID_INVALID = new ErrorCode(903, "Excel roleId invalid");
+    ErrorCode EXCEL_FORMAT_ERROR = new ErrorCode(904, "Excel format error");
 }
