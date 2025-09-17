@@ -1,6 +1,6 @@
 package nus.edu.u.framework.mybatis;
 
-import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
+import static nus.edu.u.framework.mybatis.MybatisPlusConfig.getCurrentTenantId;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -17,48 +17,36 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class MybatisMetaObjectHandler implements MetaObjectHandler {
-  @Override
-  public void insertFill(MetaObject metaObject) {
-    // Fill time automatically
-    this.strictInsertFill(metaObject, "createTime", LocalDateTime.class, LocalDateTime.now());
-    this.strictInsertFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
+    @Override
+    public void insertFill(MetaObject metaObject) {
+        // Fill time automatically
+        this.strictInsertFill(metaObject, "createTime", LocalDateTime.class, LocalDateTime.now());
+        this.strictInsertFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
 
-    // Fill user automatically
-    String currentUser = getCurrentUserId();
-    this.strictInsertFill(metaObject, "creator", String.class, currentUser);
-    this.strictInsertFill(metaObject, "updater", String.class, currentUser);
+        // Fill user automatically
+        String currentUser = getCurrentUserId();
+        this.strictInsertFill(metaObject, "creator", String.class, currentUser);
+        this.strictInsertFill(metaObject, "updater", String.class, currentUser);
 
-    this.strictInsertFill(metaObject, "tenant_id", Long.class, getCurrentTenantId());
-    this.strictInsertFill(metaObject, "deleted", Boolean.class, false);
-  }
-
-  @Override
-  public void updateFill(MetaObject metaObject) {
-    this.strictUpdateFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
-    this.strictUpdateFill(metaObject, "updater", String.class, getCurrentUserId());
-  }
-
-  private String getCurrentUserId() {
-    // Get login user id
-    try {
-      Object userIdObject = StpUtil.getLoginId();
-      if (ObjectUtil.isNotNull(userIdObject)) {
-        return String.valueOf(userIdObject);
-      }
-    } catch (Exception ignored) {
+        this.strictInsertFill(metaObject, "tenant_id", Long.class, getCurrentTenantId());
+        this.strictInsertFill(metaObject, "deleted", Boolean.class, false);
     }
-    return "system"; // Default value
-  }
 
-  private Long getCurrentTenantId() {
-    try {
-      Object tenantIdObject = StpUtil.getSession().get(SESSION_TENANT_ID);
-      Long tenantId = Long.parseLong(tenantIdObject.toString());
-      if (ObjectUtil.isNotNull(tenantId)) {
-        return tenantId;
-      }
-    } catch (Exception ignored) {
+    @Override
+    public void updateFill(MetaObject metaObject) {
+        this.strictUpdateFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
+        this.strictUpdateFill(metaObject, "updater", String.class, getCurrentUserId());
     }
-    return 1L; // Default value
-  }
+
+    private String getCurrentUserId() {
+        // Get login user id
+        try {
+            Object userIdObject = StpUtil.getLoginId();
+            if (ObjectUtil.isNotNull(userIdObject)) {
+                return String.valueOf(userIdObject);
+            }
+        } catch (Exception ignored) {
+        }
+        return "system"; // Default value
+    }
 }

@@ -16,17 +16,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserRoleDTO {
 
-  private Long userId;
+    private Long userId;
 
-  private String username;
+    private String username;
 
-  private String email;
+    private String email;
 
-  private String phone;
+    private String phone;
 
-  private Integer status;
+    private Integer status;
 
-  private Long tenantId;
+    private Long tenantId;
 
-  private List<RoleDTO> roles;
+    private List<RoleDTO> roles;
 }

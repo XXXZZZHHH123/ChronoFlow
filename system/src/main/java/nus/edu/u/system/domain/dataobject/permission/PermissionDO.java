@@ -20,29 +20,29 @@ import nus.edu.u.system.enums.permission.PermissionTypeEnum;
 @NoArgsConstructor
 public class PermissionDO extends TenantBaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  private String name;
+    private String name;
 
-  /** Key to judge the permission */
-  private String permissionKey;
+    /** Key to judge the permission */
+    private String permissionKey;
 
-  /**
-   * 1-menu 2-button 3-API
-   *
-   * <p>Enum {@link PermissionTypeEnum}
-   */
-  private Integer type;
+    /**
+     * 1-menu 2-button 3-API
+     *
+     * <p>Enum {@link PermissionTypeEnum}
+     */
+    private Integer type;
 
-  /** To store parent permission id */
-  private Long parentId;
+    /** To store parent permission id */
+    private Long parentId;
 
-  /**
-   * Permission status
-   *
-   * <p>Enum {@link CommonStatusEnum}
-   */
-  private Integer status;
+    /**
+     * Permission status
+     *
+     * <p>Enum {@link CommonStatusEnum}
+     */
+    private Integer status;
 }

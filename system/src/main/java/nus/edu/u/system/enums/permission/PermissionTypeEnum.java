@@ -13,24 +13,24 @@ import nus.edu.u.common.core.ArrayValuable;
 @AllArgsConstructor
 public enum PermissionTypeEnum implements ArrayValuable<Integer> {
 
-  /** Menu permission */
-  MENU(1, "Menu permission"),
+    /** Menu permission */
+    MENU(1, "Menu permission"),
 
-  /** Button permission */
-  BUTTON(2, "Button permission"),
+    /** Button permission */
+    BUTTON(2, "Button permission"),
 
-  /** API permission */
-  API(3, "API permission");
+    /** API permission */
+    API(3, "API permission");
 
-  private final Integer type;
+    private final Integer type;
 
-  private final String typeName;
+    private final String typeName;
 
-  private static final Integer[] ARRAYS =
-      Arrays.stream(values()).map(PermissionTypeEnum::getType).toArray(Integer[]::new);
+    private static final Integer[] ARRAYS =
+            Arrays.stream(values()).map(PermissionTypeEnum::getType).toArray(Integer[]::new);
 
-  @Override
-  public Integer[] array() {
-    return ARRAYS;
-  }
+    @Override
+    public Integer[] array() {
+        return ARRAYS;
+    }
 }

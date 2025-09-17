@@ -22,19 +22,19 @@ import nus.edu.u.system.enums.task.TaskActionEnum;
 @NoArgsConstructor
 public class TaskLogDO extends TenantBaseDO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @TableId private Long id;
+    @TableId private Long id;
 
-  /** Related to {@link TaskDO#getId()} */
-  private Long taskId;
+    /** Related to {@link TaskDO#getId()} */
+    private Long taskId;
 
-  /** Related to {@link TaskActionEnum} */
-  private Integer action;
+    /** Related to {@link TaskActionEnum} */
+    private Integer action;
 
-  private BigDecimal moneyCost;
+    private BigDecimal moneyCost;
 
-  private BigDecimal laborCost;
+    private BigDecimal laborCost;
 
-  private String remark;
+    private String remark;
 }

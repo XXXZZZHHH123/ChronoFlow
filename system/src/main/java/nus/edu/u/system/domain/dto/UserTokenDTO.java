@@ -15,11 +15,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserTokenDTO {
 
-  private Long id;
+    private Long id;
 
-  private Long tenantId;
+    private Long tenantId;
 
-  private Long roleId;
+    private Long roleId;
 
-  private boolean remember;
+    private boolean remember;
 }

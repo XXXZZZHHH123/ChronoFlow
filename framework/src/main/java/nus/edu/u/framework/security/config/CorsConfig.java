@@ -13,16 +13,16 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class CorsConfig {
 
-  @Bean
-  public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration config = new CorsConfiguration();
-    config.setAllowCredentials(true); // Allow Cookie
-    config.addAllowedOriginPattern("*"); // Allow all sources
-    config.addAllowedHeader("*"); // Allow all request headers
-    config.addAllowedMethod("*"); // Allow all request methods (GET, POST, PUT, DELETE...)
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true); // Allow Cookie
+        config.addAllowedOriginPattern("*"); // Allow all sources
+        config.addAllowedHeader("*"); // Allow all request headers
+        config.addAllowedMethod("*"); // Allow all request methods (GET, POST, PUT, DELETE...)
 
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", config);
-    return source;
-  }
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 }

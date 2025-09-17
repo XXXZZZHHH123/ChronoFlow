@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RegSearchRespVO {
 
-  private String organizationName;
+    private String organizationName;
 
-  private String email;
+    private String email;
 }

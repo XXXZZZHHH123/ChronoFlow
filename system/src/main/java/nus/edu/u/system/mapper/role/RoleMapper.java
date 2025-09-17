@@ -12,11 +12,11 @@ import org.apache.ibatis.annotations.Param;
  */
 @Mapper
 public interface RoleMapper extends BaseMapper<RoleDO> {
-  /**
-   * Batch counts whether role IDs exist
-   *
-   * @param ids A collection of role IDs
-   * @return The actual number of existing roles
-   */
-  int countByIds(@Param("ids") List<Long> ids);
+    /**
+     * Batch counts whether role IDs exist
+     *
+     * @param ids A collection of role IDs
+     * @return The actual number of existing roles
+     */
+    int countByIds(@Param("ids") List<Long> ids);
 }

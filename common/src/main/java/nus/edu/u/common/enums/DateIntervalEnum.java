@@ -15,26 +15,26 @@ import nus.edu.u.common.core.ArrayValuable;
 @Getter
 @AllArgsConstructor
 public enum DateIntervalEnum implements ArrayValuable<Integer> {
-  DAY(1, "Days"),
-  WEEK(2, "Weeks"),
-  MONTH(3, "Months"),
-  QUARTER(4, "Seasons"),
-  YEAR(5, "Years");
+    DAY(1, "Days"),
+    WEEK(2, "Weeks"),
+    MONTH(3, "Months"),
+    QUARTER(4, "Seasons"),
+    YEAR(5, "Years");
 
-  public static final Integer[] ARRAYS =
-      Arrays.stream(values()).map(DateIntervalEnum::getInterval).toArray(Integer[]::new);
+    public static final Integer[] ARRAYS =
+            Arrays.stream(values()).map(DateIntervalEnum::getInterval).toArray(Integer[]::new);
 
-  private final Integer interval;
+    private final Integer interval;
 
-  private final String name;
+    private final String name;
 
-  @Override
-  public Integer[] array() {
-    return ARRAYS;
-  }
+    @Override
+    public Integer[] array() {
+        return ARRAYS;
+    }
 
-  public static DateIntervalEnum valueOf(Integer interval) {
-    return ArrayUtil.firstMatch(
-        item -> item.getInterval().equals(interval), DateIntervalEnum.values());
-  }
+    public static DateIntervalEnum valueOf(Integer interval) {
+        return ArrayUtil.firstMatch(
+                item -> item.getInterval().equals(interval), DateIntervalEnum.values());
+    }
 }

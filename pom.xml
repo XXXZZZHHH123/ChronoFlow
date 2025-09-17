@@ -183,7 +183,9 @@
 					<version>2.43.0</version>
 					<configuration>
 						<java>
-							<googleJavaFormat/>
+							<googleJavaFormat>
+								<style>AOSP</style>
+							</googleJavaFormat>
 						</java>
 					</configuration>
 					<executions>
