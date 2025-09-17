@@ -40,12 +40,6 @@ public interface UserService {
      */
     UserRoleDTO selectUserWithRole(Long userId);
 
-    /**
-     * Select user by id
-     *
-     * @param userId
-     * @return UserDO
-     */
     UserDO selectUserById(Long userId);
 
     Long createUserWithRoleIds(CreateUserDTO dto);
@@ -67,7 +61,7 @@ public interface UserService {
 
     BulkUpsertUsersRespVO bulkUpsertUsers(List<CreateUserDTO> rawRows);
 
-    boolean processSingleRowWithNewTx(CreateUserDTO row, boolean dbExists);
+    boolean tryCreateOrFallbackToUpdate(String email, String remark, List<Long> roleIds);
 
     List<Long> getAliveRoleIdsByUserId(Long userId);
 }
