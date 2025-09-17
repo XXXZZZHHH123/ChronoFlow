@@ -1,15 +1,10 @@
 package nus.edu.u.system.service.user;
 
-import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.*;
-
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
-import java.util.*;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
@@ -29,6 +24,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import java.util.regex.Pattern;
+
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.*;
+
+
+
+
 
 /**
  * User service implementation
@@ -379,7 +384,7 @@ public class UserServiceImpl implements UserService {
           throw new ServiceException(NULL_USERID);
         }
 
-        validateUpdateArgs(email, roleIds);
+        validateUpdateArgs(roleIds);
 
         UpdateUserDTO u =
             UpdateUserDTO.builder().id(userId).email(null).remark(remark).roleIds(roleIds).build();
@@ -422,7 +427,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private void validateUpdateArgs(String rawEmail, List<Long> rawRoleIds) {
+  private void validateUpdateArgs(List<Long> rawRoleIds) {
     if (rawRoleIds == null || rawRoleIds.isEmpty()) {
       throw new ServiceException(EMPTY_ROLEIDS);
     }
