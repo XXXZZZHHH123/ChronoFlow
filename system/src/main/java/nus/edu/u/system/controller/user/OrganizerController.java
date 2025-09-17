@@ -12,7 +12,6 @@ import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.CreateUserDTO;
 import nus.edu.u.system.domain.dto.UpdateUserDTO;
 import nus.edu.u.system.domain.vo.user.*;
-import nus.edu.u.system.mapper.user.UserRoleMapper;
 import nus.edu.u.system.service.excel.ExcelService;
 import nus.edu.u.system.service.user.UserService;
 import org.springframework.validation.annotation.Validated;
@@ -28,8 +27,6 @@ public class OrganizerController {
     @Resource private UserService userService;
 
     @Resource private UserConvert userConvert;
-
-    @Resource private UserRoleMapper userRoleMapper;
 
     @Resource private ExcelService excelService;
 
