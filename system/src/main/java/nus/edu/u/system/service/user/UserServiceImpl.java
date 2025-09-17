@@ -75,6 +75,11 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public UserDO selectUserById(Long userId) {
+    return userMapper.selectById(userId);
+  }
+
+  @Override
   @Transactional
   public Long createUserWithRoleIds(CreateUserDTO dto) {
     String email = dto.getEmail().trim();

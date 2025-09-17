@@ -41,6 +41,8 @@ public interface UserService {
    */
   UserRoleDTO selectUserWithRole(Long userId);
 
+  UserDO selectUserById(Long userId);
+
   Long createUserWithRoleIds(CreateUserDTO dto);
 
   UserDO updateUserWithRoleIds(UpdateUserDTO dto);
