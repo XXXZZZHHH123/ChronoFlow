@@ -107,6 +107,11 @@ public class RegServiceImpl implements RegService {
     @Override
     @Transactional
     public boolean registerAsOrganizer(RegOrganizerReqVO regOrganizerReqVO) {
+        // check if username exists
+        UserDO checkUserDO = userMapper.selectByUsername(regOrganizerReqVO.getUsername());
+        if (!ObjUtil.isEmpty(checkUserDO)) {
+            throw exception(ACCOUNT_EXIST);
+        }
         // Create and insert user
         UserDO user =
                 UserDO.builder()
