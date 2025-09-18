@@ -79,18 +79,7 @@ public class AuthServiceImpl implements AuthService {
         if (StrUtil.isEmpty(refreshToken)) {
             refreshToken = tokenService.createRefreshToken(userTokenDTO);
         }
-        UserRoleDTO userRoleDTO = userService.selectUserWithRole(userDO.getId());
-        UserVO userVO =
-                UserVO.builder()
-                        .id(userDO.getId())
-                        .email(userDO.getEmail())
-                        .name(userDO.getUsername())
-                        .role(
-                                userRoleDTO.getRoles().stream()
-                                        .map(RoleDTO::getRoleKey)
-                                        .collect(Collectors.joining(DEFAULT_DELIMITER)))
-                        .build();
-        return LoginRespVO.builder().refreshToken(refreshToken).user(userVO).build();
+        return getInfo(refreshToken);
     }
 
     @Override
@@ -101,21 +90,32 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginRespVO refresh(String refreshToken) {
-        // 1.Create access token and expire time
+        // Check if user login or not
+        if (StpUtil.isLogin()) {
+            return getInfo(refreshToken);
+        }
+        // Login expired
+        // Create access token and expire time
         Long userId = tokenService.getUserIdFromRefreshToken(refreshToken);
         if (ObjUtil.isNull(userId)) {
             throw exception(REFRESH_TOKEN_WRONG);
         }
-        // 2.Login user
+        // Login user
         StpUtil.login(userId);
-        // 3.Build response object
-        UserRoleDTO userRoleDTO = userService.selectUserWithRole(userId);
-        UserDO user = userService.selectUserById(userId);
+        // Build response object
+        return getInfo(refreshToken);
+    }
+
+    private LoginRespVO getInfo(String refreshToken) {
+        UserRoleDTO userRoleDTO = userService.selectUserWithRole(Long.parseLong(StpUtil.getLoginId().toString()));
+        if (userRoleDTO == null) {
+            throw exception(ACCOUNT_ERROR);
+        }
         UserVO userVO =
                 UserVO.builder()
-                        .id(userId)
-                        .email(user.getEmail())
-                        .name(user.getUsername())
+                        .id(userRoleDTO.getUserId())
+                        .email(userRoleDTO.getEmail())
+                        .name(userRoleDTO.getUsername())
                         .role(
                                 userRoleDTO.getRoles().stream()
                                         .map(RoleDTO::getRoleKey)

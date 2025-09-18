@@ -1,5 +1,6 @@
 package nus.edu.u.system.controller.user;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.annotation.SaCheckRole;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -22,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/organizer")
 @Validated
 @Slf4j
-@SaCheckRole("ORGANIZER")
 public class OrganizerController {
     @Resource private UserService userService;
 
@@ -30,6 +30,7 @@ public class OrganizerController {
 
     @Resource private ExcelService excelService;
 
+    @SaCheckPermission("user:organizer:member:create")
     @PostMapping("/create/user")
     public CommonResult<Long> createUserForOrganizer(@Valid @RequestBody CreateUserReqVO req) {
         CreateUserDTO dto = userConvert.toDTO(req);
@@ -37,6 +38,7 @@ public class OrganizerController {
         return CommonResult.success(userId);
     }
 
+    @SaCheckPermission("user:organizer:member:update")
     @PatchMapping("/update/user/{id}")
     public CommonResult<UpdateUserRespVO> updateUserForOrganizer(
             @PathVariable("id") Long id, @Valid @RequestBody UpdateUserReqVO vo) {
@@ -52,35 +54,41 @@ public class OrganizerController {
         return CommonResult.success(respVO);
     }
 
+    @SaCheckPermission("user:organizer:member:delete")
     @DeleteMapping("/delete/user/{id}")
     public CommonResult<Boolean> softDeleteUser(@PathVariable("id") Long id) {
         userService.softDeleteUser(id);
         return CommonResult.success(Boolean.TRUE);
     }
 
+    @SaCheckPermission("user:organizer:member:restore")
     @PatchMapping("/restore/user/{id}")
     public CommonResult<Boolean> restoreUser(@PathVariable("id") Long id) {
         userService.restoreUser(id);
         return CommonResult.success(Boolean.TRUE);
     }
 
+    @SaCheckPermission("user:organizer:member:disable")
     @PatchMapping("/disable/user/{id}")
     public CommonResult<Boolean> disableUser(@PathVariable("id") Long id) {
         userService.disableUser(id);
         return CommonResult.success(true);
     }
 
+    @SaCheckPermission("user:organizer:member:enable")
     @PatchMapping("/enable/user/{id}")
     public CommonResult<Boolean> enableUser(@PathVariable("id") Long id) {
         userService.enableUser(id);
         return CommonResult.success(true);
     }
 
+    @SaCheckPermission("user:organizer:member:query")
     @GetMapping("/users")
     public CommonResult<List<UserProfileRespVO>> getAllUserProfiles() {
         return CommonResult.success(userService.getAllUserProfiles());
     }
 
+    @SaCheckPermission("user:organizer:member:create")
     @PostMapping("/users/bulk-upsert")
     public CommonResult<BulkUpsertUsersRespVO> bulkUpsertUsers(
             @RequestParam("file") MultipartFile file) throws IOException {

@@ -19,6 +19,7 @@ public interface ErrorCodeConstants {
             new ErrorCode(10_01_003, "Incorrect verification code. Please try again");
     ErrorCode REFRESH_TOKEN_WRONG =
             new ErrorCode(10_01_004, "Your session has expired. Please log in again");
+    ErrorCode ACCOUNT_ERROR = new ErrorCode(10_01_005, "Account error");
 
     // ========= user crud module 12-01-000 ============
     ErrorCode USERNAME_EXIST = new ErrorCode(12_01_001, "Username already exists");
