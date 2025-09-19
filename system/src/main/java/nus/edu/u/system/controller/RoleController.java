@@ -3,6 +3,7 @@ package nus.edu.u.system.controller;
 import jakarta.annotation.Resource;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.system.domain.vo.role.RoleListRespVO;
 import nus.edu.u.system.service.role.RoleService;
 import org.springframework.validation.annotation.Validated;
@@ -24,7 +25,7 @@ public class RoleController {
     @Resource private RoleService roleService;
 
     @GetMapping("/list")
-    public List<RoleListRespVO> listRoles() {
-        return roleService.listRolesExcludingAdmin();
+    public CommonResult<List<RoleListRespVO>> listRoles() {
+        return CommonResult.success(roleService.listRolesExcludingAdmin());
     }
 }
