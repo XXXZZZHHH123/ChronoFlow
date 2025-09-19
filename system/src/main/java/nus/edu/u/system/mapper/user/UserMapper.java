@@ -89,5 +89,6 @@ public interface UserMapper extends BaseMapper<UserDO> {
         return list.stream().map(o -> (String) o).collect(Collectors.toSet());
     }
 
+    @InterceptorIgnore(tenantLine = "true")
     List<UserPermissionDTO> selectUserWithPermission(Long userId);
 }

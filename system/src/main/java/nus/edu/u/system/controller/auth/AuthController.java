@@ -2,11 +2,9 @@ package nus.edu.u.system.controller.auth;
 
 import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_COOKIE_NAME;
 import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE;
-import static nus.edu.u.common.core.domain.CommonResult.error;
 import static nus.edu.u.common.core.domain.CommonResult.success;
-import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.MISSING_COOKIE;
 
-import cn.hutool.core.util.StrUtil;
+import cn.dev33.satoken.annotation.SaIgnore;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -38,6 +36,7 @@ public class AuthController {
 
     @Resource private CookieConfig cookieConfig;
 
+    @SaIgnore
     @PostMapping("/login")
     public CommonResult<LoginRespVO> login(
             @RequestBody @Valid LoginReqVO reqVO,
@@ -74,12 +73,10 @@ public class AuthController {
         return success(true);
     }
 
+    @SaIgnore
     @PostMapping("/refresh")
     public CommonResult<LoginRespVO> refresh(
             @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken) {
-        if (StrUtil.isBlank(refreshToken)) {
-            return error(MISSING_COOKIE);
-        }
         return success(authService.refresh(refreshToken));
     }
 }

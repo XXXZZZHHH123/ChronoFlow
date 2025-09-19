@@ -46,7 +46,8 @@ public class MybatisPlusConfig {
                                 // conditions.
                                 return "sys_dict_data".equals(tableName)
                                         || "sys_dict_type".equals(tableName)
-                                        || "sys_tenant".equals(tableName);
+                                        || "sys_tenant".equals(tableName)
+                                        || "sys_permission".equals(tableName);
                             }
                         }));
 
