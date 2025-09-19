@@ -122,4 +122,21 @@
                                AND r.deleted = 0
         WHERE u.deleted = 0
     </select>
+    <select id="selectByUsername" resultType="nus.edu.u.system.domain.dataobject.user.UserDO">
+        SELECT
+            id,
+            username,
+            password,
+            remark,
+            email,
+            phone,
+            status,
+            login_time,
+            dept_id,
+            post_list,
+            tenant_id
+        FROM ChronoFlow.sys_user
+        WHERE username = #{username}
+          AND deleted = 0
+    </select>
 </mapper>

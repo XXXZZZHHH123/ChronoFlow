@@ -2,6 +2,9 @@ package nus.edu.u.framework.web.handler;
 
 import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.*;
 
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotPermissionException;
+import cn.dev33.satoken.exception.NotRoleException;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
@@ -106,6 +109,24 @@ public class GlobalExceptionHandler {
         return CommonResult.error(
                 BAD_REQUEST.getCode(),
                 String.format("Request parameters missing: %s", ex.getParameterName()));
+    }
+
+    /** 处理未登录请求 */
+    @ExceptionHandler(value = NotLoginException.class)
+    public CommonResult<?> notLoginExceptionHandler(NotLoginException ex) {
+        return CommonResult.error(UNAUTHORIZED.getCode(), UNAUTHORIZED.getMsg());
+    }
+
+    /** 处理无角色请求 */
+    @ExceptionHandler(value = NotRoleException.class)
+    public CommonResult<?> notRoleExceptionHandler(NotRoleException ex) {
+        return CommonResult.error(FORBIDDEN.getCode(), FORBIDDEN.getMsg());
+    }
+
+    /** 处理无权限请求 */
+    @ExceptionHandler(value = NotPermissionException.class)
+    public CommonResult<?> notPermissionExceptionHandler(NotPermissionException ex) {
+        return CommonResult.error(FORBIDDEN.getCode(), FORBIDDEN.getMsg());
     }
 
     /**

@@ -1,5 +1,6 @@
 package nus.edu.u.system.mapper.user;
 
+import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -33,12 +34,8 @@ public interface UserMapper extends BaseMapper<UserDO> {
 
     List<UserRoleDTO> selectAllUsersWithRoles();
 
-    default UserDO selectByUsername(String username) {
-        return this.selectOne(
-                new LambdaQueryWrapper<UserDO>()
-                        .eq(UserDO::getUsername, username)
-                        .eq(UserDO::getDeleted, false));
-    }
+    @InterceptorIgnore(tenantLine = "true")
+    UserDO selectByUsername(String username);
 
     // ===== exists series, for Service reuse to avoid duplication of count code =====
     default boolean existsUsername(String username, Long excludeId) {
@@ -92,5 +89,6 @@ public interface UserMapper extends BaseMapper<UserDO> {
         return list.stream().map(o -> (String) o).collect(Collectors.toSet());
     }
 
+    @InterceptorIgnore(tenantLine = "true")
     List<UserPermissionDTO> selectUserWithPermission(Long userId);
 }
