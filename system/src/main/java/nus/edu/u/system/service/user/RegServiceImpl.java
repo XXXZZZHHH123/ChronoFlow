@@ -123,6 +123,17 @@ public class RegServiceImpl implements RegService {
         if (!ObjUtil.isEmpty(checkUserDO)) {
             throw exception(ACCOUNT_EXIST);
         }
+        TenantDO tenant =
+                TenantDO.builder()
+                        .name(regOrganizerReqVO.getOrganizationName())
+                        .contactMobile(regOrganizerReqVO.getMobile())
+                        .address(regOrganizerReqVO.getOrganizationAddress())
+                        .contactName(regOrganizerReqVO.getName())
+                        .build();
+        boolean isSuccess = tenantMapper.insert(tenant) > 0;
+        if (!isSuccess) {
+            throw exception(REG_FAIL);
+        }
         // Create and insert user
         UserDO user =
                 UserDO.builder()
@@ -133,7 +144,14 @@ public class RegServiceImpl implements RegService {
                         .remark(ORGANIZER_REMARK)
                         .status(UserStatusEnum.ENABLE.getCode())
                         .build();
-        boolean isSuccess = userMapper.insert(user) > 0;
+        user.setTenantId(tenant.getId());
+        isSuccess = userMapper.insert(user) > 0;
+        if (!isSuccess) {
+            throw exception(REG_FAIL);
+        }
+        // update tenant table with user id
+        tenant.setContactUserId(user.getId());
+        isSuccess = tenantMapper.updateById(tenant) > 0;
         if (!isSuccess) {
             throw exception(REG_FAIL);
         }
@@ -144,6 +162,7 @@ public class RegServiceImpl implements RegService {
                         .roleKey(ORGANIZER_ROLE_KEY)
                         .status(CommonStatusEnum.ENABLE.getStatus())
                         .build();
+        role.setTenantId(tenant.getId());
         isSuccess = roleMapper.insert(role) > 0;
         if (!isSuccess) {
             throw exception(REG_FAIL);
@@ -155,6 +174,7 @@ public class RegServiceImpl implements RegService {
                         .roleKey(MEMBER_ROLE_KEY)
                         .status(CommonStatusEnum.ENABLE.getStatus())
                         .build();
+        roleMember.setTenantId(tenant.getId());
         isSuccess = roleMapper.insert(roleMember) > 0;
         if (!isSuccess) {
             throw exception(REG_FAIL);
@@ -162,31 +182,11 @@ public class RegServiceImpl implements RegService {
         // Apply organizer role to this user
         UserRoleDO userRole =
                 UserRoleDO.builder().userId(user.getId()).roleId(role.getId()).build();
+        userRole.setTenantId(tenant.getId());
         isSuccess = userRoleMapper.insert(userRole) > 0;
         if (!isSuccess) {
             throw exception(REG_FAIL);
         }
-        TenantDO tenant =
-                TenantDO.builder()
-                        .name(regOrganizerReqVO.getOrganizationName())
-                        .contactMobile(regOrganizerReqVO.getMobile())
-                        .address(regOrganizerReqVO.getOrganizationAddress())
-                        .contactName(regOrganizerReqVO.getName())
-                        .contactUserId(user.getId())
-                        .build();
-        isSuccess = tenantMapper.insert(tenant) > 0;
-        if (!isSuccess) {
-            throw exception(REG_FAIL);
-        }
-        // Set tenant id into table
-        user.setTenantId(tenant.getId());
-        userMapper.updateById(user);
-        role.setTenantId(tenant.getId());
-        roleMapper.updateById(role);
-        roleMember.setTenantId(tenant.getId());
-        roleMapper.updateById(roleMember);
-        userRole.setTenantId(tenant.getId());
-        userRoleMapper.updateById(userRole);
         // Give all organizer permission
         PermissionDO permissionDO =
                 permissionMapper.selectOne(
@@ -202,6 +202,7 @@ public class RegServiceImpl implements RegService {
                         .roleId(role.getId())
                         .permissionId(permissionDO.getId())
                         .build();
+        rolePermissionDO.setTenantId(tenant.getId());
         isSuccess = rolePermissionMapper.insert(rolePermissionDO) > 0;
         if (!isSuccess) {
             throw exception(REG_FAIL);
