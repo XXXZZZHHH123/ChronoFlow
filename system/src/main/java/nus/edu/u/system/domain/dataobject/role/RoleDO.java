@@ -2,12 +2,10 @@ package nus.edu.u.system.domain.dataobject.role;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.*;
-import nus.edu.u.common.enums.CommonStatusEnum;
-import nus.edu.u.common.core.domain.base.TenantBaseDO;
-import nus.edu.u.system.enums.role.RoleTypeEnum;
-
 import java.io.Serializable;
+import lombok.*;
+import nus.edu.u.common.core.domain.base.TenantBaseDO;
+import nus.edu.u.common.enums.CommonStatusEnum;
 
 /**
  * Role data object for table sys_role
@@ -25,24 +23,16 @@ public class RoleDO extends TenantBaseDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId
-    private Long id;
+    @TableId private Long id;
 
     private String name;
 
-    private Integer level;
-
-    /**
-     * 1 - system role; 2 - custom role
-     *
-     * Enum {@link RoleTypeEnum}
-     */
-    private Integer type;
+    private String roleKey;
 
     /**
      * Role status
      *
-     * Enum {@link CommonStatusEnum}
+     * <p>Enum {@link CommonStatusEnum}
      */
     private Integer status;
 

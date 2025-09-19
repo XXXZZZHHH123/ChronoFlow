@@ -3,7 +3,6 @@ package nus.edu.u.common.utils.string;
 import cn.hutool.core.text.StrPool;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -22,10 +21,9 @@ public class StrUtils {
     }
 
     /**
-     * 给定字符串是否以任何一个字符串开始
-     * 给定字符串和数组为空都返回 false
+     * 给定字符串是否以任何一个字符串开始 给定字符串和数组为空都返回 false
      *
-     * @param str      给定字符串
+     * @param str 给定字符串
      * @param prefixes 需要检测的开始字符串
      * @since 3.0.6
      */
@@ -76,5 +74,4 @@ public class StrUtils {
                 .filter(line -> !line.contains(sequence))
                 .collect(Collectors.joining("\n"));
     }
-
 }

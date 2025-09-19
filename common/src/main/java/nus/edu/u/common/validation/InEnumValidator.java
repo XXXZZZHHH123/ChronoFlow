@@ -2,12 +2,11 @@ package nus.edu.u.common.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import nus.edu.u.common.annotation.InEnum;
-import nus.edu.u.common.core.ArrayValuable;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import nus.edu.u.common.annotation.InEnum;
+import nus.edu.u.common.core.ArrayValuable;
 
 public class InEnumValidator implements ConstraintValidator<InEnum, Object> {
 
@@ -35,10 +34,10 @@ public class InEnumValidator implements ConstraintValidator<InEnum, Object> {
         }
         // 校验不通过，自定义提示语句
         context.disableDefaultConstraintViolation(); // 禁用默认的 message 的值
-        context.buildConstraintViolationWithTemplate(context.getDefaultConstraintMessageTemplate()
-                .replaceAll("\\{value}", values.toString())).addConstraintViolation(); // 重新添加错误提示语句
+        context.buildConstraintViolationWithTemplate(
+                        context.getDefaultConstraintMessageTemplate()
+                                .replaceAll("\\{value}", values.toString()))
+                .addConstraintViolation(); // 重新添加错误提示语句
         return false;
     }
-
 }
-

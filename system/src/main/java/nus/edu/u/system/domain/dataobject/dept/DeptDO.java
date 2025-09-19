@@ -2,12 +2,12 @@ package nus.edu.u.system.domain.dataobject.dept;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.*;
-import nus.edu.u.common.enums.CommonStatusEnum;
-import nus.edu.u.common.core.domain.base.TenantBaseDO;
-import nus.edu.u.system.domain.dataobject.user.UserDO;
-
 import java.io.Serializable;
+import lombok.*;
+import nus.edu.u.common.core.domain.base.TenantBaseDO;
+import nus.edu.u.common.enums.CommonStatusEnum;
+import nus.edu.u.system.domain.dataobject.task.EventDO;
+import nus.edu.u.system.domain.dataobject.user.UserDO;
 
 /**
  * Department data object for table sys_dept
@@ -25,16 +25,13 @@ public class DeptDO extends TenantBaseDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId
-    private Long id;
+    @TableId private Long id;
 
     private String name;
 
     private Integer sort;
 
-    /**
-     * Related to {@link UserDO#getId()}
-     */
+    /** Related to {@link UserDO#getId()} */
     private Long leadUserId;
 
     private String phone;
@@ -46,8 +43,14 @@ public class DeptDO extends TenantBaseDO implements Serializable {
     /**
      * Department status
      *
-     * Enum {@link CommonStatusEnum}
+     * <p>Enum {@link CommonStatusEnum}
      */
     private Integer status;
 
+    /**
+     * Associated event ID
+     *
+     * <p>Related to {@link EventDO#getId()}
+     */
+    private Long eventId;
 }

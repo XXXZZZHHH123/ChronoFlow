@@ -3,11 +3,10 @@ package nus.edu.u.common.core.domain.base;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
-import lombok.Data;
-import org.apache.ibatis.type.JdbcType;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import lombok.Data;
+import org.apache.ibatis.type.JdbcType;
 
 /**
  * Base data object contains common fields
@@ -27,7 +26,7 @@ public abstract class BaseDO implements Serializable {
     /**
      * Store user id now
      *
-     * Use String type for extension
+     * <p>Use String type for extension
      */
     @TableField(fill = FieldFill.INSERT, jdbcType = JdbcType.VARCHAR)
     private String creator;
@@ -35,11 +34,10 @@ public abstract class BaseDO implements Serializable {
     /**
      * Store user id now
      *
-     * Use String type for extension
+     * <p>Use String type for extension
      */
     @TableField(fill = FieldFill.INSERT_UPDATE, jdbcType = JdbcType.VARCHAR)
     private String updater;
 
-    @TableLogic
-    private Boolean deleted;
+    @TableLogic private Boolean deleted;
 }

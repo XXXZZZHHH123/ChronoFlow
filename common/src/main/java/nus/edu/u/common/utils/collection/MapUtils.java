@@ -5,13 +5,12 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import nus.edu.u.common.core.KeyValue;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import nus.edu.u.common.core.KeyValue;
 
 /**
  * Map 工具类
@@ -29,20 +28,19 @@ public class MapUtils {
      */
     public static <K, V> List<V> getList(Multimap<K, V> multimap, Collection<K> keys) {
         List<V> result = new ArrayList<>();
-        keys.forEach(k -> {
-            Collection<V> values = multimap.get(k);
-            if (CollectionUtil.isEmpty(values)) {
-                return;
-            }
-            result.addAll(values);
-        });
+        keys.forEach(
+                k -> {
+                    Collection<V> values = multimap.get(k);
+                    if (CollectionUtil.isEmpty(values)) {
+                        return;
+                    }
+                    result.addAll(values);
+                });
         return result;
     }
 
     /**
-     * 从哈希表查找到 key 对应的 value，然后进一步处理
-     * key 为 null 时, 不处理
-     * 注意，如果查找到的 value 为 null 时，不进行处理
+     * 从哈希表查找到 key 对应的 value，然后进一步处理 key 为 null 时, 不处理 注意，如果查找到的 value 为 null 时，不进行处理
      *
      * @param map 哈希表
      * @param key key
@@ -64,5 +62,4 @@ public class MapUtils {
         keyValues.forEach(keyValue -> map.put(keyValue.getKey(), keyValue.getValue()));
         return map;
     }
-
 }

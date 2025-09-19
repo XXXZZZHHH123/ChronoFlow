@@ -21,5 +21,4 @@ public class ZeroLifeRefreshTokenCookie extends AbstractCookieFactory {
     public String getCookieName() {
         return TOKEN_NAME;
     }
-
 }

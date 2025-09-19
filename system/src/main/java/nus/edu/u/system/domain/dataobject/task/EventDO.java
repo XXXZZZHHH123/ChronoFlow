@@ -2,13 +2,12 @@ package nus.edu.u.system.domain.dataobject.task;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 import lombok.*;
 import nus.edu.u.common.core.domain.base.TenantBaseDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.enums.event.EventStatusEnum;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * Event data object from table event
@@ -26,12 +25,9 @@ public class EventDO extends TenantBaseDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId
-    private Long id;
+    @TableId private Long id;
 
-    /**
-     * Related to {@link UserDO#getId()}
-     */
+    /** Related to {@link UserDO#getId()} */
     private Long userId;
 
     private String name;
@@ -45,7 +41,7 @@ public class EventDO extends TenantBaseDO implements Serializable {
     /**
      * Event status
      *
-     * Enum {@link EventStatusEnum}
+     * <p>Enum {@link EventStatusEnum}
      */
     private Integer status;
 

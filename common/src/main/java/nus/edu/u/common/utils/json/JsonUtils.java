@@ -10,13 +10,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * JSON 工具类
@@ -37,8 +36,8 @@ public class JsonUtils {
 
     /**
      * 初始化 objectMapper 属性
-     * <p>
-     * 通过这样的方式，使用 Spring 创建的 ObjectMapper Bean
+     *
+     * <p>通过这样的方式，使用 Spring 创建的 ObjectMapper Bean
      *
      * @param objectMapper ObjectMapper 对象
      */
@@ -100,9 +99,8 @@ public class JsonUtils {
     }
 
     /**
-     * 将字符串解析成指定类型的对象
-     * 使用 {@link #parseObject(String, Class)} 时，在@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS) 的场景下，
-     * 如果 text 没有 class 属性，则会报错。此时，使用这个方法，可以解决。
+     * 将字符串解析成指定类型的对象 使用 {@link #parseObject(String, Class)} 时，在@JsonTypeInfo(use =
+     * JsonTypeInfo.Id.CLASS) 的场景下， 如果 text 没有 class 属性，则会报错。此时，使用这个方法，可以解决。
      *
      * @param text 字符串
      * @param clazz 类型
@@ -156,7 +154,8 @@ public class JsonUtils {
             return new ArrayList<>();
         }
         try {
-            return objectMapper.readValue(text, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
+            return objectMapper.readValue(
+                    text, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
         } catch (IOException e) {
             log.error("json parse err,json:{}", text, e);
             throw new RuntimeException(e);
@@ -170,7 +169,9 @@ public class JsonUtils {
         try {
             JsonNode treeNode = objectMapper.readTree(text);
             JsonNode pathNode = treeNode.path(path);
-            return objectMapper.readValue(pathNode.toString(), objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
+            return objectMapper.readValue(
+                    pathNode.toString(),
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
         } catch (IOException e) {
             log.error("json parse err,json:{}", text, e);
             throw new RuntimeException(e);
@@ -201,10 +202,10 @@ public class JsonUtils {
 
     /**
      * 判断字符串是否为 JSON 类型的字符串
+     *
      * @param str 字符串
      */
     public static boolean isJsonObject(String str) {
         return JSONUtil.isTypeJSONObject(str);
     }
-
 }

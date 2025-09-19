@@ -2,12 +2,11 @@ package nus.edu.u.system.domain.dataobject.file;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.*;
-import nus.edu.u.system.domain.dataobject.task.EventDO;
-import nus.edu.u.common.core.domain.base.TenantBaseDO;
-import nus.edu.u.system.domain.dataobject.task.TaskLogDO;
-
 import java.io.Serializable;
+import lombok.*;
+import nus.edu.u.common.core.domain.base.TenantBaseDO;
+import nus.edu.u.system.domain.dataobject.task.EventDO;
+import nus.edu.u.system.domain.dataobject.task.TaskLogDO;
 
 /**
  * File data object for table file
@@ -25,17 +24,12 @@ public class FileDO extends TenantBaseDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId
-    private Long id;
+    @TableId private Long id;
 
-    /**
-     * Related to {@link TaskLogDO#getId()}
-     */
+    /** Related to {@link TaskLogDO#getId()} */
     private Long taskLogId;
 
-    /**
-     * Related to {@link EventDO#getId()}
-     */
+    /** Related to {@link EventDO#getId()} */
     private Long eventId;
 
     private String name;
@@ -45,5 +39,4 @@ public class FileDO extends TenantBaseDO implements Serializable {
     private String type;
 
     private Long size;
-
 }

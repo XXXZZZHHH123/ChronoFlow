@@ -1,10 +1,9 @@
 package nus.edu.u.common.core.domain;
 
-import java.io.Serializable;
-import java.util.Objects;
-
 import cn.hutool.core.lang.Assert;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.io.Serializable;
+import java.util.Objects;
 import lombok.Data;
 import nus.edu.u.common.exception.ErrorCode;
 import nus.edu.u.common.exception.ServiceException;
@@ -13,8 +12,8 @@ import nus.edu.u.common.utils.exception.ServiceExceptionUtil;
 
 /**
  * Common return class
- * @param <T>
  *
+ * @param <T>
  * @author Lu Shuwen
  * @date 2025-08-28
  */
@@ -28,9 +27,7 @@ public class CommonResult<T> implements Serializable {
      */
     private Integer code;
 
-    /**
-     * Return data
-     */
+    /** Return data */
     private T data;
 
     /**
@@ -43,7 +40,7 @@ public class CommonResult<T> implements Serializable {
     /**
      * 将传入的 result 对象，转换成另外一个泛型结果的对象
      *
-     * 因为 A 方法返回的 CommonResult 对象，不满足调用其的 B 方法的返回，所以需要进行转换。
+     * <p>因为 A 方法返回的 CommonResult 对象，不满足调用其的 B 方法的返回，所以需要进行转换。
      *
      * @param result 传入的 result 对象
      * @param <T> 返回的泛型
@@ -62,7 +59,8 @@ public class CommonResult<T> implements Serializable {
     }
 
     public static <T> CommonResult<T> error(ErrorCode errorCode, Object... params) {
-        Assert.notEquals(GlobalErrorCodeConstants.SUCCESS.getCode(), errorCode.getCode(), "code 必须是错误的！");
+        Assert.notEquals(
+                GlobalErrorCodeConstants.SUCCESS.getCode(), errorCode.getCode(), "code 必须是错误的！");
         CommonResult<T> result = new CommonResult<>();
         result.code = errorCode.getCode();
         result.msg = ServiceExceptionUtil.doFormat(errorCode.getCode(), errorCode.getMsg(), params);
@@ -97,9 +95,7 @@ public class CommonResult<T> implements Serializable {
 
     // ========= 和 Exception 异常体系集成 =========
 
-    /**
-     * 判断是否有异常。如果有，则抛出 {@link ServiceException} 异常
-     */
+    /** 判断是否有异常。如果有，则抛出 {@link ServiceException} 异常 */
     public void checkError() throws ServiceException {
         if (isSuccess()) {
             return;
@@ -108,10 +104,7 @@ public class CommonResult<T> implements Serializable {
         throw new ServiceException(code, msg);
     }
 
-    /**
-     * 判断是否有异常。如果有，则抛出 {@link ServiceException} 异常
-     * 如果没有，则返回 {@link #data} 数据
-     */
+    /** 判断是否有异常。如果有，则抛出 {@link ServiceException} 异常 如果没有，则返回 {@link #data} 数据 */
     @JsonIgnore // 避免 jackson 序列化
     public T getCheckedData() {
         checkError();

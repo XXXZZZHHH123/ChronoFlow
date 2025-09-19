@@ -4,9 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import nus.edu.u.common.exception.enums.GlobalErrorCodeConstants;
 
-/**
- * Server exception
- */
+/** Server exception */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public final class ServerException extends RuntimeException {
@@ -17,16 +15,12 @@ public final class ServerException extends RuntimeException {
      * @see GlobalErrorCodeConstants
      */
     private Integer code;
-    /**
-     * Error message
-     */
+
+    /** Error message */
     private String message;
 
-    /**
-     * 空构造方法，避免反序列化问题
-     */
-    public ServerException() {
-    }
+    /** 空构造方法，避免反序列化问题 */
+    public ServerException() {}
 
     public ServerException(ErrorCode errorCode) {
         this.code = errorCode.getCode();
@@ -56,5 +50,4 @@ public final class ServerException extends RuntimeException {
         this.message = message;
         return this;
     }
-
 }

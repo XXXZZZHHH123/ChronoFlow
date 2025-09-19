@@ -1,7 +1,6 @@
 package nus.edu.u.common.utils.date;
 
 import cn.hutool.core.date.LocalDateTimeUtil;
-
 import java.time.*;
 import java.util.Calendar;
 import java.util.Date;
@@ -13,14 +12,10 @@ import java.util.Date;
  */
 public class DateUtils {
 
-    /**
-     * 时区 - 默认
-     */
+    /** 时区 - 默认 */
     public static final String TIME_ZONE_DEFAULT = "GMT+8";
 
-    /**
-     * 秒转换成毫秒
-     */
+    /** 秒转换成毫秒 */
     public static final long SECOND_MILLIS = 1000;
 
     public static final String FORMAT_YEAR_MONTH_DAY = "yyyy-MM-dd";
@@ -73,9 +68,9 @@ public class DateUtils {
     /**
      * 创建指定时间
      *
-     * @param year  年
+     * @param year 年
      * @param mouth 月
-     * @param day   日
+     * @param day 日
      * @return 指定时间
      */
     public static Date buildTime(int year, int mouth, int day) {
@@ -85,16 +80,15 @@ public class DateUtils {
     /**
      * 创建指定时间
      *
-     * @param year   年
-     * @param mouth  月
-     * @param day    日
-     * @param hour   小时
+     * @param year 年
+     * @param mouth 月
+     * @param day 日
+     * @param hour 小时
      * @param minute 分钟
      * @param second 秒
      * @return 指定时间
      */
-    public static Date buildTime(int year, int mouth, int day,
-                                 int hour, int minute, int second) {
+    public static Date buildTime(int year, int mouth, int day, int hour, int minute, int second) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.YEAR, year);
         calendar.set(Calendar.MONTH, mouth - 1);
@@ -145,5 +139,4 @@ public class DateUtils {
     public static boolean isYesterday(LocalDateTime date) {
         return LocalDateTimeUtil.isSameDay(date, LocalDateTime.now().minusDays(1));
     }
-
 }

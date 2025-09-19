@@ -1,14 +1,13 @@
 package nus.edu.u.common.utils.collection;
 
+import static nus.edu.u.common.utils.collection.CollectionUtils.convertList;
+
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.collection.IterUtil;
 import cn.hutool.core.util.ArrayUtil;
-
 import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import static nus.edu.u.common.utils.collection.CollectionUtils.convertList;
 
 /**
  * Array 工具类
@@ -54,5 +53,4 @@ public class ArrayUtils {
         }
         return array[index];
     }
-
 }

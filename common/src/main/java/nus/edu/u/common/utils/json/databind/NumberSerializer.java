@@ -3,13 +3,12 @@ package nus.edu.u.common.utils.json.databind;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JacksonStdImpl;
-
 import java.io.IOException;
 
 /**
  * Long 序列化规则
  *
- * 会将超长 long 值转换为 string，解决前端 JavaScript 最大安全整数是 2^53-1 的问题
+ * <p>会将超长 long 值转换为 string，解决前端 JavaScript 最大安全整数是 2^53-1 的问题
  *
  * @author 星语
  */
@@ -26,7 +25,8 @@ public class NumberSerializer extends com.fasterxml.jackson.databind.ser.std.Num
     }
 
     @Override
-    public void serialize(Number value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    public void serialize(Number value, JsonGenerator gen, SerializerProvider serializers)
+            throws IOException {
         // 超出范围 序列化位字符串
         if (value.longValue() > MIN_SAFE_INTEGER && value.longValue() < MAX_SAFE_INTEGER) {
             super.serialize(value, gen, serializers);

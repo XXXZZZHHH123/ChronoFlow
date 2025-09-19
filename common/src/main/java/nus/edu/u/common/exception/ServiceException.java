@@ -4,9 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import nus.edu.u.common.exception.enums.ServiceErrorCodeConstants;
 
-/**
- * Service logic exception
- */
+/** Service logic exception */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public final class ServiceException extends RuntimeException {
@@ -17,16 +15,12 @@ public final class ServiceException extends RuntimeException {
      * @see ServiceErrorCodeConstants
      */
     private Integer code;
-    /**
-     * Error message
-     */
+
+    /** Error message */
     private String message;
 
-    /**
-     * 空构造方法，避免反序列化问题
-     */
-    public ServiceException() {
-    }
+    /** 空构造方法，避免反序列化问题 */
+    public ServiceException() {}
 
     public ServiceException(ErrorCode errorCode) {
         this.code = errorCode.getCode();
@@ -56,5 +50,4 @@ public final class ServiceException extends RuntimeException {
         this.message = message;
         return this;
     }
-
 }

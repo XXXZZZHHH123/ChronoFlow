@@ -1,7 +1,6 @@
 package nus.edu.u.common.utils.collection;
 
 import cn.hutool.core.collection.CollUtil;
-
 import java.util.Set;
 
 /**
@@ -15,5 +14,4 @@ public class SetUtils {
     public static <T> Set<T> asSet(T... objs) {
         return CollUtil.newHashSet(objs);
     }
-
 }

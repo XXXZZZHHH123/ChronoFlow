@@ -2,19 +2,18 @@ package nus.edu.u.framework.redis.core;
 
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import java.time.Duration;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 
-import java.time.Duration;
-
 /**
  * 支持自定义过期时间的 {@link RedisCacheManager} 实现类
  *
- * 在 {@link Cacheable#cacheNames()} 格式为 "key#ttl" 时，# 后面的 ttl 为过期时间。
- * 单位为最后一个字母（支持的单位有：d 天，h 小时，m 分钟，s 秒），默认单位为 s 秒
+ * <p>在 {@link Cacheable#cacheNames()} 格式为 "key#ttl" 时，# 后面的 ttl 为过期时间。 单位为最后一个字母（支持的单位有：d 天，h 小时，m
+ * 分钟，s 秒），默认单位为 s 秒
  *
  * @author 芋道源码
  */
@@ -22,7 +21,8 @@ public class TimeoutRedisCacheManager extends RedisCacheManager {
 
     private static final String SPLIT = "#";
 
-    public TimeoutRedisCacheManager(RedisCacheWriter cacheWriter, RedisCacheConfiguration defaultCacheConfiguration) {
+    public TimeoutRedisCacheManager(
+            RedisCacheWriter cacheWriter, RedisCacheConfiguration defaultCacheConfiguration) {
         super(cacheWriter, defaultCacheConfiguration);
     }
 
@@ -82,5 +82,4 @@ public class TimeoutRedisCacheManager extends RedisCacheManager {
     private Long removeDurationSuffix(String ttlStr) {
         return NumberUtil.parseLong(StrUtil.sub(ttlStr, 0, ttlStr.length() - 1));
     }
-
 }

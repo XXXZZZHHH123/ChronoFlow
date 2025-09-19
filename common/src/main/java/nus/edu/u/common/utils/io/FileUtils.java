@@ -6,10 +6,9 @@ import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
-import lombok.SneakyThrows;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import lombok.SneakyThrows;
 
 /**
  * 文件工具类
@@ -19,8 +18,7 @@ import java.io.File;
 public class FileUtils {
 
     /**
-     * 创建临时文件
-     * 该文件会在 JVM 退出时，进行删除
+     * 创建临时文件 该文件会在 JVM 退出时，进行删除
      *
      * @param data 文件内容
      * @return 文件
@@ -34,8 +32,7 @@ public class FileUtils {
     }
 
     /**
-     * 创建临时文件
-     * 该文件会在 JVM 退出时，进行删除
+     * 创建临时文件 该文件会在 JVM 退出时，进行删除
      *
      * @param data 文件内容
      * @return 文件
@@ -49,8 +46,7 @@ public class FileUtils {
     }
 
     /**
-     * 创建临时文件，无内容
-     * 该文件会在 JVM 退出时，进行删除
+     * 创建临时文件，无内容 该文件会在 JVM 退出时，进行删除
      *
      * @return 文件
      */
@@ -66,7 +62,7 @@ public class FileUtils {
     /**
      * 生成文件路径
      *
-     * @param content      文件内容
+     * @param content 文件内容
      * @param originalName 原始文件名
      * @return path，唯一不可重复
      */
@@ -80,5 +76,4 @@ public class FileUtils {
         // 情况二：基于 content 计算
         return sha256Hex + '.' + FileTypeUtil.getType(new ByteArrayInputStream(content));
     }
-
 }

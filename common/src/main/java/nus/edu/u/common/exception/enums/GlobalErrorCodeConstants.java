@@ -3,13 +3,11 @@ package nus.edu.u.common.exception.enums;
 import nus.edu.u.common.exception.ErrorCode;
 
 /**
- * Global error code enum
- * 0-999 System error code occupied
+ * Global error code enum 0-999 System error code occupied
  *
  * @author Lu Shuwen
  * @date 2025-08-28
  */
-
 public interface GlobalErrorCodeConstants {
 
     ErrorCode SUCCESS = new ErrorCode(0, "Success");
@@ -24,7 +22,8 @@ public interface GlobalErrorCodeConstants {
     ErrorCode EXPIRED_LOGIN_CREDENTIALS = new ErrorCode(406, "Login expired, please log in again");
     ErrorCode MISSING_COOKIE = new ErrorCode(407, "Missing cookie");
     ErrorCode LOCKED = new ErrorCode(423, "Request failed, please try again later"); // 并发请求，不允许
-    ErrorCode TOO_MANY_REQUESTS = new ErrorCode(429, "The request is too frequent, please try again later");
+    ErrorCode TOO_MANY_REQUESTS =
+            new ErrorCode(429, "The request is too frequent, please try again later");
 
     // ========== Server error segment ==========
 
@@ -34,9 +33,12 @@ public interface GlobalErrorCodeConstants {
 
     // ========== Customise error segment ==========
 
-    ErrorCode REPEATED_REQUESTS = new ErrorCode(900, "Repeat request, please try again later"); // 重复请求
+    ErrorCode REPEATED_REQUESTS =
+            new ErrorCode(900, "Repeat request, please try again later"); // 重复请求
     ErrorCode DEMO_DENY = new ErrorCode(901, "Demo mode, write operation disabled");
 
     ErrorCode UNKNOWN = new ErrorCode(999, "Unknown error");
-
+    ErrorCode EXCEL_HEADER_MISSING = new ErrorCode(902, "Excel header missing");
+    ErrorCode EXCEL_ROLEID_INVALID = new ErrorCode(903, "Excel roleId invalid");
+    ErrorCode EXCEL_FORMAT_ERROR = new ErrorCode(904, "Excel format error");
 }

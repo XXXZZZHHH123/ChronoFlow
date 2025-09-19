@@ -16,6 +16,4 @@ public class SecurityProperties {
 
     @NotNull(message = "Refresh token expire can't be empty")
     private long refreshTokenExpire;
-
 }
-

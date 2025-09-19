@@ -8,15 +8,14 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.util.StringUtils;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
-
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * HTTP 工具类
@@ -39,8 +38,9 @@ public class HttpUtils {
     public static String replaceUrlQuery(String url, String key, String value) {
         UrlBuilder builder = UrlBuilder.of(url, Charset.defaultCharset());
         // 先移除
-        TableMap<CharSequence, CharSequence> query = (TableMap<CharSequence, CharSequence>)
-                ReflectUtil.getFieldValue(builder.getQuery(), "query");
+        TableMap<CharSequence, CharSequence> query =
+                (TableMap<CharSequence, CharSequence>)
+                        ReflectUtil.getFieldValue(builder.getQuery(), "query");
         query.remove(key);
         // 后添加
         builder.addQuery(key, value);
@@ -54,15 +54,17 @@ public class HttpUtils {
     /**
      * 拼接 URL
      *
-     * copy from Spring Security OAuth2 的 AuthorizationEndpoint 类的 append 方法
+     * <p>copy from Spring Security OAuth2 的 AuthorizationEndpoint 类的 append 方法
      *
      * @param base 基础 URL
      * @param query 查询参数
-     * @param keys query 的 key，对应的原本的 key 的映射。例如说 query 里有个 key 是 xx，实际它的 key 是 extra_xx，则通过 keys 里添加这个映射
+     * @param keys query 的 key，对应的原本的 key 的映射。例如说 query 里有个 key 是 xx，实际它的 key 是 extra_xx，则通过 keys
+     *     里添加这个映射
      * @param fragment URL 的 fragment，即拼接到 # 中
      * @return 拼接后的 URL
      */
-    public static String append(String base, Map<String, ?> query, Map<String, String> keys, boolean fragment) {
+    public static String append(
+            String base, Map<String, ?> query, Map<String, String> keys, boolean fragment) {
         UriComponentsBuilder template = UriComponentsBuilder.newInstance();
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(base);
         URI redirectUri;
@@ -74,8 +76,11 @@ public class HttpUtils {
             redirectUri = builder.build().toUri();
             builder = UriComponentsBuilder.fromUri(redirectUri);
         }
-        template.scheme(redirectUri.getScheme()).port(redirectUri.getPort()).host(redirectUri.getHost())
-                .userInfo(redirectUri.getUserInfo()).path(redirectUri.getPath());
+        template.scheme(redirectUri.getScheme())
+                .port(redirectUri.getPort())
+                .host(redirectUri.getHost())
+                .userInfo(redirectUri.getUserInfo())
+                .path(redirectUri.getPath());
 
         if (fragment) {
             StringBuilder values = new StringBuilder();
@@ -131,7 +136,7 @@ public class HttpUtils {
 
         // 如果两者非空，则返回
         if (StrUtil.isNotEmpty(clientId) && StrUtil.isNotEmpty(clientSecret)) {
-            return new String[]{clientId, clientSecret};
+            return new String[] {clientId, clientSecret};
         }
         return null;
     }
@@ -139,7 +144,7 @@ public class HttpUtils {
     /**
      * HTTP post 请求，基于 {@link cn.hutool.http.HttpUtil} 实现
      *
-     * 为什么要封装该方法，因为 HttpUtil 默认封装的方法，没有允许传递 headers 参数
+     * <p>为什么要封装该方法，因为 HttpUtil 默认封装的方法，没有允许传递 headers 参数
      *
      * @param url URL
      * @param headers 请求头
@@ -147,10 +152,8 @@ public class HttpUtils {
      * @return 请求结果
      */
     public static String post(String url, Map<String, String> headers, String requestBody) {
-        try (HttpResponse response = HttpRequest.post(url)
-                .addHeaders(headers)
-                .body(requestBody)
-                .execute()) {
+        try (HttpResponse response =
+                HttpRequest.post(url).addHeaders(headers).body(requestBody).execute()) {
             return response.body();
         }
     }
@@ -158,18 +161,15 @@ public class HttpUtils {
     /**
      * HTTP get 请求，基于 {@link cn.hutool.http.HttpUtil} 实现
      *
-     * 为什么要封装该方法，因为 HttpUtil 默认封装的方法，没有允许传递 headers 参数
+     * <p>为什么要封装该方法，因为 HttpUtil 默认封装的方法，没有允许传递 headers 参数
      *
      * @param url URL
      * @param headers 请求头
      * @return 请求结果
      */
     public static String get(String url, Map<String, String> headers) {
-        try (HttpResponse response = HttpRequest.get(url)
-                .addHeaders(headers)
-                .execute()) {
+        try (HttpResponse response = HttpRequest.get(url).addHeaders(headers).execute()) {
             return response.body();
         }
     }
-
 }

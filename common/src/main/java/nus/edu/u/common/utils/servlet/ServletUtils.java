@@ -5,14 +5,12 @@ import cn.hutool.extra.servlet.JakartaServletUtil;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Map;
 import nus.edu.u.common.utils.json.JsonUtils;
 import org.springframework.http.MediaType;
-
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
-import java.util.Map;
 
 /**
  * 客户端工具类
@@ -25,7 +23,7 @@ public class ServletUtils {
      * 返回 JSON 字符串
      *
      * @param response 响应
-     * @param object   对象，会序列化成 JSON 字符串
+     * @param object 对象，会序列化成 JSON 字符串
      */
     @SuppressWarnings("deprecation") // 必须使用 APPLICATION_JSON_UTF8_VALUE，否则会乱码
     public static void writeJSON(HttpServletResponse response, Object object) {
@@ -72,7 +70,8 @@ public class ServletUtils {
     }
 
     public static boolean isJsonRequest(ServletRequest request) {
-        return StrUtil.startWithIgnoreCase(request.getContentType(), MediaType.APPLICATION_JSON_VALUE);
+        return StrUtil.startWithIgnoreCase(
+                request.getContentType(), MediaType.APPLICATION_JSON_VALUE);
     }
 
     public static String getBody(HttpServletRequest request) {
@@ -102,5 +101,4 @@ public class ServletUtils {
     public static Map<String, String> getHeaderMap(HttpServletRequest request) {
         return JakartaServletUtil.getHeaderMap(request);
     }
-
 }

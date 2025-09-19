@@ -1,7 +1,6 @@
 package nus.edu.u.common.utils.spring;
 
 import cn.hutool.extra.spring.SpringUtil;
-
 import java.util.Objects;
 
 /**
@@ -20,5 +19,4 @@ public class SpringUtils extends SpringUtil {
         String activeProfile = getActiveProfile();
         return Objects.equals("prod", activeProfile);
     }
-
 }

@@ -33,5 +33,4 @@ public abstract class AbstractCookieFactory {
     }
 
     protected abstract String getCookieName();
-
 }

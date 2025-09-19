@@ -1,10 +1,9 @@
 package nus.edu.u.system.enums.event;
 
+import java.util.Arrays;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nus.edu.u.common.core.ArrayValuable;
-
-import java.util.Arrays;
 
 /**
  * Event status enum class
@@ -15,7 +14,6 @@ import java.util.Arrays;
 @Getter
 @AllArgsConstructor
 public enum EventStatusEnum implements ArrayValuable<Integer> {
-
     WAITING(1, "Waiting"),
     DOING(2, "Doing"),
     SUSPENDED(3, "Suspended"),
@@ -26,11 +24,11 @@ public enum EventStatusEnum implements ArrayValuable<Integer> {
 
     private final String name;
 
-    private static final Integer[] ARRAYS = Arrays.stream(values()).map(EventStatusEnum::getStatus).toArray(Integer[]::new);
+    private static final Integer[] ARRAYS =
+            Arrays.stream(values()).map(EventStatusEnum::getStatus).toArray(Integer[]::new);
 
     @Override
     public Integer[] array() {
         return ARRAYS;
     }
-
 }

@@ -1,6 +1,5 @@
 package nus.edu.u.system.service.auth;
 
-import nus.edu.u.system.domain.dto.TokenDTO;
 import nus.edu.u.system.domain.dto.UserTokenDTO;
 
 /**
@@ -26,8 +25,6 @@ public interface TokenService {
      */
     void removeToken(String token);
 
-    /**
-     * Get userId in refresh token from redis
-     */
+    /** Get userId in refresh token from redis */
     Long getUserIdFromRefreshToken(String refreshToken);
 }

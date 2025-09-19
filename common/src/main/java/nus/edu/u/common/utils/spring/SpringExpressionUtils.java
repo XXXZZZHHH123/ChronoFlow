@@ -5,6 +5,10 @@ import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.expression.BeanFactoryResolver;
@@ -16,11 +20,6 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Spring EL 表达式的工具类
  *
@@ -28,38 +27,37 @@ import java.util.Map;
  */
 public class SpringExpressionUtils {
 
-    /**
-     * Spring EL 表达式解析器
-     */
+    /** Spring EL 表达式解析器 */
     private static final ExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
-    /**
-     * 参数名发现器
-     */
-    private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER = new DefaultParameterNameDiscoverer();
 
-    private SpringExpressionUtils() {
-    }
+    /** 参数名发现器 */
+    private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER =
+            new DefaultParameterNameDiscoverer();
+
+    private SpringExpressionUtils() {}
 
     /**
      * 从切面中，单个解析 EL 表达式的结果
      *
-     * @param joinPoint        切面点
+     * @param joinPoint 切面点
      * @param expressionString EL 表达式数组
      * @return 执行界面
      */
     public static Object parseExpression(JoinPoint joinPoint, String expressionString) {
-        Map<String, Object> result = parseExpressions(joinPoint, Collections.singletonList(expressionString));
+        Map<String, Object> result =
+                parseExpressions(joinPoint, Collections.singletonList(expressionString));
         return result.get(expressionString);
     }
 
     /**
      * 从切面中，批量解析 EL 表达式的结果
      *
-     * @param joinPoint         切面点
+     * @param joinPoint 切面点
      * @param expressionStrings EL 表达式数组
      * @return 结果，key 为表达式，value 为对应值
      */
-    public static Map<String, Object> parseExpressions(JoinPoint joinPoint, List<String> expressionStrings) {
+    public static Map<String, Object> parseExpressions(
+            JoinPoint joinPoint, List<String> expressionStrings) {
         // 如果为空，则不进行解析
         if (CollUtil.isEmpty(expressionStrings)) {
             return MapUtil.newHashMap();
@@ -83,10 +81,11 @@ public class SpringExpressionUtils {
 
         // 第二步，逐个参数解析
         Map<String, Object> result = MapUtil.newHashMap(expressionStrings.size(), true);
-        expressionStrings.forEach(key -> {
-            Object value = EXPRESSION_PARSER.parseExpression(key).getValue(context);
-            result.put(key, value);
-        });
+        expressionStrings.forEach(
+                key -> {
+                    Object value = EXPRESSION_PARSER.parseExpression(key).getValue(context);
+                    result.put(key, value);
+                });
         return result;
     }
 
@@ -104,7 +103,7 @@ public class SpringExpressionUtils {
      * 从 Bean 工厂，解析 EL 表达式的结果
      *
      * @param expressionString EL 表达式
-     * @param variables        变量
+     * @param variables 变量
      * @return 执行界面
      */
     public static Object parseExpression(String expressionString, Map<String, Object> variables) {
@@ -119,5 +118,4 @@ public class SpringExpressionUtils {
         }
         return expression.getValue(context);
     }
-
 }

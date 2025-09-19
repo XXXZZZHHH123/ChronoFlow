@@ -1,17 +1,16 @@
 package nus.edu.u.common.utils.object;
 
 import cn.hutool.core.bean.BeanUtil;
-import nus.edu.u.common.core.domain.PageResult;
-import nus.edu.u.common.utils.collection.CollectionUtils;
-
 import java.util.List;
 import java.util.function.Consumer;
+import nus.edu.u.common.core.domain.PageResult;
+import nus.edu.u.common.utils.collection.CollectionUtils;
 
 /**
  * Bean 工具类
  *
- * 1. 默认使用 {@link BeanUtil} 作为实现类，虽然不同 bean 工具的性能有差别，但是对绝大多数同学的项目，不用在意这点性能
- * 2. 针对复杂的对象转换，可以搜参考 AuthConvert 实现，通过 mapstruct + default 配合实现
+ * <p>1. 默认使用 {@link BeanUtil} 作为实现类，虽然不同 bean 工具的性能有差别，但是对绝大多数同学的项目，不用在意这点性能 2. 针对复杂的对象转换，可以搜参考
+ * AuthConvert 实现，通过 mapstruct + default 配合实现
  *
  * @author 芋道源码
  */
@@ -48,7 +47,8 @@ public class BeanUtils {
         return toBean(source, targetType, null);
     }
 
-    public static <S, T> PageResult<T> toBean(PageResult<S> source, Class<T> targetType, Consumer<T> peek) {
+    public static <S, T> PageResult<T> toBean(
+            PageResult<S> source, Class<T> targetType, Consumer<T> peek) {
         if (source == null) {
             return null;
         }
@@ -65,5 +65,4 @@ public class BeanUtils {
         }
         BeanUtil.copyProperties(source, target, false);
     }
-
 }

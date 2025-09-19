@@ -1,10 +1,9 @@
 package nus.edu.u.system.enums.role;
 
+import java.util.Arrays;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nus.edu.u.common.core.ArrayValuable;
-
-import java.util.Arrays;
 
 /**
  * Role type enum class
@@ -16,20 +15,17 @@ import java.util.Arrays;
 @AllArgsConstructor
 public enum RoleTypeEnum implements ArrayValuable<Integer> {
 
-    /**
-     * System role
-     */
+    /** System role */
     SYSTEM(1, "System role"),
-    /**
-     * Custom role
-     */
+    /** Custom role */
     CUSTOM(2, "Custom role");
 
     private final Integer type;
 
     private final String typeName;
 
-    private static final Integer[] ARRAYS = Arrays.stream(values()).map(RoleTypeEnum:: getType).toArray(Integer[]::new);
+    private static final Integer[] ARRAYS =
+            Arrays.stream(values()).map(RoleTypeEnum::getType).toArray(Integer[]::new);
 
     @Override
     public Integer[] array() {

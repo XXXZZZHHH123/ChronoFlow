@@ -1,22 +1,19 @@
 package nus.edu.u.system.service.auth;
 
-import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.NumberUtil;
-import cn.hutool.core.util.StrUtil;
-import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
-import nus.edu.u.framework.security.config.SecurityProperties;
-import nus.edu.u.system.domain.dto.TokenDTO;
-import nus.edu.u.system.domain.dto.UserTokenDTO;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
-
-import java.util.concurrent.TimeUnit;
-
 import static nus.edu.u.common.constant.CacheConstants.LOGIN_REFRESH_TOKEN_KEY;
 import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.EXPIRED_LOGIN_CREDENTIALS;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.lang.UUID;
+import cn.hutool.core.util.StrUtil;
+import jakarta.annotation.Resource;
+import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import nus.edu.u.framework.security.config.SecurityProperties;
+import nus.edu.u.system.domain.dto.UserTokenDTO;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
 
 /**
  * Token service implementation
@@ -28,11 +25,9 @@ import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 @Slf4j
 public class TokenServiceImpl implements TokenService {
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    @Resource private StringRedisTemplate stringRedisTemplate;
 
-    @Resource
-    private SecurityProperties securityProperties;
+    @Resource private SecurityProperties securityProperties;
 
     @Override
     public String createRefreshToken(UserTokenDTO userTokenDTO) {
@@ -40,8 +35,13 @@ public class TokenServiceImpl implements TokenService {
         String token = UUID.randomUUID().toString();
         if (userTokenDTO.isRemember()) {
             // 2.Put token into redis
-            stringRedisTemplate.opsForValue().set(LOGIN_REFRESH_TOKEN_KEY + token, userTokenDTO.getId().toString(),
-                    securityProperties.getRefreshTokenExpire(), TimeUnit.SECONDS);
+            stringRedisTemplate
+                    .opsForValue()
+                    .set(
+                            LOGIN_REFRESH_TOKEN_KEY + token,
+                            userTokenDTO.getId().toString(),
+                            securityProperties.getRefreshTokenExpire(),
+                            TimeUnit.SECONDS);
         }
         // 3.Return token
         return token;
@@ -60,7 +60,8 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public Long getUserIdFromRefreshToken(String refreshToken) {
-        String userIdStr = stringRedisTemplate.opsForValue().get(LOGIN_REFRESH_TOKEN_KEY + refreshToken);
+        String userIdStr =
+                stringRedisTemplate.opsForValue().get(LOGIN_REFRESH_TOKEN_KEY + refreshToken);
         if (StrUtil.isNotEmpty(userIdStr)) {
             return Long.parseLong(userIdStr);
         }

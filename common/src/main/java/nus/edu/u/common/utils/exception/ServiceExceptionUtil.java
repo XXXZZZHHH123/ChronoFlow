@@ -9,9 +9,8 @@ import nus.edu.u.common.exception.enums.GlobalErrorCodeConstants;
 /**
  * {@link ServiceException} 工具类
  *
- * 目的在于，格式化异常信息提示。
- * 考虑到 String.format 在参数不正确时会报错，因此使用 {} 作为占位符，并使用 {@link #doFormat(int, String, Object...)} 方法来格式化
- *
+ * <p>目的在于，格式化异常信息提示。 考虑到 String.format 在参数不正确时会报错，因此使用 {} 作为占位符，并使用 {@link #doFormat(int, String,
+ * Object...)} 方法来格式化
  */
 @Slf4j
 public class ServiceExceptionUtil {
@@ -26,7 +25,8 @@ public class ServiceExceptionUtil {
         return exception0(errorCode.getCode(), errorCode.getMsg(), params);
     }
 
-    public static ServiceException exception0(Integer code, String messagePattern, Object... params) {
+    public static ServiceException exception0(
+            Integer code, String messagePattern, Object... params) {
         String message = doFormat(code, messagePattern, params);
         return new ServiceException(code, message);
     }
@@ -40,9 +40,9 @@ public class ServiceExceptionUtil {
     /**
      * 将错误编号对应的消息使用 params 进行格式化。
      *
-     * @param code           错误编号
+     * @param code 错误编号
      * @param messagePattern 消息模版
-     * @param params         参数
+     * @param params 参数
      * @return 格式化后的提示
      */
     @VisibleForTesting
@@ -73,5 +73,4 @@ public class ServiceExceptionUtil {
         sbuf.append(messagePattern.substring(i));
         return sbuf.toString();
     }
-
 }

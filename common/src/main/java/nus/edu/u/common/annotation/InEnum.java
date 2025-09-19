@@ -2,25 +2,22 @@ package nus.edu.u.common.annotation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
+import java.lang.annotation.*;
 import nus.edu.u.common.core.ArrayValuable;
 import nus.edu.u.common.validation.InEnumCollectionValidator;
 import nus.edu.u.common.validation.InEnumValidator;
 
-import java.lang.annotation.*;
-
 @Target({
-        ElementType.METHOD,
-        ElementType.FIELD,
-        ElementType.ANNOTATION_TYPE,
-        ElementType.CONSTRUCTOR,
-        ElementType.PARAMETER,
-        ElementType.TYPE_USE
+    ElementType.METHOD,
+    ElementType.FIELD,
+    ElementType.ANNOTATION_TYPE,
+    ElementType.CONSTRUCTOR,
+    ElementType.PARAMETER,
+    ElementType.TYPE_USE
 })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Constraint(
-        validatedBy = {InEnumValidator.class, InEnumCollectionValidator.class}
-)
+@Constraint(validatedBy = {InEnumValidator.class, InEnumCollectionValidator.class})
 public @interface InEnum {
 
     /**
@@ -33,5 +30,4 @@ public @interface InEnum {
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
-
 }

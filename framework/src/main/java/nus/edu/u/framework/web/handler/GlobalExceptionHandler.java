@@ -1,25 +1,27 @@
 package nus.edu.u.framework.web.handler;
 
+import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.*;
+
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotPermissionException;
+import cn.dev33.satoken.exception.NotRoleException;
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.exceptions.ExceptionUtil;
-import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.extra.servlet.JakartaServletUtil;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
+import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.common.utils.collection.SetUtils;
 import nus.edu.u.common.utils.exception.ServiceExceptionUtil;
-import nus.edu.u.common.utils.servlet.ServletUtils;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.util.Assert;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -32,13 +34,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.*;
 
 /**
  * Global exception handler, process exception to CommonResult + ErrorCode
@@ -54,8 +49,7 @@ public class GlobalExceptionHandler {
     public static final Set<String> IGNORE_ERROR_MESSAGES = SetUtils.asSet("无效的刷新令牌");
 
     /**
-     * 处理所有异常，主要是提供给 Filter 使用
-     * 因为 Filter 不走 SpringMVC 的流程，但是我们又需要兜底处理异常，所以这里提供一个全量的异常处理过程，保持逻辑统一。
+     * 处理所有异常，主要是提供给 Filter 使用 因为 Filter 不走 SpringMVC 的流程，但是我们又需要兜底处理异常，所以这里提供一个全量的异常处理过程，保持逻辑统一。
      *
      * @param request 请求
      * @param ex 异常
@@ -63,13 +57,16 @@ public class GlobalExceptionHandler {
      */
     public CommonResult<?> allExceptionHandler(HttpServletRequest request, Throwable ex) {
         if (ex instanceof MissingServletRequestParameterException) {
-            return missingServletRequestParameterExceptionHandler((MissingServletRequestParameterException) ex);
+            return missingServletRequestParameterExceptionHandler(
+                    (MissingServletRequestParameterException) ex);
         }
         if (ex instanceof MethodArgumentTypeMismatchException) {
-            return methodArgumentTypeMismatchExceptionHandler((MethodArgumentTypeMismatchException) ex);
+            return methodArgumentTypeMismatchExceptionHandler(
+                    (MethodArgumentTypeMismatchException) ex);
         }
         if (ex instanceof MethodArgumentNotValidException) {
-            return methodArgumentNotValidExceptionExceptionHandler((MethodArgumentNotValidException) ex);
+            return methodArgumentNotValidExceptionExceptionHandler(
+                    (MethodArgumentNotValidException) ex);
         }
         if (ex instanceof BindException) {
             return bindExceptionHandler((BindException) ex);
@@ -87,10 +84,12 @@ public class GlobalExceptionHandler {
             return noResourceFoundExceptionHandler(request, (NoResourceFoundException) ex);
         }
         if (ex instanceof HttpRequestMethodNotSupportedException) {
-            return httpRequestMethodNotSupportedExceptionHandler((HttpRequestMethodNotSupportedException) ex);
+            return httpRequestMethodNotSupportedExceptionHandler(
+                    (HttpRequestMethodNotSupportedException) ex);
         }
         if (ex instanceof HttpMediaTypeNotSupportedException) {
-            return httpMediaTypeNotSupportedExceptionHandler((HttpMediaTypeNotSupportedException) ex);
+            return httpMediaTypeNotSupportedExceptionHandler(
+                    (HttpMediaTypeNotSupportedException) ex);
         }
         if (ex instanceof ServiceException) {
             return serviceExceptionHandler((ServiceException) ex);
@@ -101,31 +100,54 @@ public class GlobalExceptionHandler {
     /**
      * 处理 SpringMVC 请求参数缺失
      *
-     * 例如说，接口上设置了 @RequestParam("xx") 参数，结果并未传递 xx 参数
+     * <p>例如说，接口上设置了 @RequestParam("xx") 参数，结果并未传递 xx 参数
      */
     @ExceptionHandler(value = MissingServletRequestParameterException.class)
-    public CommonResult<?> missingServletRequestParameterExceptionHandler(MissingServletRequestParameterException ex) {
-        log.warn("[missingServletRequestParameterExceptionHandler]", ex);
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数缺失:%s", ex.getParameterName()));
+    public CommonResult<?> missingServletRequestParameterExceptionHandler(
+            MissingServletRequestParameterException ex) {
+        // log.warn("[missingServletRequestParameterExceptionHandler]", ex);
+        return CommonResult.error(
+                BAD_REQUEST.getCode(),
+                String.format("Request parameters missing: %s", ex.getParameterName()));
+    }
+
+    /** 处理未登录请求 */
+    @ExceptionHandler(value = NotLoginException.class)
+    public CommonResult<?> notLoginExceptionHandler(NotLoginException ex) {
+        return CommonResult.error(UNAUTHORIZED.getCode(), UNAUTHORIZED.getMsg());
+    }
+
+    /** 处理无角色请求 */
+    @ExceptionHandler(value = NotRoleException.class)
+    public CommonResult<?> notRoleExceptionHandler(NotRoleException ex) {
+        return CommonResult.error(FORBIDDEN.getCode(), FORBIDDEN.getMsg());
+    }
+
+    /** 处理无权限请求 */
+    @ExceptionHandler(value = NotPermissionException.class)
+    public CommonResult<?> notPermissionExceptionHandler(NotPermissionException ex) {
+        return CommonResult.error(FORBIDDEN.getCode(), FORBIDDEN.getMsg());
     }
 
     /**
      * 处理 SpringMVC 请求参数类型错误
      *
-     * 例如说，接口上设置了 @RequestParam("xx") 参数为 Integer，结果传递 xx 参数类型为 String
+     * <p>例如说，接口上设置了 @RequestParam("xx") 参数为 Integer，结果传递 xx 参数类型为 String
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public CommonResult<?> methodArgumentTypeMismatchExceptionHandler(MethodArgumentTypeMismatchException ex) {
-        log.warn("[methodArgumentTypeMismatchExceptionHandler]", ex);
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数类型错误:%s", ex.getMessage()));
+    public CommonResult<?> methodArgumentTypeMismatchExceptionHandler(
+            MethodArgumentTypeMismatchException ex) {
+        // log.warn("[methodArgumentTypeMismatchExceptionHandler]", ex);
+        return CommonResult.error(
+                BAD_REQUEST.getCode(),
+                String.format("Request parameter type wrong: %s", ex.getMessage()));
     }
 
-    /**
-     * 处理 SpringMVC 参数校验不正确
-     */
+    /** 处理 SpringMVC 参数校验不正确 */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public CommonResult<?> methodArgumentNotValidExceptionExceptionHandler(MethodArgumentNotValidException ex) {
-        log.warn("[methodArgumentNotValidExceptionExceptionHandler]", ex);
+    public CommonResult<?> methodArgumentNotValidExceptionExceptionHandler(
+            MethodArgumentNotValidException ex) {
+        // log.warn("[methodArgumentNotValidExceptionExceptionHandler]", ex);
         // 获取 errorMessage
         String errorMessage = null;
         FieldError fieldError = ex.getBindingResult().getFieldError();
@@ -142,54 +164,55 @@ public class GlobalExceptionHandler {
         if (StrUtil.isEmpty(errorMessage)) {
             return CommonResult.error(BAD_REQUEST);
         }
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数不正确:%s", errorMessage));
+        return CommonResult.error(BAD_REQUEST.getCode(), errorMessage);
     }
 
-    /**
-     * 处理 SpringMVC 参数绑定不正确，本质上也是通过 Validator 校验
-     */
+    /** 处理 SpringMVC 参数绑定不正确，本质上也是通过 Validator 校验 */
     @ExceptionHandler(BindException.class)
     public CommonResult<?> bindExceptionHandler(BindException ex) {
-        log.warn("[handleBindException]", ex);
+        // log.warn("[handleBindException]", ex);
         FieldError fieldError = ex.getFieldError();
         assert fieldError != null; // 断言，避免告警
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数不正确:%s", fieldError.getDefaultMessage()));
+        return CommonResult.error(
+                BAD_REQUEST.getCode(),
+                String.format("Request parameters error: %s", fieldError.getDefaultMessage()));
     }
 
     /**
      * 处理 SpringMVC 请求参数类型错误
      *
-     * 例如说，接口上设置了 @RequestBody 实体中 xx 属性类型为 Integer，结果传递 xx 参数类型为 String
+     * <p>例如说，接口上设置了 @RequestBody 实体中 xx 属性类型为 Integer，结果传递 xx 参数类型为 String
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public CommonResult<?> methodArgumentTypeInvalidFormatExceptionHandler(HttpMessageNotReadableException ex) {
-        log.warn("[methodArgumentTypeInvalidFormatExceptionHandler]", ex);
+    public CommonResult<?> methodArgumentTypeInvalidFormatExceptionHandler(
+            HttpMessageNotReadableException ex) {
+        // log.warn("[methodArgumentTypeInvalidFormatExceptionHandler]", ex);
         if (ex.getCause() instanceof InvalidFormatException) {
             InvalidFormatException invalidFormatException = (InvalidFormatException) ex.getCause();
-            return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数类型错误:%s", invalidFormatException.getValue()));
+            return CommonResult.error(
+                    BAD_REQUEST.getCode(),
+                    String.format(
+                            "Request parameters type error:%s", invalidFormatException.getValue()));
         }
         if (StrUtil.startWith(ex.getMessage(), "Required request body is missing")) {
-            return CommonResult.error(BAD_REQUEST.getCode(), "请求参数类型错误: request body 缺失");
+            return CommonResult.error(
+                    BAD_REQUEST.getCode(), "Request parameters type error: request body missing");
         }
         return defaultExceptionHandler(ex);
     }
 
-    /**
-     * 处理 Validator 校验不通过产生的异常
-     */
+    /** 处理 Validator 校验不通过产生的异常 */
     @ExceptionHandler(value = ConstraintViolationException.class)
     public CommonResult<?> constraintViolationExceptionHandler(ConstraintViolationException ex) {
-        log.warn("[constraintViolationExceptionHandler]", ex);
+        // log.warn("[constraintViolationExceptionHandler]", ex);
         ConstraintViolation<?> constraintViolation = ex.getConstraintViolations().iterator().next();
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求参数不正确:%s", constraintViolation.getMessage()));
+        return CommonResult.error(BAD_REQUEST.getCode(), constraintViolation.getMessage());
     }
 
-    /**
-     * 处理 Dubbo Consumer 本地参数校验时，抛出的 ValidationException 异常
-     */
+    /** 处理 Dubbo Consumer 本地参数校验时，抛出的 ValidationException 异常 */
     @ExceptionHandler(value = ValidationException.class)
     public CommonResult<?> validationException(ValidationException ex) {
-        log.warn("[constraintViolationExceptionHandler]", ex);
+        // log.warn("[constraintViolationExceptionHandler]", ex);
         // 无法拼接明细的错误信息，因为 Dubbo Consumer 抛出 ValidationException 异常时，是直接的字符串信息，且人类不可读
         return CommonResult.error(BAD_REQUEST);
     }
@@ -197,51 +220,59 @@ public class GlobalExceptionHandler {
     /**
      * 处理 SpringMVC 请求地址不存在
      *
-     * 注意，它需要设置如下两个配置项：
-     * 1. spring.mvc.throw-exception-if-no-handler-found 为 true
-     * 2. spring.mvc.static-path-pattern 为 /statics/**
+     * <p>注意，它需要设置如下两个配置项： 1. spring.mvc.throw-exception-if-no-handler-found 为 true 2.
+     * spring.mvc.static-path-pattern 为 /statics/**
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     public CommonResult<?> noHandlerFoundExceptionHandler(NoHandlerFoundException ex) {
-        log.warn("[noHandlerFoundExceptionHandler]", ex);
-        return CommonResult.error(NOT_FOUND.getCode(), String.format("请求地址不存在:%s", ex.getRequestURL()));
+        // log.warn("[noHandlerFoundExceptionHandler]", ex);
+        return CommonResult.error(
+                NOT_FOUND.getCode(),
+                String.format("Request address doesn't exist: %s", ex.getRequestURL()));
     }
 
-    /**
-     * 处理 SpringMVC 请求地址不存在
-     */
+    /** 处理 SpringMVC 请求地址不存在 */
     @ExceptionHandler(NoResourceFoundException.class)
-    private CommonResult<?> noResourceFoundExceptionHandler(HttpServletRequest req, NoResourceFoundException ex) {
-        log.warn("[noResourceFoundExceptionHandler]", ex);
-        return CommonResult.error(NOT_FOUND.getCode(), String.format("请求地址不存在:%s", ex.getResourcePath()));
+    private CommonResult<?> noResourceFoundExceptionHandler(
+            HttpServletRequest req, NoResourceFoundException ex) {
+        // log.warn("[noResourceFoundExceptionHandler]", ex);
+        return CommonResult.error(
+                NOT_FOUND.getCode(),
+                String.format("Request address doesn't exist: %s", ex.getResourcePath()));
     }
 
     /**
      * 处理 SpringMVC 请求方法不正确
      *
-     * 例如说，A 接口的方法为 GET 方式，结果请求方法为 POST 方式，导致不匹配
+     * <p>例如说，A 接口的方法为 GET 方式，结果请求方法为 POST 方式，导致不匹配
      */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public CommonResult<?> httpRequestMethodNotSupportedExceptionHandler(HttpRequestMethodNotSupportedException ex) {
-        log.warn("[httpRequestMethodNotSupportedExceptionHandler]", ex);
-        return CommonResult.error(METHOD_NOT_ALLOWED.getCode(), String.format("请求方法不正确:%s", ex.getMessage()));
+    public CommonResult<?> httpRequestMethodNotSupportedExceptionHandler(
+            HttpRequestMethodNotSupportedException ex) {
+        // log.warn("[httpRequestMethodNotSupportedExceptionHandler]", ex);
+        return CommonResult.error(
+                METHOD_NOT_ALLOWED.getCode(),
+                String.format("Request method doesn't correct: %s", ex.getMessage()));
     }
 
     /**
      * 处理 SpringMVC 请求的 Content-Type 不正确
      *
-     * 例如说，A 接口的 Content-Type 为 application/json，结果请求的 Content-Type 为 application/octet-stream，导致不匹配
+     * <p>例如说，A 接口的 Content-Type 为 application/json，结果请求的 Content-Type 为
+     * application/octet-stream，导致不匹配
      */
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public CommonResult<?> httpMediaTypeNotSupportedExceptionHandler(HttpMediaTypeNotSupportedException ex) {
-        log.warn("[httpMediaTypeNotSupportedExceptionHandler]", ex);
-        return CommonResult.error(BAD_REQUEST.getCode(), String.format("请求类型不正确:%s", ex.getMessage()));
+    public CommonResult<?> httpMediaTypeNotSupportedExceptionHandler(
+            HttpMediaTypeNotSupportedException ex) {
+        // log.warn("[httpMediaTypeNotSupportedExceptionHandler]", ex);
+        return CommonResult.error(
+                BAD_REQUEST.getCode(), String.format("Request type error: %s", ex.getMessage()));
     }
 
     /**
      * 处理业务异常 ServiceException
      *
-     * 例如说，商品库存不足，用户手机号已存在。
+     * <p>例如说，商品库存不足，用户手机号已存在。
      */
     @ExceptionHandler(value = ServiceException.class)
     public CommonResult<?> serviceExceptionHandler(ServiceException ex) {
@@ -251,7 +282,8 @@ public class GlobalExceptionHandler {
             try {
                 StackTraceElement[] stackTraces = ex.getStackTrace();
                 for (StackTraceElement stackTrace : stackTraces) {
-                    if (ObjUtil.notEqual(stackTrace.getClassName(), ServiceExceptionUtil.class.getName())) {
+                    if (ObjUtil.notEqual(
+                            stackTrace.getClassName(), ServiceExceptionUtil.class.getName())) {
                         log.warn("[serviceExceptionHandler]\n\t{}", stackTrace);
                         break;
                     }
@@ -263,9 +295,7 @@ public class GlobalExceptionHandler {
         return CommonResult.error(ex.getCode(), ex.getMessage());
     }
 
-    /**
-     * 处理系统异常，兜底处理所有的一切
-     */
+    /** 处理系统异常，兜底处理所有的一切 */
     @ExceptionHandler(value = Exception.class)
     public CommonResult<?> defaultExceptionHandler(Throwable ex) {
         // 处理异常
@@ -273,5 +303,4 @@ public class GlobalExceptionHandler {
         // 返回 ERROR CommonResult
         return CommonResult.error(INTERNAL_SERVER_ERROR.getCode(), INTERNAL_SERVER_ERROR.getMsg());
     }
-
 }

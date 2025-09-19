@@ -7,7 +7,7 @@ import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_COOKIE_P
  * @author Lu Shuwen
  * @date 2025-09-06
  */
-public class LongLifeRefreshTokenCookie extends AbstractCookieFactory{
+public class LongLifeRefreshTokenCookie extends AbstractCookieFactory {
 
     private static final String COOKIE_NAME = REFRESH_TOKEN_COOKIE_NAME;
 

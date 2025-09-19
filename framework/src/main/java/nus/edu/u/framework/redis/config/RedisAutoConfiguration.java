@@ -10,15 +10,11 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
-/**
- * Redis 配置类
- */
+/** Redis 配置类 */
 @AutoConfiguration(before = RedissonAutoConfigurationV2.class) // 目的：使用自己定义的 RedisTemplate Bean
 public class RedisAutoConfiguration {
 
-    /**
-     * 创建 RedisTemplate Bean，使用 JSON 序列化方式
-     */
+    /** 创建 RedisTemplate Bean，使用 JSON 序列化方式 */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
         // 创建 RedisTemplate 对象
@@ -41,5 +37,4 @@ public class RedisAutoConfiguration {
         objectMapper.registerModules(new JavaTimeModule());
         return json;
     }
-
 }
