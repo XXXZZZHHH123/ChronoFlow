@@ -9,6 +9,4 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/user")
 @Validated
 @Slf4j
-public class UserController {
-
-}
+public class UserController {}

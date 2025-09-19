@@ -4,8 +4,6 @@ import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
 import cn.hutool.core.util.ObjUtil;
-import cn.hutool.core.util.RandomUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +20,6 @@ import nus.edu.u.system.domain.vo.reg.RegOrganizerReqVO;
 import nus.edu.u.system.domain.vo.reg.RegSearchReqVO;
 import nus.edu.u.system.domain.vo.reg.RegSearchRespVO;
 import nus.edu.u.system.enums.user.UserStatusEnum;
-import nus.edu.u.system.mapper.dept.PostMapper;
 import nus.edu.u.system.mapper.permission.PermissionMapper;
 import nus.edu.u.system.mapper.role.RoleMapper;
 import nus.edu.u.system.mapper.role.RolePermissionMapper;
@@ -152,11 +149,12 @@ public class RegServiceImpl implements RegService {
             throw exception(REG_FAIL);
         }
         // Insert member role
-        RoleDO roleMember = RoleDO.builder()
-                .name(MEMBER_ROLE_NAME)
-                .roleKey(MEMBER_ROLE_KEY)
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .build();
+        RoleDO roleMember =
+                RoleDO.builder()
+                        .name(MEMBER_ROLE_NAME)
+                        .roleKey(MEMBER_ROLE_KEY)
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
         isSuccess = roleMapper.insert(roleMember) > 0;
         if (!isSuccess) {
             throw exception(REG_FAIL);
@@ -190,16 +188,20 @@ public class RegServiceImpl implements RegService {
         userRole.setTenantId(tenant.getId());
         userRoleMapper.updateById(userRole);
         // Give all organizer permission
-        PermissionDO permissionDO = permissionMapper.selectOne(
-                new LambdaQueryWrapper<PermissionDO>().eq(PermissionDO::getPermissionKey, PermissionConstants.ALL_ORGANIZER_PERMISSION)
-        );
+        PermissionDO permissionDO =
+                permissionMapper.selectOne(
+                        new LambdaQueryWrapper<PermissionDO>()
+                                .eq(
+                                        PermissionDO::getPermissionKey,
+                                        PermissionConstants.ALL_ORGANIZER_PERMISSION));
         if (ObjUtil.isEmpty(permissionDO)) {
             throw exception(REG_FAIL);
         }
-        RolePermissionDO rolePermissionDO = RolePermissionDO.builder()
-                .roleId(role.getId())
-                .permissionId(permissionDO.getId())
-                .build();
+        RolePermissionDO rolePermissionDO =
+                RolePermissionDO.builder()
+                        .roleId(role.getId())
+                        .permissionId(permissionDO.getId())
+                        .build();
         isSuccess = rolePermissionMapper.insert(rolePermissionDO) > 0;
         if (!isSuccess) {
             throw exception(REG_FAIL);

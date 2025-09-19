@@ -111,25 +111,19 @@ public class GlobalExceptionHandler {
                 String.format("Request parameters missing: %s", ex.getParameterName()));
     }
 
-    /**
-     * 处理未登录请求
-     */
+    /** 处理未登录请求 */
     @ExceptionHandler(value = NotLoginException.class)
     public CommonResult<?> notLoginExceptionHandler(NotLoginException ex) {
         return CommonResult.error(UNAUTHORIZED.getCode(), UNAUTHORIZED.getMsg());
     }
 
-    /**
-     * 处理无角色请求
-     */
+    /** 处理无角色请求 */
     @ExceptionHandler(value = NotRoleException.class)
     public CommonResult<?> notRoleExceptionHandler(NotRoleException ex) {
         return CommonResult.error(FORBIDDEN.getCode(), FORBIDDEN.getMsg());
     }
 
-    /**
-     * 处理无权限请求
-     */
+    /** 处理无权限请求 */
     @ExceptionHandler(value = NotPermissionException.class)
     public CommonResult<?> notPermissionExceptionHandler(NotPermissionException ex) {
         return CommonResult.error(FORBIDDEN.getCode(), FORBIDDEN.getMsg());

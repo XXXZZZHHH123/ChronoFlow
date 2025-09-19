@@ -1,7 +1,8 @@
 package nus.edu.u.system.controller.user;
 
+import static nus.edu.u.common.constant.PermissionConstants.*;
+
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import cn.dev33.satoken.annotation.SaCheckRole;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import java.io.IOException;
@@ -18,8 +19,6 @@ import nus.edu.u.system.service.user.UserService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import static nus.edu.u.common.constant.PermissionConstants.*;
 
 @RestController
 @RequestMapping("/organizer")

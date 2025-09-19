@@ -107,7 +107,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private LoginRespVO getInfo(String refreshToken) {
-        UserRoleDTO userRoleDTO = userService.selectUserWithRole(Long.parseLong(StpUtil.getLoginId().toString()));
+        UserRoleDTO userRoleDTO =
+                userService.selectUserWithRole(Long.parseLong(StpUtil.getLoginId().toString()));
         if (userRoleDTO == null) {
             throw exception(ACCOUNT_ERROR);
         }
