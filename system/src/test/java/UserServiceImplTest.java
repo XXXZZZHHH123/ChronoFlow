@@ -1,35 +1,3 @@
-import cn.dev33.satoken.stp.StpUtil;
-import com.baomidou.mybatisplus.core.MybatisConfiguration;
-import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
-import java.lang.reflect.InvocationTargetException;
-import nus.edu.u.common.exception.ServiceException;
-import nus.edu.u.system.domain.dataobject.user.UserDO;
-import nus.edu.u.system.domain.dto.CreateUserDTO;
-import nus.edu.u.system.domain.dto.RoleDTO;
-import nus.edu.u.system.domain.dto.UpdateUserDTO;
-import nus.edu.u.system.domain.dto.UserRoleDTO;
-import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
-import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
-import nus.edu.u.system.mapper.role.RoleMapper;
-import nus.edu.u.system.mapper.user.UserMapper;
-import nus.edu.u.system.mapper.user.UserRoleMapper;
-import nus.edu.u.system.service.user.UserService;
-import nus.edu.u.system.service.user.UserServiceImpl;
-import nus.edu.u.system.enums.user.UserStatusEnum;
-import org.apache.ibatis.builder.MapperBuilderAssistant;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.MockitoAnnotations;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,6 +7,37 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+
+import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import nus.edu.u.common.exception.ServiceException;
+import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dto.CreateUserDTO;
+import nus.edu.u.system.domain.dto.RoleDTO;
+import nus.edu.u.system.domain.dto.UpdateUserDTO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
+import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
+import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
+import nus.edu.u.system.enums.user.UserStatusEnum;
+import nus.edu.u.system.mapper.role.RoleMapper;
+import nus.edu.u.system.mapper.user.UserMapper;
+import nus.edu.u.system.mapper.user.UserRoleMapper;
+import nus.edu.u.system.service.user.UserService;
+import nus.edu.u.system.service.user.UserServiceImpl;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 class UserServiceImplTest {
     @Mock private UserMapper userMapper;
@@ -144,7 +143,8 @@ class UserServiceImplTest {
         dto.setRoleIds(List.of(2L));
         when(userMapper.existsEmail(anyString(), any())).thenReturn(true);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.createUserWithRoleIds(dto));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.createUserWithRoleIds(dto));
         assertEquals(EMAIL_EXIST.getCode(), ex.getCode());
     }
 
@@ -154,7 +154,8 @@ class UserServiceImplTest {
         dto.setEmail("a@b.com");
         dto.setRoleIds(List.of(1L));
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.createUserWithRoleIds(dto));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.createUserWithRoleIds(dto));
         assertEquals(ROLE_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -166,7 +167,8 @@ class UserServiceImplTest {
         when(userMapper.existsEmail(anyString(), any())).thenReturn(false);
         when(roleMapper.countByIds(anyList())).thenReturn(0);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.createUserWithRoleIds(dto));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.createUserWithRoleIds(dto));
         assertEquals(ROLE_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -179,7 +181,8 @@ class UserServiceImplTest {
         when(roleMapper.countByIds(anyList())).thenReturn(1);
         when(userMapper.insert(any())).thenReturn(0);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.createUserWithRoleIds(dto));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.createUserWithRoleIds(dto));
         assertEquals(USER_INSERT_FAILURE.getCode(), ex.getCode());
     }
 
@@ -198,7 +201,8 @@ class UserServiceImplTest {
                         });
         when(userRoleMapper.insert(any())).thenReturn(0);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.createUserWithRoleIds(dto));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.createUserWithRoleIds(dto));
         assertEquals(USER_ROLE_BIND_FAILURE.getCode(), ex.getCode());
     }
 
@@ -268,7 +272,8 @@ class UserServiceImplTest {
         dto.setId(1L);
         when(userMapper.selectById(1L)).thenReturn(null);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
         assertEquals(USER_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -280,7 +285,8 @@ class UserServiceImplTest {
         dbUser.setDeleted(true);
         when(userMapper.selectById(1L)).thenReturn(dbUser);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
         assertEquals(USER_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -294,7 +300,8 @@ class UserServiceImplTest {
         when(userMapper.selectById(1L)).thenReturn(dbUser);
         when(userMapper.existsEmail(eq("new@b.com"), eq(1L))).thenReturn(true);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
         assertEquals(EMAIL_EXIST.getCode(), ex.getCode());
     }
 
@@ -308,7 +315,8 @@ class UserServiceImplTest {
         when(userMapper.existsEmail(anyString(), any())).thenReturn(false);
         when(userMapper.update(any(), any())).thenReturn(0);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
         assertEquals(UPDATE_FAILURE.getCode(), ex.getCode());
     }
 
@@ -322,7 +330,8 @@ class UserServiceImplTest {
         when(userMapper.selectById(1L)).thenReturn(dbUser);
         when(userMapper.update(any(), any())).thenReturn(1);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
         assertEquals(ROLE_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -337,7 +346,8 @@ class UserServiceImplTest {
         when(userMapper.update(any(), any())).thenReturn(1);
         when(roleMapper.countByIds(anyList())).thenReturn(0);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.updateUserWithRoleIds(dto));
         assertEquals(ROLE_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -357,7 +367,8 @@ class UserServiceImplTest {
     void testSoftDeleteUser_notFound() {
         when(userMapper.selectRawById(1L)).thenReturn(null);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.softDeleteUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.softDeleteUser(1L));
         assertEquals(USER_NOTFOUND.getCode(), ex.getCode());
     }
 
@@ -367,7 +378,8 @@ class UserServiceImplTest {
         db.setDeleted(true);
         when(userMapper.selectRawById(1L)).thenReturn(db);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.softDeleteUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.softDeleteUser(1L));
         assertEquals(USER_ALREADY_DELETED.getCode(), ex.getCode());
     }
 
@@ -378,7 +390,8 @@ class UserServiceImplTest {
         when(userMapper.selectRawById(1L)).thenReturn(db);
         when(userMapper.update(any(), any())).thenReturn(0);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.softDeleteUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.softDeleteUser(1L));
         assertEquals(UPDATE_FAILURE.getCode(), ex.getCode());
         verify(userRoleMapper, never()).delete(any());
     }
@@ -398,7 +411,8 @@ class UserServiceImplTest {
     void testRestoreUser_notFound() {
         when(userMapper.selectRawById(1L)).thenReturn(null);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.restoreUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.restoreUser(1L));
         assertEquals(USER_NOTFOUND.getCode(), ex.getCode());
     }
 
@@ -408,7 +422,8 @@ class UserServiceImplTest {
         db.setDeleted(false);
         when(userMapper.selectRawById(1L)).thenReturn(db);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.restoreUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.restoreUser(1L));
         assertEquals(USER_NOT_DELETED.getCode(), ex.getCode());
     }
 
@@ -419,7 +434,8 @@ class UserServiceImplTest {
         when(userMapper.selectRawById(1L)).thenReturn(db);
         when(userMapper.update(any(), any())).thenReturn(0);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.restoreUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.restoreUser(1L));
         assertEquals(UPDATE_FAILURE.getCode(), ex.getCode());
     }
 
@@ -439,7 +455,8 @@ class UserServiceImplTest {
     void testDisableUser_notFound() {
         when(userMapper.selectById(1L)).thenReturn(null);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.disableUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.disableUser(1L));
         assertEquals(USER_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -449,7 +466,8 @@ class UserServiceImplTest {
         db.setDeleted(true);
         when(userMapper.selectById(1L)).thenReturn(db);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.disableUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.disableUser(1L));
         assertEquals(USER_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -460,7 +478,8 @@ class UserServiceImplTest {
         db.setStatus(UserStatusEnum.DISABLE.getCode());
         when(userMapper.selectById(1L)).thenReturn(db);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.disableUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.disableUser(1L));
         assertEquals(USER_ALREADY_DISABLED.getCode(), ex.getCode());
     }
 
@@ -472,7 +491,8 @@ class UserServiceImplTest {
         when(userMapper.selectById(1L)).thenReturn(db);
         when(userMapper.update(any(), any())).thenReturn(0);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.disableUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.disableUser(1L));
         assertEquals(USER_DISABLE_FAILURE.getCode(), ex.getCode());
     }
 
@@ -492,7 +512,8 @@ class UserServiceImplTest {
     void testEnableUser_notFound() {
         when(userMapper.selectById(1L)).thenReturn(null);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.enableUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.enableUser(1L));
         assertEquals(USER_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -502,7 +523,8 @@ class UserServiceImplTest {
         db.setDeleted(true);
         when(userMapper.selectById(1L)).thenReturn(db);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.enableUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.enableUser(1L));
         assertEquals(USER_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -513,7 +535,8 @@ class UserServiceImplTest {
         db.setStatus(UserStatusEnum.ENABLE.getCode());
         when(userMapper.selectById(1L)).thenReturn(db);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.enableUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.enableUser(1L));
         assertEquals(USER_ALREADY_ENABLED.getCode(), ex.getCode());
     }
 
@@ -525,7 +548,8 @@ class UserServiceImplTest {
         when(userMapper.selectById(1L)).thenReturn(db);
         when(userMapper.update(any(), any())).thenReturn(0);
 
-        ServiceException ex = assertThrows(ServiceException.class, () -> userService.enableUser(1L));
+        ServiceException ex =
+                assertThrows(ServiceException.class, () -> userService.enableUser(1L));
         assertEquals(USER_ENABLE_FAILURE.getCode(), ex.getCode());
     }
 
@@ -645,11 +669,7 @@ class UserServiceImplTest {
     @Test
     void testBulkUpsertUsers_serviceExceptionRecorded() {
         CreateUserDTO invalidEmail =
-                CreateUserDTO.builder()
-                        .rowIndex(1)
-                        .email("bad")
-                        .roleIds(List.of(2L))
-                        .build();
+                CreateUserDTO.builder().rowIndex(1).email("bad").roleIds(List.of(2L)).build();
         CreateUserDTO emptyRoles =
                 CreateUserDTO.builder()
                         .rowIndex(3)
@@ -667,7 +687,10 @@ class UserServiceImplTest {
                 userService.bulkUpsertUsers(List.of(invalidEmail, forbiddenRole, emptyRoles));
 
         assertEquals(3, resp.getFailedCount());
-        List<String> reasons = resp.getFailures().stream().map(BulkUpsertUsersRespVO.RowFailure::getReason).toList();
+        List<String> reasons =
+                resp.getFailures().stream()
+                        .map(BulkUpsertUsersRespVO.RowFailure::getReason)
+                        .toList();
         assertTrue(reasons.contains(INVALID_EMAIL.getMsg()));
         assertTrue(reasons.contains(ROLE_NOT_FOUND.getMsg()));
         assertTrue(reasons.contains(EMPTY_ROLEIDS.getMsg()));
@@ -692,11 +715,7 @@ class UserServiceImplTest {
 
     @Test
     void testBulkUpsertUsers_handlesNullRowIndexAndRoles() {
-        CreateUserDTO row =
-                CreateUserDTO.builder()
-                        .email("user@example.com")
-                        .roleIds(null)
-                        .build();
+        CreateUserDTO row = CreateUserDTO.builder().email("user@example.com").roleIds(null).build();
 
         BulkUpsertUsersRespVO resp = userService.bulkUpsertUsers(List.of(row));
 
@@ -709,11 +728,7 @@ class UserServiceImplTest {
     @Test
     void testBulkUpsertUsers_handlesNullEmail() {
         CreateUserDTO row =
-                CreateUserDTO.builder()
-                        .rowIndex(4)
-                        .email(null)
-                        .roleIds(List.of(2L))
-                        .build();
+                CreateUserDTO.builder().rowIndex(4).email(null).roleIds(List.of(2L)).build();
 
         BulkUpsertUsersRespVO resp = userService.bulkUpsertUsers(List.of(row));
 
@@ -764,7 +779,9 @@ class UserServiceImplTest {
         ServiceException ex =
                 assertThrows(
                         ServiceException.class,
-                        () -> userService.tryCreateOrFallbackToUpdate("user@example.com", "remark", List.of(2L)));
+                        () ->
+                                userService.tryCreateOrFallbackToUpdate(
+                                        "user@example.com", "remark", List.of(2L)));
         assertEquals(NULL_USERID.getCode(), ex.getCode());
     }
 
@@ -776,7 +793,9 @@ class UserServiceImplTest {
         ServiceException ex =
                 assertThrows(
                         ServiceException.class,
-                        () -> userService.tryCreateOrFallbackToUpdate("user@example.com", "remark", List.of(2L)));
+                        () ->
+                                userService.tryCreateOrFallbackToUpdate(
+                                        "user@example.com", "remark", List.of(2L)));
         assertEquals(ROLE_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -789,7 +808,9 @@ class UserServiceImplTest {
         ServiceException ex =
                 assertThrows(
                         ServiceException.class,
-                        () -> userService.tryCreateOrFallbackToUpdate("user@example.com", "remark", emptyRoles));
+                        () ->
+                                userService.tryCreateOrFallbackToUpdate(
+                                        "user@example.com", "remark", emptyRoles));
         assertEquals(EMPTY_ROLEIDS.getCode(), ex.getCode());
     }
 
@@ -835,7 +856,9 @@ class UserServiceImplTest {
         var method = UserServiceImpl.class.getDeclaredMethod("validateUpdateArgs", List.class);
         method.setAccessible(true);
         var invocation =
-                assertThrows(InvocationTargetException.class, () -> method.invoke(userService, (Object) null));
+                assertThrows(
+                        InvocationTargetException.class,
+                        () -> method.invoke(userService, (Object) null));
         Throwable cause = invocation.getCause();
         assertTrue(cause instanceof ServiceException);
         assertEquals(EMPTY_ROLEIDS.getCode(), ((ServiceException) cause).getCode());

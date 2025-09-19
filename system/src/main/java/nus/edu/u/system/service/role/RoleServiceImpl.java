@@ -1,13 +1,12 @@
 package nus.edu.u.system.service.role;
 
 import jakarta.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.system.domain.vo.role.RoleListRespVO;
 import nus.edu.u.system.mapper.role.RoleMapper;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
