@@ -1,11 +1,10 @@
 package nus.edu.u.system.service.event;
 
+import java.util.List;
 import nus.edu.u.system.domain.vo.event.*;
 
-import java.util.List;
-
 public interface EventService {
-    Long createEvent(EventCreateReqVO reqVO);
+    EventRespVO createEvent(EventCreateReqVO reqVO);
 
     EventRespVO getByEventId(Long eventId);
 
@@ -16,12 +15,12 @@ public interface EventService {
     Boolean deleteEvent(Long id);
 
     Boolean restoreEvent(Long id);
-//
-//    Boolean updateEvent(EventUpdateReqVO reqVO);
-//
-//    Boolean deleteEvent(Long id);
-//
-//    EventRespVO getEvent(Long id);
-//
-//    PageResult<EventRespVO> getEventPage(EventPageReqVO reqVO);
+    //
+    //    Boolean updateEvent(EventUpdateReqVO reqVO);
+    //
+    //    Boolean deleteEvent(Long id);
+    //
+    //    EventRespVO getEvent(Long id);
+    //
+    //    PageResult<EventRespVO> getEventPage(EventPageReqVO reqVO);
 }

@@ -1,8 +1,10 @@
 package nus.edu.u.system.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.system.domain.vo.event.EventCreateReqVO;
@@ -13,20 +15,19 @@ import nus.edu.u.system.service.event.EventService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/system/event")
 @Validated
 @Slf4j
 public class EventController {
-    @Resource
-    private EventService eventService;
+    @Resource private EventService eventService;
 
-    @PostMapping("/create")
-    public CommonResult<Long> createEvent(@Valid @RequestBody EventCreateReqVO req) {
-        Long eventId = eventService.createEvent(req);
-        return CommonResult.success(eventId);
+    @PostMapping()
+    public CommonResult<EventRespVO> createEvent(@Valid @RequestBody EventCreateReqVO req) {
+        Long organizerId = StpUtil.getLoginIdAsLong();
+        req.setOrganizerId(organizerId);
+        EventRespVO resp = eventService.createEvent(req);
+        return CommonResult.success(resp);
     }
 
     @GetMapping("/{id}")
@@ -34,16 +35,15 @@ public class EventController {
         return CommonResult.success(eventService.getByEventId(id));
     }
 
-    @GetMapping("/organizer/{organizerId}")
-    public CommonResult<List<EventRespVO>> getByOrganizerId(
-            @PathVariable("organizerId") @NotNull Long organizerId) {
+    @GetMapping()
+    public CommonResult<List<EventRespVO>> getByOrganizerId() {
+        Long organizerId = StpUtil.getLoginIdAsLong();
         return CommonResult.success(eventService.getByOrganizerId(organizerId));
     }
 
     @PatchMapping("/{id}")
     public CommonResult<UpdateEventRespVO> updateEvent(
-            @PathVariable("id") Long id,
-            @Valid @RequestBody EventUpdateReqVO req) {
+            @PathVariable("id") Long id, @Valid @RequestBody EventUpdateReqVO req) {
         UpdateEventRespVO respVO = eventService.updateEvent(id, req);
         return CommonResult.success(respVO);
     }

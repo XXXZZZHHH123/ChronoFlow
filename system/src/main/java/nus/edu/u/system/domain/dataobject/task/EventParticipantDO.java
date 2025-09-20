@@ -2,10 +2,9 @@ package nus.edu.u.system.domain.dataobject.task;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import java.io.Serializable;
 import lombok.*;
 import nus.edu.u.common.core.domain.base.TenantBaseDO;
-
-import java.io.Serializable;
 
 @TableName("event_participant")
 @Data
@@ -16,8 +15,7 @@ import java.io.Serializable;
 public class EventParticipantDO extends TenantBaseDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @TableId
-    private Long id;
+    @TableId private Long id;
 
     private Long eventId;
 

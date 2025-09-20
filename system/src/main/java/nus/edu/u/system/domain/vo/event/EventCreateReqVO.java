@@ -4,10 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class EventCreateReqVO {
@@ -17,7 +16,6 @@ public class EventCreateReqVO {
 
     private String description;
 
-    @NotNull(message = "organizerId cannot be empty")
     private Long organizerId;
 
     private List<Long> participantUserIds;
@@ -25,6 +23,8 @@ public class EventCreateReqVO {
     @NotNull(message = "startTime cannot be empty")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startTime;
+
+    private String location;
 
     @NotNull(message = "endTime cannot be empty")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")

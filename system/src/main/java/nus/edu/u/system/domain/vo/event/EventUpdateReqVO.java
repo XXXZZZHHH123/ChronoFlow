@@ -1,13 +1,10 @@
 package nus.edu.u.system.domain.vo.event;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Data
 public class EventUpdateReqVO {
@@ -19,7 +16,7 @@ public class EventUpdateReqVO {
     private String description;
 
     private Integer status;
-
+    private String location;
     private List<Long> participantUserIds;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

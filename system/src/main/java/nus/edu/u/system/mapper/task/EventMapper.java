@@ -1,6 +1,5 @@
 package nus.edu.u.system.mapper.task;
 
-import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import org.apache.ibatis.annotations.Mapper;
@@ -17,8 +16,9 @@ public interface EventMapper extends BaseMapper<EventDO> {
     @Select("SELECT * FROM event WHERE id = #{id}")
     EventDO selectRawById(@Param("id") Long id);
 
-    @Update("""
-        UPDATE event 
+    @Update(
+            """
+        UPDATE event
         SET deleted = 0, update_time = NOW()
         WHERE id = #{id} AND deleted = 1
     """)

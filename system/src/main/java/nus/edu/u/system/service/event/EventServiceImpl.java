@@ -1,9 +1,15 @@
 package nus.edu.u.system.service.event;
 
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.*;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.EventStatusEnum;
 import nus.edu.u.system.convert.event.EventConvert;
@@ -18,26 +24,16 @@ import nus.edu.u.system.mapper.user.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.*;
-
 @Service
 @Slf4j
-public class EventServiceImpl implements EventService{
-    @Resource
-    private EventMapper eventMapper;
-    @Resource
-    private EventParticipantMapper eventParticipantMapper;
-    @Resource
-    private UserMapper userMapper;
+public class EventServiceImpl implements EventService {
+    @Resource private EventMapper eventMapper;
+    @Resource private EventParticipantMapper eventParticipantMapper;
+    @Resource private UserMapper userMapper;
 
     @Override
     @Transactional
-    public Long createEvent(EventCreateReqVO reqVO) {
+    public EventRespVO createEvent(EventCreateReqVO reqVO) {
         validateTimeRange(reqVO.getStartTime(), reqVO.getEndTime());
         validateOrganizerExists(reqVO.getOrganizerId());
         validateParticipantsExist(reqVO.getParticipantUserIds());
@@ -45,7 +41,7 @@ public class EventServiceImpl implements EventService{
         EventDTO dto = EventConvert.INSTANCE.convert(reqVO);
         EventDO event = EventConvert.INSTANCE.convert(dto);
         if (event.getStatus() == null) {
-            event.setStatus(EventStatusEnum.NOT_STARTED.getCode());
+            event.setStatus(EventStatusEnum.ACTIVE.getCode());
         }
         eventMapper.insert(event);
 
@@ -57,7 +53,15 @@ public class EventServiceImpl implements EventService{
                 eventParticipantMapper.insert(relation);
             }
         }
-        return event.getId();
+        EventRespVO resp = EventConvert.INSTANCE.DOconvertVO(event);
+
+        Long count =
+                eventParticipantMapper.selectCount(
+                        Wrappers.<EventParticipantDO>lambdaQuery()
+                                .eq(EventParticipantDO::getEventId, event.getId()));
+        resp.setJoiningParticipants(count.intValue());
+
+        return resp;
     }
 
     @Override
@@ -69,13 +73,15 @@ public class EventServiceImpl implements EventService{
         }
         EventRespVO resp = EventConvert.INSTANCE.DOconvertVO(event);
 
-        List<EventParticipantDO> rels = eventParticipantMapper.selectList(
-                new LambdaQueryWrapper<EventParticipantDO>().eq(EventParticipantDO::getEventId, eventId)
-        );
-        List<Long> participantIds = rels.stream()
-                .map(EventParticipantDO::getUserId)
-                .toList();
-        resp.setParticipantUserIds(participantIds);
+        Long count =
+                eventParticipantMapper.selectCount(
+                        Wrappers.<EventParticipantDO>lambdaQuery()
+                                .eq(EventParticipantDO::getEventId, eventId));
+        resp.setJoiningParticipants(count.intValue());
+
+        resp.setGroups(buildDefaultGroups());
+        resp.setTaskStatus(buildDefaultTaskStatus());
+
         return resp;
     }
 
@@ -86,31 +92,37 @@ public class EventServiceImpl implements EventService{
             throw exception(ORGANIZER_NOT_FOUND);
         }
 
-        List<EventDO> events = eventMapper.selectList(
-                new LambdaQueryWrapper<EventDO>().eq(EventDO::getUserId, organizerId)
-        );
+        List<EventDO> events =
+                eventMapper.selectList(
+                        new LambdaQueryWrapper<EventDO>().eq(EventDO::getUserId, organizerId));
         if (events.isEmpty()) {
             return List.of();
         }
 
         List<Long> eventIds = events.stream().map(EventDO::getId).toList();
-        List<EventParticipantDO> allRels = eventParticipantMapper.selectList(
-                new LambdaQueryWrapper<EventParticipantDO>().in(EventParticipantDO::getEventId, eventIds)
-        );
+        List<EventParticipantDO> allRels =
+                eventParticipantMapper.selectList(
+                        new LambdaQueryWrapper<EventParticipantDO>()
+                                .in(EventParticipantDO::getEventId, eventIds));
 
-        Map<Long, List<Long>> eventId2Users = allRels.stream()
-                .collect(Collectors.groupingBy(
-                        EventParticipantDO::getEventId,
-                        Collectors.mapping(EventParticipantDO::getUserId, Collectors.toList())
-                ));
+        Map<Long, Integer> countsByEventId =
+                allRels.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        EventParticipantDO::getEventId,
+                                        Collectors.summingInt(e -> 1)));
 
-        List<EventRespVO> list = EventConvert.INSTANCE.convertList(events);
-
-        for (EventRespVO vo : list) {
-            List<Long> participantIds = eventId2Users.getOrDefault(vo.getId(), Collections.emptyList());
-            vo.setParticipantUserIds(participantIds);
-        }
-        return list;
+        return events.stream()
+                .map(
+                        event -> {
+                            EventRespVO vo = EventConvert.INSTANCE.DOconvertVO(event);
+                            vo.setJoiningParticipants(
+                                    countsByEventId.getOrDefault(event.getId(), 0));
+                            vo.setGroups(buildDefaultGroups());
+                            vo.setTaskStatus(buildDefaultTaskStatus());
+                            return vo;
+                        })
+                .toList();
     }
 
     @Override
@@ -121,8 +133,12 @@ public class EventServiceImpl implements EventService{
             throw exception(EVENT_NOT_FOUND);
         }
 
-        validateTimeRange(reqVO.getStartTime(), reqVO.getEndTime());
-        if(reqVO.getOrganizerId() != null) {
+        LocalDateTime start =
+                reqVO.getStartTime() != null ? reqVO.getStartTime() : db.getStartTime();
+        LocalDateTime end = reqVO.getEndTime() != null ? reqVO.getEndTime() : db.getEndTime();
+        validateTimeRange(start, end);
+
+        if (reqVO.getOrganizerId() != null) {
             validateOrganizerExists(reqVO.getOrganizerId());
         }
         validateParticipantsExist(reqVO.getParticipantUserIds());
@@ -135,21 +151,24 @@ public class EventServiceImpl implements EventService{
         if (reqVO.getEndTime() != null) uw.set(EventDO::getEndTime, reqVO.getEndTime());
         if (reqVO.getStatus() != null) uw.set(EventDO::getStatus, reqVO.getStatus());
         if (reqVO.getRemark() != null) uw.set(EventDO::getRemark, reqVO.getRemark());
+        if (reqVO.getLocation() != null) uw.set(EventDO::getLocation, reqVO.getLocation());
         eventMapper.update(new EventDO(), uw);
 
         if (reqVO.getParticipantUserIds() != null) {
-            List<Long> targetList = reqVO.getParticipantUserIds().stream()
-                    .filter(Objects::nonNull)
-                    .distinct()
-                    .toList();
+            List<Long> targetList =
+                    reqVO.getParticipantUserIds().stream()
+                            .filter(Objects::nonNull)
+                            .distinct()
+                            .toList();
 
-            List<EventParticipantDO> currentList = eventParticipantMapper.selectList(
-                    Wrappers.<EventParticipantDO>lambdaQuery()
-                            .eq(EventParticipantDO::getEventId, id)
-            );
-            Set<Long> current = currentList.stream()
-                    .map(EventParticipantDO::getUserId)
-                    .collect(Collectors.toSet());
+            List<EventParticipantDO> currentList =
+                    eventParticipantMapper.selectList(
+                            Wrappers.<EventParticipantDO>lambdaQuery()
+                                    .eq(EventParticipantDO::getEventId, id));
+            Set<Long> current =
+                    currentList.stream()
+                            .map(EventParticipantDO::getUserId)
+                            .collect(Collectors.toSet());
 
             Set<Long> target = new HashSet<>(targetList);
             Set<Long> toRemove = new HashSet<>(current);
@@ -166,8 +185,7 @@ public class EventServiceImpl implements EventService{
                 eventParticipantMapper.delete(
                         Wrappers.<EventParticipantDO>lambdaQuery()
                                 .eq(EventParticipantDO::getEventId, id)
-                                .in(EventParticipantDO::getUserId, toRemove)
-                );
+                                .in(EventParticipantDO::getUserId, toRemove));
             }
 
             if (!toAdd.isEmpty()) {
@@ -181,7 +199,6 @@ public class EventServiceImpl implements EventService{
         }
 
         EventDO updated = eventMapper.selectById(id);
-
         UpdateEventRespVO resp = new UpdateEventRespVO();
         resp.setId(updated.getId());
         resp.setEventName(updated.getName());
@@ -189,13 +206,19 @@ public class EventServiceImpl implements EventService{
         resp.setOrganizerId(updated.getUserId());
         resp.setStartTime(updated.getStartTime());
         resp.setEndTime(updated.getEndTime());
+        resp.setLocation(updated.getLocation());
         resp.setStatus(updated.getStatus());
         resp.setRemarks(updated.getRemark());
         resp.setUpdateTime(updated.getUpdateTime());
 
-        List<Long> participantIds = eventParticipantMapper.selectList(
-                Wrappers.<EventParticipantDO>lambdaQuery().eq(EventParticipantDO::getEventId, id)
-        ).stream().map(EventParticipantDO::getUserId).toList();
+        List<Long> participantIds =
+                eventParticipantMapper
+                        .selectList(
+                                Wrappers.<EventParticipantDO>lambdaQuery()
+                                        .eq(EventParticipantDO::getEventId, id))
+                        .stream()
+                        .map(EventParticipantDO::getUserId)
+                        .toList();
         resp.setParticipantUserIds(participantIds);
 
         return resp;
@@ -215,8 +238,7 @@ public class EventServiceImpl implements EventService{
         }
 
         eventParticipantMapper.delete(
-                Wrappers.<EventParticipantDO>lambdaQuery().eq(EventParticipantDO::getEventId, id)
-        );
+                Wrappers.<EventParticipantDO>lambdaQuery().eq(EventParticipantDO::getEventId, id));
 
         return true;
     }
@@ -260,8 +282,8 @@ public class EventServiceImpl implements EventService{
             throw exception(DUPLICATE_PARTICIPANTS);
         }
 
-        List<Long> existIds = userMapper.selectBatchIds(distinct).stream()
-                .map(UserDO::getId).toList();
+        List<Long> existIds =
+                userMapper.selectBatchIds(distinct).stream().map(UserDO::getId).toList();
 
         if (existIds.size() != distinct.size()) {
             Set<Long> miss = new HashSet<>(distinct);
@@ -269,5 +291,25 @@ public class EventServiceImpl implements EventService{
             log.warn("Missing participants: {}", miss);
             throw exception(PARTICIPANT_NOT_FOUND);
         }
+    }
+
+    private List<EventRespVO.GroupVO> buildDefaultGroups() {
+        EventRespVO.GroupVO g1 = new EventRespVO.GroupVO();
+        g1.setId("grp_a");
+        g1.setName("Logistics");
+
+        EventRespVO.GroupVO g2 = new EventRespVO.GroupVO();
+        g2.setId("grp_b");
+        g2.setName("Registration");
+
+        return List.of(g1, g2);
+    }
+
+    private EventRespVO.TaskStatusVO buildDefaultTaskStatus() {
+        EventRespVO.TaskStatusVO ts = new EventRespVO.TaskStatusVO();
+        ts.setTotal(0);
+        ts.setRemaining(0);
+        ts.setCompleted(0);
+        return ts;
     }
 }
