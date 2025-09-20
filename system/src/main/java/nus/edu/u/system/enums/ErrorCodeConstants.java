@@ -12,11 +12,14 @@ public interface ErrorCodeConstants {
 
     // ========= Auth module 10-01-000 ============
     ErrorCode AUTH_LOGIN_BAD_CREDENTIALS =
-            new ErrorCode(10_01_001, "Login fail, username/password is wrong");
+            new ErrorCode(10_01_001, "Login failed. Incorrect username or password");
     ErrorCode AUTH_LOGIN_USER_DISABLED =
-            new ErrorCode(10_01_002, "Login fail, this account is disabled");
-    ErrorCode AUTH_LOGIN_CAPTCHA_CODE_ERROR = new ErrorCode(10_01_003, "Captcha wrong, reason：{}");
-    ErrorCode REFRESH_TOKEN_WRONG = new ErrorCode(10_01_004, "Can't refresh, please login again");
+            new ErrorCode(10_01_002, "Login failed. This account has been disabled");
+    ErrorCode AUTH_LOGIN_CAPTCHA_CODE_ERROR =
+            new ErrorCode(10_01_003, "Incorrect verification code. Please try again");
+    ErrorCode REFRESH_TOKEN_WRONG =
+            new ErrorCode(10_01_004, "Your session has expired. Please log in again");
+    ErrorCode ACCOUNT_ERROR = new ErrorCode(10_01_005, "Account error");
 
     // ========= user crud module 12-01-000 ============
     ErrorCode USERNAME_EXIST = new ErrorCode(12_01_001, "Username already exists");
@@ -34,6 +37,10 @@ public interface ErrorCodeConstants {
     ErrorCode USER_ALREADY_ENABLED = new ErrorCode(12_01_0011, "User already enabled");
     ErrorCode ROLE_NOT_FOUND = new ErrorCode(12_01_0012, "Role not found");
     ErrorCode USER_ROLE_BIND_FAILURE = new ErrorCode(12_01_0013, "User role bind failure");
+    ErrorCode EMAIL_BLANK = new ErrorCode(12_01_0014, "Email can not be blank");
+    ErrorCode INVALID_EMAIL = new ErrorCode(12_01_0015, "Invalid email");
+    ErrorCode EMPTY_ROLEIDS = new ErrorCode(12_01_0016, "roleIds can not be blank");
+    ErrorCode NULL_USERID = new ErrorCode(12_01_0017, "Email existed but user not found on update");
 
     // ========= group module 10-02-000 ============
     ErrorCode GROUP_NOT_FOUND = new ErrorCode(10_02_001, "Group not found");
@@ -49,10 +56,13 @@ public interface ErrorCodeConstants {
             new ErrorCode(10_02_007, "Cannot remove group leader from group");
 
     // ========= Reg module 11-01-000 =============
-    ErrorCode NO_SEARCH_RESULT = new ErrorCode(11_01_001, "No result found");
-    ErrorCode REG_FAIL = new ErrorCode(11_01_002, "Sign up fail, please contact administrator");
+    ErrorCode NO_SEARCH_RESULT = new ErrorCode(11_01_001, "No matching result found");
+    ErrorCode REG_FAIL = new ErrorCode(11_01_002, "Sign-up failed. Please contact support");
     ErrorCode EXCEED_MAX_RETRY_GENERATE_CODE =
             new ErrorCode(
-                    11_01_003, "Failed to generate unique organization code, please try again");
-    ErrorCode ACCOUNT_EXIST = new ErrorCode(11_01_004, "Account already exist");
+                    11_01_003, "Unable to generate an organization code. Please try again later");
+    ErrorCode ACCOUNT_EXIST =
+            new ErrorCode(
+                    11_01_004,
+                    "This account already exists. Please log in or use a different account");
 }

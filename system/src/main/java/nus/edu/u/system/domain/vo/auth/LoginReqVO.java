@@ -11,12 +11,12 @@ import lombok.*;
 @Builder
 public class LoginReqVO {
 
-    @NotEmpty(message = "Username can't be empty")
-    @Size(min = 6, max = 100, message = "Username length should between 6 and 100")
+    @NotEmpty(message = "Username is required")
+    @Size(min = 6, max = 100, message = "Username must be between 6 and 100 characters")
     private String username;
 
-    @NotEmpty(message = "Passage can't be empty")
-    @Size(min = 8, max = 100, message = "Password length should between 8 and 100")
+    @NotEmpty(message = "Password is required")
+    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
     private String password;
 
     private boolean remember = true;

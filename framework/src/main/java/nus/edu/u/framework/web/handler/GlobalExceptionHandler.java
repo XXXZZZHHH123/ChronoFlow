@@ -2,6 +2,9 @@ package nus.edu.u.framework.web.handler;
 
 import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.*;
 
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotPermissionException;
+import cn.dev33.satoken.exception.NotRoleException;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
@@ -102,10 +105,28 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = MissingServletRequestParameterException.class)
     public CommonResult<?> missingServletRequestParameterExceptionHandler(
             MissingServletRequestParameterException ex) {
-        log.warn("[missingServletRequestParameterExceptionHandler]", ex);
+        // log.warn("[missingServletRequestParameterExceptionHandler]", ex);
         return CommonResult.error(
                 BAD_REQUEST.getCode(),
-                String.format("Request parameters missing:%s", ex.getParameterName()));
+                String.format("Request parameters missing: %s", ex.getParameterName()));
+    }
+
+    /** 处理未登录请求 */
+    @ExceptionHandler(value = NotLoginException.class)
+    public CommonResult<?> notLoginExceptionHandler(NotLoginException ex) {
+        return CommonResult.error(UNAUTHORIZED.getCode(), UNAUTHORIZED.getMsg());
+    }
+
+    /** 处理无角色请求 */
+    @ExceptionHandler(value = NotRoleException.class)
+    public CommonResult<?> notRoleExceptionHandler(NotRoleException ex) {
+        return CommonResult.error(FORBIDDEN.getCode(), FORBIDDEN.getMsg());
+    }
+
+    /** 处理无权限请求 */
+    @ExceptionHandler(value = NotPermissionException.class)
+    public CommonResult<?> notPermissionExceptionHandler(NotPermissionException ex) {
+        return CommonResult.error(FORBIDDEN.getCode(), FORBIDDEN.getMsg());
     }
 
     /**
@@ -116,17 +137,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public CommonResult<?> methodArgumentTypeMismatchExceptionHandler(
             MethodArgumentTypeMismatchException ex) {
-        log.warn("[methodArgumentTypeMismatchExceptionHandler]", ex);
+        // log.warn("[methodArgumentTypeMismatchExceptionHandler]", ex);
         return CommonResult.error(
                 BAD_REQUEST.getCode(),
-                String.format("Request parameter type wrong:%s", ex.getMessage()));
+                String.format("Request parameter type wrong: %s", ex.getMessage()));
     }
 
     /** 处理 SpringMVC 参数校验不正确 */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public CommonResult<?> methodArgumentNotValidExceptionExceptionHandler(
             MethodArgumentNotValidException ex) {
-        log.warn("[methodArgumentNotValidExceptionExceptionHandler]", ex);
+        // log.warn("[methodArgumentNotValidExceptionExceptionHandler]", ex);
         // 获取 errorMessage
         String errorMessage = null;
         FieldError fieldError = ex.getBindingResult().getFieldError();
@@ -143,19 +164,18 @@ public class GlobalExceptionHandler {
         if (StrUtil.isEmpty(errorMessage)) {
             return CommonResult.error(BAD_REQUEST);
         }
-        return CommonResult.error(
-                BAD_REQUEST.getCode(), String.format("Request parameters error:%s", errorMessage));
+        return CommonResult.error(BAD_REQUEST.getCode(), errorMessage);
     }
 
     /** 处理 SpringMVC 参数绑定不正确，本质上也是通过 Validator 校验 */
     @ExceptionHandler(BindException.class)
     public CommonResult<?> bindExceptionHandler(BindException ex) {
-        log.warn("[handleBindException]", ex);
+        // log.warn("[handleBindException]", ex);
         FieldError fieldError = ex.getFieldError();
         assert fieldError != null; // 断言，避免告警
         return CommonResult.error(
                 BAD_REQUEST.getCode(),
-                String.format("Request parameters error:%s", fieldError.getDefaultMessage()));
+                String.format("Request parameters error: %s", fieldError.getDefaultMessage()));
     }
 
     /**
@@ -166,7 +186,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public CommonResult<?> methodArgumentTypeInvalidFormatExceptionHandler(
             HttpMessageNotReadableException ex) {
-        log.warn("[methodArgumentTypeInvalidFormatExceptionHandler]", ex);
+        // log.warn("[methodArgumentTypeInvalidFormatExceptionHandler]", ex);
         if (ex.getCause() instanceof InvalidFormatException) {
             InvalidFormatException invalidFormatException = (InvalidFormatException) ex.getCause();
             return CommonResult.error(
@@ -176,7 +196,7 @@ public class GlobalExceptionHandler {
         }
         if (StrUtil.startWith(ex.getMessage(), "Required request body is missing")) {
             return CommonResult.error(
-                    BAD_REQUEST.getCode(), "Request parameters type error: request body 缺失");
+                    BAD_REQUEST.getCode(), "Request parameters type error: request body missing");
         }
         return defaultExceptionHandler(ex);
     }
@@ -184,17 +204,15 @@ public class GlobalExceptionHandler {
     /** 处理 Validator 校验不通过产生的异常 */
     @ExceptionHandler(value = ConstraintViolationException.class)
     public CommonResult<?> constraintViolationExceptionHandler(ConstraintViolationException ex) {
-        log.warn("[constraintViolationExceptionHandler]", ex);
+        // log.warn("[constraintViolationExceptionHandler]", ex);
         ConstraintViolation<?> constraintViolation = ex.getConstraintViolations().iterator().next();
-        return CommonResult.error(
-                BAD_REQUEST.getCode(),
-                String.format("Request parameters error:%s", constraintViolation.getMessage()));
+        return CommonResult.error(BAD_REQUEST.getCode(), constraintViolation.getMessage());
     }
 
     /** 处理 Dubbo Consumer 本地参数校验时，抛出的 ValidationException 异常 */
     @ExceptionHandler(value = ValidationException.class)
     public CommonResult<?> validationException(ValidationException ex) {
-        log.warn("[constraintViolationExceptionHandler]", ex);
+        // log.warn("[constraintViolationExceptionHandler]", ex);
         // 无法拼接明细的错误信息，因为 Dubbo Consumer 抛出 ValidationException 异常时，是直接的字符串信息，且人类不可读
         return CommonResult.error(BAD_REQUEST);
     }
@@ -207,20 +225,20 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     public CommonResult<?> noHandlerFoundExceptionHandler(NoHandlerFoundException ex) {
-        log.warn("[noHandlerFoundExceptionHandler]", ex);
+        // log.warn("[noHandlerFoundExceptionHandler]", ex);
         return CommonResult.error(
                 NOT_FOUND.getCode(),
-                String.format("Request address doesn't exist:%s", ex.getRequestURL()));
+                String.format("Request address doesn't exist: %s", ex.getRequestURL()));
     }
 
     /** 处理 SpringMVC 请求地址不存在 */
     @ExceptionHandler(NoResourceFoundException.class)
     private CommonResult<?> noResourceFoundExceptionHandler(
             HttpServletRequest req, NoResourceFoundException ex) {
-        log.warn("[noResourceFoundExceptionHandler]", ex);
+        // log.warn("[noResourceFoundExceptionHandler]", ex);
         return CommonResult.error(
                 NOT_FOUND.getCode(),
-                String.format("Request address doesn't exist:%s", ex.getResourcePath()));
+                String.format("Request address doesn't exist: %s", ex.getResourcePath()));
     }
 
     /**
@@ -231,10 +249,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public CommonResult<?> httpRequestMethodNotSupportedExceptionHandler(
             HttpRequestMethodNotSupportedException ex) {
-        log.warn("[httpRequestMethodNotSupportedExceptionHandler]", ex);
+        // log.warn("[httpRequestMethodNotSupportedExceptionHandler]", ex);
         return CommonResult.error(
                 METHOD_NOT_ALLOWED.getCode(),
-                String.format("Request method doesn't correct:%s", ex.getMessage()));
+                String.format("Request method doesn't correct: %s", ex.getMessage()));
     }
 
     /**
@@ -246,9 +264,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public CommonResult<?> httpMediaTypeNotSupportedExceptionHandler(
             HttpMediaTypeNotSupportedException ex) {
-        log.warn("[httpMediaTypeNotSupportedExceptionHandler]", ex);
+        // log.warn("[httpMediaTypeNotSupportedExceptionHandler]", ex);
         return CommonResult.error(
-                BAD_REQUEST.getCode(), String.format("Request type error:%s", ex.getMessage()));
+                BAD_REQUEST.getCode(), String.format("Request type error: %s", ex.getMessage()));
     }
 
     /**
