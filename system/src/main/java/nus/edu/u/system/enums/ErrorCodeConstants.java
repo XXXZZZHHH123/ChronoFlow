@@ -65,4 +65,13 @@ public interface ErrorCodeConstants {
             new ErrorCode(
                     11_01_004,
                     "This account already exists. Please log in or use a different account");
+
+    // ========= Event module 13-01-000 =============
+    ErrorCode ORGANIZER_NOT_FOUND      = new ErrorCode(13_01_001, "Organizer does not exist");
+    ErrorCode PARTICIPANT_NOT_FOUND    = new ErrorCode(13_01_002, "Some participants do not exist");
+    ErrorCode TIME_RANGE_INVALID       = new ErrorCode(13_01_003, "The start time must be earlier than the end time");
+    ErrorCode DUPLICATE_PARTICIPANTS   = new ErrorCode(13_01_004, "The participant list contains duplicate users");
+    ErrorCode EVENT_DELETE_FAILED      = new ErrorCode(13_01_005, "Event deletion failed");
+    ErrorCode EVENT_NOT_DELETED        = new ErrorCode(13_01_006, "Event not deleted");
+    ErrorCode EVENT_RESTORE_FAILED     = new ErrorCode(13_01_006, "Event restore failed");
 }
