@@ -1,16 +1,21 @@
 package nus.edu.u.system.service.excel;
 
 import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.*;
+import static nus.edu.u.system.enums.ErrorCodeConstants.ROLE_NOT_FOUND;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.exception.ServiceException;
+import nus.edu.u.system.domain.dataobject.role.RoleDO;
 import nus.edu.u.system.domain.dto.CreateUserDTO;
+import nus.edu.u.system.mapper.role.RoleMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,10 +23,12 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class ExcelService {
 
+    @Resource private RoleMapper roleMapper;
+
     /**
-     * Parse Excel -> CreateUserDTO list Requires the header to contain at least: email | roleIds
-     * (remark optional) Supports delimiters for roleIds: English/Chinese commas, semicolons, and
-     * spaces; invalid numbers will throw a clear exception. Do not skip empty email rows
+     * Parse Excel -> CreateUserDTO list Requires the header to contain at least: email | roleKeys
+     * (remark optional). Supports delimiters for roleKeys: English/Chinese commas, semicolons, and
+     * spaces; unknown keys will trigger a friendly exception. Do not skip empty email rows
      * (validation is handled by the business layer).
      */
     public List<CreateUserDTO> parseCreateOrUpdateRows(MultipartFile file) throws IOException {
@@ -30,6 +37,7 @@ public class ExcelService {
         }
 
         final List<CreateUserDTO> rows = new ArrayList<>();
+        final Map<String, Long> roleKeyCache = new HashMap<>();
 
         try {
             EasyExcel.read(
@@ -53,7 +61,7 @@ public class ExcelService {
                                     headerInitialized = true;
 
                                     emailIdx = colIndexOf("email");
-                                    rolesIdx = colIndexOf("roleIds");
+                                    rolesIdx = colIndexOf("roleKeys");
                                     remarkIdx = colIndexOf("remark");
 
                                     if (emailIdx == null) {
@@ -82,7 +90,7 @@ public class ExcelService {
                                         headerInitialized = true;
 
                                         emailIdx = colIndexOf("email");
-                                        rolesIdx = colIndexOf("roleIds");
+                                        rolesIdx = colIndexOf("roleKeys");
                                         remarkIdx = colIndexOf("remark");
 
                                         if (emailIdx == null) {
@@ -99,7 +107,10 @@ public class ExcelService {
                                     String remark =
                                             remarkIdx == null ? "" : getCell(data, remarkIdx);
 
-                                    List<Long> roleIds = parseRoleIdsStrict(roles, excelRow);
+                                    List<String> roleKeys = parseRoleKeysStrict(roles);
+                                    List<Long> roleIds =
+                                            ExcelService.this.resolveRoleIds(
+                                                    roleKeys, excelRow, roleKeyCache);
 
                                     rows.add(
                                             CreateUserDTO.builder()
@@ -146,31 +157,23 @@ public class ExcelService {
                                 }
 
                                 /**
-                                 * Parse roleIds. Supports English and Chinese commas, semicolons,
-                                 * and spaces. Explicit exceptions (with line numbers) are thrown
-                                 * for invalid numbers. Returns a deduplicated list of longs.
+                                 * Parse roleKeys. Supports English/Chinese commas, semicolons, and
+                                 * spaces. Returns a deduplicated list while preserving appearance
+                                 * order.
                                  */
-                                private List<Long> parseRoleIdsStrict(String cell, int excelRow) {
-                                    if (cell == null || cell.isBlank())
+                                private List<String> parseRoleKeysStrict(String cell) {
+                                    if (cell == null || cell.isBlank()) {
                                         return Collections.emptyList();
-                                    List<Long> result = new ArrayList<>();
+                                    }
+                                    Set<String> dedup = new LinkedHashSet<>();
                                     for (String part : cell.split("[,，;\\s]+")) {
                                         if (part == null) continue;
                                         String token = part.trim();
-                                        if (token.isEmpty()) continue;
-                                        try {
-                                            result.add(Long.valueOf(token));
-                                        } catch (NumberFormatException ex) {
-                                            throw new ServiceException(
-                                                    EXCEL_ROLEID_INVALID.getCode(),
-                                                    "Excel row"
-                                                            + excelRow
-                                                            + "column roleIds There is an illegal value: '"
-                                                            + token
-                                                            + "'");
+                                        if (!token.isEmpty()) {
+                                            dedup.add(token);
                                         }
                                     }
-                                    return result.stream().distinct().collect(Collectors.toList());
+                                    return new ArrayList<>(dedup);
                                 }
                             })
                     .sheet()
@@ -191,5 +194,57 @@ public class ExcelService {
         }
 
         return rows;
+    }
+
+    private List<Long> resolveRoleIds(
+            List<String> roleKeys, int excelRow, Map<String, Long> roleKeyCache) {
+        if (roleKeys == null || roleKeys.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> keysToQuery =
+                roleKeys.stream()
+                        .filter(key -> !roleKeyCache.containsKey(key))
+                        .collect(Collectors.toList());
+
+        if (!keysToQuery.isEmpty()) {
+            List<RoleDO> roles =
+                    roleMapper.selectList(
+                            new LambdaQueryWrapper<RoleDO>()
+                                    .select(RoleDO::getId, RoleDO::getRoleKey)
+                                    .in(RoleDO::getRoleKey, keysToQuery));
+
+            Map<String, Long> roleKeyToId =
+                    roles.stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            RoleDO::getRoleKey,
+                                            RoleDO::getId,
+                                            (existing, ignore) -> existing));
+
+            for (String queriedKey : keysToQuery) {
+                Long roleId = roleKeyToId.get(queriedKey);
+                if (roleId != null) {
+                    roleKeyCache.put(queriedKey, roleId);
+                }
+            }
+        }
+
+        List<Long> resolved = new ArrayList<>(roleKeys.size());
+        for (String key : roleKeys) {
+            Long roleId = roleKeyCache.get(key);
+            if (roleId == null) {
+                throw new ServiceException(
+                        ROLE_NOT_FOUND.getCode(),
+                        "Excel row "
+                                + excelRow
+                                + " column roleKeys contains an unknown roleKey: '"
+                                + key
+                                + "'");
+            }
+            resolved.add(roleId);
+        }
+
+        return resolved;
     }
 }
