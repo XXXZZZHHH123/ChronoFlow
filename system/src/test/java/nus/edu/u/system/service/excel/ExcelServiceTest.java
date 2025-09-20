@@ -103,12 +103,11 @@ class ExcelServiceTest {
     @Test
     void parseCreateOrUpdateRows_missingEmailHeader_throwsServiceException() throws IOException {
         MockMultipartFile file =
-                createExcelFile(
-                        List.of("roleKeys", "remark"),
-                        List.of(List.of("admin", "note")));
+                createExcelFile(List.of("roleKeys", "remark"), List.of(List.of("admin", "note")));
 
         ServiceException exception =
-                assertThrows(ServiceException.class, () -> excelService.parseCreateOrUpdateRows(file));
+                assertThrows(
+                        ServiceException.class, () -> excelService.parseCreateOrUpdateRows(file));
 
         assertEquals(EXCEL_HEADER_MISSING.getCode(), exception.getCode());
     }
@@ -116,10 +115,12 @@ class ExcelServiceTest {
     @Test
     void parseCreateOrUpdateRows_missingRoleHeader_throwsServiceException() throws IOException {
         MockMultipartFile file =
-                createExcelFile(List.of("email", "remark"), List.of(List.of("user@example.com", "note")));
+                createExcelFile(
+                        List.of("email", "remark"), List.of(List.of("user@example.com", "note")));
 
         ServiceException exception =
-                assertThrows(ServiceException.class, () -> excelService.parseCreateOrUpdateRows(file));
+                assertThrows(
+                        ServiceException.class, () -> excelService.parseCreateOrUpdateRows(file));
 
         assertEquals(EXCEL_HEADER_MISSING.getCode(), exception.getCode());
     }
@@ -169,7 +170,8 @@ class ExcelServiceTest {
         when(roleMapper.selectList(any())).thenReturn(List.of());
 
         ServiceException exception =
-                assertThrows(ServiceException.class, () -> excelService.parseCreateOrUpdateRows(file));
+                assertThrows(
+                        ServiceException.class, () -> excelService.parseCreateOrUpdateRows(file));
 
         assertEquals(ROLE_NOT_FOUND.getCode(), exception.getCode());
         assertTrue(exception.getMessage().contains("missingRole"));
@@ -186,7 +188,8 @@ class ExcelServiceTest {
         when(roleMapper.selectList(any())).thenThrow(new IllegalArgumentException("bad arg"));
 
         ServiceException exception =
-                assertThrows(ServiceException.class, () -> excelService.parseCreateOrUpdateRows(file));
+                assertThrows(
+                        ServiceException.class, () -> excelService.parseCreateOrUpdateRows(file));
 
         assertEquals(EXCEL_FORMAT_ERROR.getCode(), exception.getCode());
         assertTrue(exception.getMessage().contains("bad arg"));
@@ -203,7 +206,8 @@ class ExcelServiceTest {
         when(roleMapper.selectList(any())).thenThrow(new RuntimeException("boom"));
 
         ServiceException exception =
-                assertThrows(ServiceException.class, () -> excelService.parseCreateOrUpdateRows(file));
+                assertThrows(
+                        ServiceException.class, () -> excelService.parseCreateOrUpdateRows(file));
 
         assertEquals(EXCEL_FORMAT_ERROR.getCode(), exception.getCode());
         assertTrue(exception.getMessage().contains("Excel parsing failed"));
