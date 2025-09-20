@@ -35,6 +35,7 @@ public class EventDO extends TenantBaseDO implements Serializable {
     private String description;
 
     private LocalDateTime startTime;
+    private String location;
 
     private LocalDateTime endTime;
 
