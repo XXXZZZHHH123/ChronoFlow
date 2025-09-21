@@ -32,16 +32,16 @@ public interface EventConvert {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mappings({
-            @Mapping(target = "name",       source = "eventName"),
-            @Mapping(target = "remark",     source = "remark"),
-            @Mapping(target = "userId",     source = "organizerId")
+        @Mapping(target = "name", source = "eventName"),
+        @Mapping(target = "remark", source = "remark"),
+        @Mapping(target = "userId", source = "organizerId")
     })
     void patch(@MappingTarget EventDO target, EventUpdateReqVO source);
 
     @Mappings({
-            @Mapping(target = "eventName",  source = "name"),
-            @Mapping(target = "remarks",    source = "remark"),
-            @Mapping(target = "organizerId",source = "userId")
+        @Mapping(target = "eventName", source = "name"),
+        @Mapping(target = "remarks", source = "remark"),
+        @Mapping(target = "organizerId", source = "userId")
     })
     UpdateEventRespVO toUpdateResp(EventDO bean);
 }
