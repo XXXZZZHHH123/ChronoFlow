@@ -15,7 +15,7 @@ public class EventDTO {
     private Long id;
     private String eventName;
     private String description;
-
+    private String location;
     private Long organizerId;
     private List<Long> participantUserIds;
 

@@ -4,7 +4,6 @@ import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
@@ -143,16 +142,10 @@ public class EventServiceImpl implements EventService {
         }
         validateParticipantsExist(reqVO.getParticipantUserIds());
 
-        LambdaUpdateWrapper<EventDO> uw = Wrappers.<EventDO>lambdaUpdate().eq(EventDO::getId, id);
-        if (reqVO.getEventName() != null) uw.set(EventDO::getName, reqVO.getEventName());
-        if (reqVO.getDescription() != null) uw.set(EventDO::getDescription, reqVO.getDescription());
-        if (reqVO.getOrganizerId() != null) uw.set(EventDO::getUserId, reqVO.getOrganizerId());
-        if (reqVO.getStartTime() != null) uw.set(EventDO::getStartTime, reqVO.getStartTime());
-        if (reqVO.getEndTime() != null) uw.set(EventDO::getEndTime, reqVO.getEndTime());
-        if (reqVO.getStatus() != null) uw.set(EventDO::getStatus, reqVO.getStatus());
-        if (reqVO.getRemark() != null) uw.set(EventDO::getRemark, reqVO.getRemark());
-        if (reqVO.getLocation() != null) uw.set(EventDO::getLocation, reqVO.getLocation());
-        eventMapper.update(new EventDO(), uw);
+        EventDO patch = new EventDO();
+        patch.setId(id);
+        EventConvert.INSTANCE.patch(patch, reqVO);
+        eventMapper.updateById(patch);
 
         if (reqVO.getParticipantUserIds() != null) {
             List<Long> targetList =
@@ -176,11 +169,6 @@ public class EventServiceImpl implements EventService {
             Set<Long> toAdd = new HashSet<>(target);
             toAdd.removeAll(current);
 
-            // if (reqVO.getOrganizerId() != null) {
-            //     toAdd.remove(reqVO.getOrganizerId());
-            //     toRemove.remove(reqVO.getOrganizerId());
-            // }
-
             if (!toRemove.isEmpty()) {
                 eventParticipantMapper.delete(
                         Wrappers.<EventParticipantDO>lambdaQuery()
@@ -199,17 +187,7 @@ public class EventServiceImpl implements EventService {
         }
 
         EventDO updated = eventMapper.selectById(id);
-        UpdateEventRespVO resp = new UpdateEventRespVO();
-        resp.setId(updated.getId());
-        resp.setEventName(updated.getName());
-        resp.setDescription(updated.getDescription());
-        resp.setOrganizerId(updated.getUserId());
-        resp.setStartTime(updated.getStartTime());
-        resp.setEndTime(updated.getEndTime());
-        resp.setLocation(updated.getLocation());
-        resp.setStatus(updated.getStatus());
-        resp.setRemarks(updated.getRemark());
-        resp.setUpdateTime(updated.getUpdateTime());
+        UpdateEventRespVO resp = EventConvert.INSTANCE.toUpdateResp(updated);
 
         List<Long> participantIds =
                 eventParticipantMapper

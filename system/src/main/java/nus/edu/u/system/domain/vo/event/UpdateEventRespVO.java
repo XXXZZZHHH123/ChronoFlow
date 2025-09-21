@@ -1,5 +1,6 @@
 package nus.edu.u.system.domain.vo.event;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,7 +18,17 @@ public class UpdateEventRespVO {
     private Long organizerId;
     private List<Long> participantUserIds;
     private String location;
+
+    @JsonFormat(
+            shape = JsonFormat.Shape.STRING,
+            pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            timezone = "UTC")
     private LocalDateTime startTime;
+
+    @JsonFormat(
+            shape = JsonFormat.Shape.STRING,
+            pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            timezone = "UTC")
     private LocalDateTime endTime;
 
     private Integer status;
