@@ -38,11 +38,11 @@ public class TaskDO extends TenantBaseDO implements Serializable {
     private String description;
 
     /** Related to {@link TaskStatusEnum} */
-    private String status;
+    private Integer status;
 
     private String remark;
 
     private LocalDateTime startTime;
 
-    private LocalDateTime endDTime;
+    private LocalDateTime endTime;
 }
