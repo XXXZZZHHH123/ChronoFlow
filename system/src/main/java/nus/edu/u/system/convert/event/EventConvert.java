@@ -34,7 +34,6 @@ public interface EventConvert {
     @Mappings({
             @Mapping(target = "name",       source = "eventName"),
             @Mapping(target = "remark",     source = "remark"),
-            // 其他同名字段（description/location/status/startTime/endTime/organizerId→userId）：
             @Mapping(target = "userId",     source = "organizerId")
     })
     void patch(@MappingTarget EventDO target, EventUpdateReqVO source);
