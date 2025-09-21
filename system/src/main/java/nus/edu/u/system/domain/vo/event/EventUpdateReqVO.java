@@ -19,10 +19,10 @@ public class EventUpdateReqVO {
     private String location;
     private List<Long> participantUserIds;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss'Z'")
     private LocalDateTime startTime;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss'Z'")
     private LocalDateTime endTime;
 
     private String remark;

@@ -1,5 +1,6 @@
 package nus.edu.u.system.domain.vo.event;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Data;
@@ -14,7 +15,17 @@ public class EventRespVO {
     private Long organizerId;
     private Integer joiningParticipants;
     private String location;
+
+    @JsonFormat(
+            shape = JsonFormat.Shape.STRING,
+            pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            timezone = "UTC")
     private LocalDateTime startTime;
+
+    @JsonFormat(
+            shape = JsonFormat.Shape.STRING,
+            pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            timezone = "UTC")
     private LocalDateTime endTime;
 
     @InEnum(value = EventStatusEnum.class, message = "Illegal event status")
