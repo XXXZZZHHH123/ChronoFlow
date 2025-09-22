@@ -73,11 +73,11 @@ public class GroupServiceImpl implements GroupService {
             }
         }
 
-//        // 4. Validate if event is existed
-//        EventDO eventDO = eventMapper.selectById(reqVO.getEventId());
-//        if (ObjectUtil.isNull(eventDO)) {
-//            throw exception(EVENT_NOT_FOUND);
-//        }
+        //        // 4. Validate if event is existed
+        //        EventDO eventDO = eventMapper.selectById(reqVO.getEventId());
+        //        if (ObjectUtil.isNull(eventDO)) {
+        //            throw exception(EVENT_NOT_FOUND);
+        //        }
 
         // 5. Create group
         DeptDO deptDO =
@@ -149,7 +149,8 @@ public class GroupServiceImpl implements GroupService {
             if (ObjectUtil.isNotNull(leaderId)) {
                 // Update user to remove them from the group
                 UpdateWrapper<UserDO> userUpdateWrapper = new UpdateWrapper<>();
-                userUpdateWrapper.set("dept_id", null)  // Use actual database column name
+                userUpdateWrapper
+                        .set("dept_id", null) // Use actual database column name
                         .eq("id", leaderId);
 
                 userMapper.update(null, userUpdateWrapper);
@@ -159,8 +160,7 @@ public class GroupServiceImpl implements GroupService {
 
         // Soft delete by updating status
         UpdateWrapper<DeptDO> deptUpdateWrapper = new UpdateWrapper<>();
-        deptUpdateWrapper.set("status", CommonStatusEnum.DISABLE.getStatus())
-                .eq("id", id);
+        deptUpdateWrapper.set("status", CommonStatusEnum.DISABLE.getStatus()).eq("id", id);
 
         deptMapper.update(null, deptUpdateWrapper);
         log.info("Soft deleted group ID: {}", id);

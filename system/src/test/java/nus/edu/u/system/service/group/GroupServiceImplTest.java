@@ -9,7 +9,6 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
@@ -32,25 +31,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
-
 @EnableAspectJAutoProxy(exposeProxy = true)
 @ExtendWith(MockitoExtension.class)
 class GroupServiceImplTest {
 
-    @Mock
-    private DeptMapper deptMapper;
+    @Mock private DeptMapper deptMapper;
 
-    @Mock
-    private UserMapper userMapper;
+    @Mock private UserMapper userMapper;
 
-    @Mock
-    private EventMapper eventMapper;
+    @Mock private EventMapper eventMapper;
 
-    @Mock
-    private GroupService groupServiceProxy;
+    @Mock private GroupService groupServiceProxy;
 
-    @InjectMocks
-    private GroupServiceImpl groupService;
+    @InjectMocks private GroupServiceImpl groupService;
 
     private CreateGroupReqVO createGroupReqVO;
     private UpdateGroupReqVO updateGroupReqVO;
@@ -73,25 +66,24 @@ class GroupServiceImplTest {
         updateGroupReqVO.setId(1L);
         updateGroupReqVO.setName("Updated Group");
 
-        deptDO = DeptDO.builder()
-                .id(1L)
-                .name("Test Group")
-                .eventId(1L)
-                .leadUserId(1L)
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .build();
+        deptDO =
+                DeptDO.builder()
+                        .id(1L)
+                        .name("Test Group")
+                        .eventId(1L)
+                        .leadUserId(1L)
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
 
-        userDO = UserDO.builder()
-                .id(1L)
-                .username("testuser")
-                .email("test@example.com")
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .build();
+        userDO =
+                UserDO.builder()
+                        .id(1L)
+                        .username("testuser")
+                        .email("test@example.com")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
 
-        eventDO = EventDO.builder()
-                .id(1L)
-                .name("Test Event")
-                .build();
+        eventDO = EventDO.builder().id(1L).name("Test Event").build();
     }
 
     @Test
@@ -100,11 +92,13 @@ class GroupServiceImplTest {
         when(eventMapper.selectById(1L)).thenReturn(eventDO);
         when(deptMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
         when(userMapper.selectById(1L)).thenReturn(userDO);
-        when(deptMapper.insert(any(DeptDO.class))).thenAnswer(invocation -> {
-            DeptDO dept = invocation.getArgument(0);
-            dept.setId(1L);
-            return 1;
-        });
+        when(deptMapper.insert(any(DeptDO.class)))
+                .thenAnswer(
+                        invocation -> {
+                            DeptDO dept = invocation.getArgument(0);
+                            dept.setId(1L);
+                            return 1;
+                        });
 
         // When
         Long result = groupService.createGroup(createGroupReqVO);
@@ -123,8 +117,9 @@ class GroupServiceImplTest {
         when(eventMapper.selectById(1L)).thenReturn(null);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.createGroup(createGroupReqVO));
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class, () -> groupService.createGroup(createGroupReqVO));
 
         assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
         verify(eventMapper).selectById(1L);
@@ -138,8 +133,9 @@ class GroupServiceImplTest {
         when(deptMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(deptDO);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.createGroup(createGroupReqVO));
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class, () -> groupService.createGroup(createGroupReqVO));
 
         assertEquals(ErrorCodeConstants.GROUP_NAME_EXISTS.getCode(), exception.getCode());
         verify(deptMapper, never()).insert(any());
@@ -153,8 +149,9 @@ class GroupServiceImplTest {
         when(userMapper.selectById(1L)).thenReturn(null);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.createGroup(createGroupReqVO));
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class, () -> groupService.createGroup(createGroupReqVO));
 
         assertEquals(ErrorCodeConstants.USER_NOT_FOUND.getCode(), exception.getCode());
         verify(deptMapper, never()).insert(any());
@@ -180,8 +177,9 @@ class GroupServiceImplTest {
         when(deptMapper.selectById(1L)).thenReturn(null);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.updateGroup(updateGroupReqVO));
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class, () -> groupService.updateGroup(updateGroupReqVO));
 
         assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
         verify(deptMapper, never()).updateById(any());
@@ -202,15 +200,14 @@ class GroupServiceImplTest {
         verify(deptMapper).update(isNull(), any());
     }
 
-
     @Test
     void deleteGroup_GroupNotFound() {
         // Given
         when(deptMapper.selectById(1L)).thenReturn(null);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.deleteGroup(1L));
+        ServiceException exception =
+                assertThrows(ServiceException.class, () -> groupService.deleteGroup(1L));
 
         assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
         verify(deptMapper, never()).update(any(), any(LambdaUpdateWrapper.class));
@@ -221,12 +218,13 @@ class GroupServiceImplTest {
         // Given
         Long groupId = 1L;
         Long userId = 2L;
-        UserDO user = UserDO.builder()
-                .id(userId)
-                .username("testuser2")
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .deptId(null) // Not in any group
-                .build();
+        UserDO user =
+                UserDO.builder()
+                        .id(userId)
+                        .username("testuser2")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .deptId(null) // Not in any group
+                        .build();
 
         when(deptMapper.selectById(groupId)).thenReturn(deptDO);
         when(userMapper.selectById(userId)).thenReturn(user);
@@ -247,8 +245,8 @@ class GroupServiceImplTest {
         when(deptMapper.selectById(1L)).thenReturn(null);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.addMemberToGroup(1L, 2L));
+        ServiceException exception =
+                assertThrows(ServiceException.class, () -> groupService.addMemberToGroup(1L, 2L));
 
         assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
     }
@@ -260,8 +258,8 @@ class GroupServiceImplTest {
         when(userMapper.selectById(2L)).thenReturn(null);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.addMemberToGroup(1L, 2L));
+        ServiceException exception =
+                assertThrows(ServiceException.class, () -> groupService.addMemberToGroup(1L, 2L));
 
         assertEquals(ErrorCodeConstants.USER_NOT_FOUND.getCode(), exception.getCode());
     }
@@ -271,18 +269,21 @@ class GroupServiceImplTest {
         // Given
         Long groupId = 1L;
         Long userId = 2L;
-        UserDO user = UserDO.builder()
-                .id(userId)
-                .deptId(groupId) // Already in the group
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .build();
+        UserDO user =
+                UserDO.builder()
+                        .id(userId)
+                        .deptId(groupId) // Already in the group
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
 
         when(deptMapper.selectById(groupId)).thenReturn(deptDO);
         when(userMapper.selectById(userId)).thenReturn(user);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.addMemberToGroup(groupId, userId));
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class,
+                        () -> groupService.addMemberToGroup(groupId, userId));
 
         assertEquals(ErrorCodeConstants.GROUP_MEMBER_ALREADY_EXISTS.getCode(), exception.getCode());
     }
@@ -292,17 +293,17 @@ class GroupServiceImplTest {
         // Given
         Long groupId = 1L;
         Long userId = 2L;
-        UserDO user = UserDO.builder()
-                .id(userId)
-                .status(CommonStatusEnum.DISABLE.getStatus())
-                .build();
+        UserDO user =
+                UserDO.builder().id(userId).status(CommonStatusEnum.DISABLE.getStatus()).build();
 
         when(deptMapper.selectById(groupId)).thenReturn(deptDO);
         when(userMapper.selectById(userId)).thenReturn(user);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.addMemberToGroup(groupId, userId));
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class,
+                        () -> groupService.addMemberToGroup(groupId, userId));
 
         assertEquals(ErrorCodeConstants.USER_STATUS_INVALID.getCode(), exception.getCode());
     }
@@ -312,14 +313,12 @@ class GroupServiceImplTest {
         // Given
         Long groupId = 1L;
         Long userId = 2L;
-        UserDO user = UserDO.builder()
-                .id(userId)
-                .deptId(groupId)
-                .build();
-        DeptDO group = DeptDO.builder()
-                .id(groupId)
-                .leadUserId(3L) // Different user is leader
-                .build();
+        UserDO user = UserDO.builder().id(userId).deptId(groupId).build();
+        DeptDO group =
+                DeptDO.builder()
+                        .id(groupId)
+                        .leadUserId(3L) // Different user is leader
+                        .build();
 
         when(userMapper.selectById(userId)).thenReturn(user);
         when(deptMapper.selectById(groupId)).thenReturn(group);
@@ -339,16 +338,19 @@ class GroupServiceImplTest {
         // Given
         Long groupId = 1L;
         Long userId = 2L;
-        UserDO user = UserDO.builder()
-                .id(userId)
-                .deptId(2L) // In different group
-                .build();
+        UserDO user =
+                UserDO.builder()
+                        .id(userId)
+                        .deptId(2L) // In different group
+                        .build();
 
         when(userMapper.selectById(userId)).thenReturn(user);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.removeMemberFromGroup(groupId, userId));
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class,
+                        () -> groupService.removeMemberFromGroup(groupId, userId));
 
         assertEquals(ErrorCodeConstants.USER_NOT_FOUND.getCode(), exception.getCode());
     }
@@ -358,21 +360,21 @@ class GroupServiceImplTest {
         // Given
         Long groupId = 1L;
         Long userId = 2L;
-        UserDO user = UserDO.builder()
-                .id(userId)
-                .deptId(groupId)
-                .build();
-        DeptDO group = DeptDO.builder()
-                .id(groupId)
-                .leadUserId(userId) // User is the leader
-                .build();
+        UserDO user = UserDO.builder().id(userId).deptId(groupId).build();
+        DeptDO group =
+                DeptDO.builder()
+                        .id(groupId)
+                        .leadUserId(userId) // User is the leader
+                        .build();
 
         when(userMapper.selectById(userId)).thenReturn(user);
         when(deptMapper.selectById(groupId)).thenReturn(group);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.removeMemberFromGroup(groupId, userId));
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class,
+                        () -> groupService.removeMemberFromGroup(groupId, userId));
 
         assertEquals(ErrorCodeConstants.CANNOT_REMOVE_GROUP_LEADER.getCode(), exception.getCode());
     }
@@ -381,24 +383,24 @@ class GroupServiceImplTest {
     void getGroupMembers_Success() {
         // Given
         Long groupId = 1L;
-        List<UserDO> users = Arrays.asList(
-                UserDO.builder()
-                        .id(1L)
-                        .username("user1")
-                        .email("user1@example.com")
-                        .phone("12345678901")
-                        .deptId(groupId)
-                        .status(CommonStatusEnum.ENABLE.getStatus())
-                        .build(),
-                UserDO.builder()
-                        .id(2L)
-                        .username("user2")
-                        .email("user2@example.com")
-                        .phone("12345678902")
-                        .deptId(groupId)
-                        .status(CommonStatusEnum.ENABLE.getStatus())
-                        .build()
-        );
+        List<UserDO> users =
+                Arrays.asList(
+                        UserDO.builder()
+                                .id(1L)
+                                .username("user1")
+                                .email("user1@example.com")
+                                .phone("12345678901")
+                                .deptId(groupId)
+                                .status(CommonStatusEnum.ENABLE.getStatus())
+                                .build(),
+                        UserDO.builder()
+                                .id(2L)
+                                .username("user2")
+                                .email("user2@example.com")
+                                .phone("12345678902")
+                                .deptId(groupId)
+                                .status(CommonStatusEnum.ENABLE.getStatus())
+                                .build());
 
         when(userMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(users);
 
@@ -420,10 +422,13 @@ class GroupServiceImplTest {
 
         when(deptMapper.selectById(groupId)).thenReturn(deptDO);
 
-        lenient().when(userMapper.selectById(anyLong())).thenReturn(UserDO.builder()
-                .id(1L)
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .build());
+        lenient()
+                .when(userMapper.selectById(anyLong()))
+                .thenReturn(
+                        UserDO.builder()
+                                .id(1L)
+                                .status(CommonStatusEnum.ENABLE.getStatus())
+                                .build());
         lenient().when(userMapper.update(isNull(), any(LambdaUpdateWrapper.class))).thenReturn(1);
 
         // When
@@ -439,8 +444,10 @@ class GroupServiceImplTest {
         when(deptMapper.selectById(1L)).thenReturn(null);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.addMembersToGroup(1L, Arrays.asList(1L, 2L)));
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class,
+                        () -> groupService.addMembersToGroup(1L, Arrays.asList(1L, 2L)));
 
         assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
     }
@@ -480,8 +487,10 @@ class GroupServiceImplTest {
         when(deptMapper.selectById(1L)).thenReturn(null);
 
         // When & Then
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> groupService.removeMembersToGroup(1L, Arrays.asList(1L, 2L)));
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class,
+                        () -> groupService.removeMembersToGroup(1L, Arrays.asList(1L, 2L)));
 
         assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
     }

@@ -12,17 +12,18 @@ class DeptDOTest {
     void deptDO_AllFields_ShouldWork() {
         // Given
         LocalDateTime now = LocalDateTime.now();
-        DeptDO deptDO = DeptDO.builder()
-                .id(1L)
-                .name("Test Department")
-                .sort(1)
-                .leadUserId(2L)
-                .phone("12345678901")
-                .email("dept@example.com")
-                .remark("Test remark")
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .eventId(1L)
-                .build();
+        DeptDO deptDO =
+                DeptDO.builder()
+                        .id(1L)
+                        .name("Test Department")
+                        .sort(1)
+                        .leadUserId(2L)
+                        .phone("12345678901")
+                        .email("dept@example.com")
+                        .remark("Test remark")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .eventId(1L)
+                        .build();
 
         // Set inherited fields
         deptDO.setTenantId(1L);
@@ -53,17 +54,18 @@ class DeptDOTest {
     @Test
     void deptDO_Builder_ShouldWork() {
         // Given & When
-        DeptDO deptDO = DeptDO.builder()
-                .id(1L)
-                .name("Test Department")
-                .sort(1)
-                .leadUserId(2L)
-                .phone("12345678901")
-                .email("dept@example.com")
-                .remark("Test remark")
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .eventId(1L)
-                .build();
+        DeptDO deptDO =
+                DeptDO.builder()
+                        .id(1L)
+                        .name("Test Department")
+                        .sort(1)
+                        .leadUserId(2L)
+                        .phone("12345678901")
+                        .email("dept@example.com")
+                        .remark("Test remark")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .eventId(1L)
+                        .build();
 
         // Then
         assertNotNull(deptDO);
@@ -99,17 +101,18 @@ class DeptDOTest {
     @Test
     void deptDO_AllArgsConstructor_ShouldWork() {
         // Given & When
-        DeptDO deptDO = new DeptDO(
-                1L, // id
-                "Test Department", // name
-                1, // sort
-                2L, // leadUserId
-                "12345678901", // phone
-                "dept@example.com", // email
-                "Test remark", // remark
-                CommonStatusEnum.ENABLE.getStatus(), // status
-                1L // eventId
-        );
+        DeptDO deptDO =
+                new DeptDO(
+                        1L, // id
+                        "Test Department", // name
+                        1, // sort
+                        2L, // leadUserId
+                        "12345678901", // phone
+                        "dept@example.com", // email
+                        "Test remark", // remark
+                        CommonStatusEnum.ENABLE.getStatus(), // status
+                        1L // eventId
+                        );
 
         // Then
         assertNotNull(deptDO);
@@ -157,17 +160,18 @@ class DeptDOTest {
         // Given
         LocalDateTime now = LocalDateTime.now();
 
-        DeptDO deptDO1 = DeptDO.builder()
-                .id(1L)
-                .name("Test Department")
-                .sort(1)
-                .leadUserId(2L)
-                .phone("12345678901")
-                .email("dept@example.com")
-                .remark("Test remark")
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .eventId(1L)
-                .build();
+        DeptDO deptDO1 =
+                DeptDO.builder()
+                        .id(1L)
+                        .name("Test Department")
+                        .sort(1)
+                        .leadUserId(2L)
+                        .phone("12345678901")
+                        .email("dept@example.com")
+                        .remark("Test remark")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .eventId(1L)
+                        .build();
         deptDO1.setTenantId(1L);
         deptDO1.setCreateTime(now);
         deptDO1.setUpdateTime(now);
@@ -175,17 +179,18 @@ class DeptDOTest {
         deptDO1.setUpdater("testuser");
         deptDO1.setDeleted(false);
 
-        DeptDO deptDO2 = DeptDO.builder()
-                .id(1L)
-                .name("Test Department")
-                .sort(1)
-                .leadUserId(2L)
-                .phone("12345678901")
-                .email("dept@example.com")
-                .remark("Test remark")
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .eventId(1L)
-                .build();
+        DeptDO deptDO2 =
+                DeptDO.builder()
+                        .id(1L)
+                        .name("Test Department")
+                        .sort(1)
+                        .leadUserId(2L)
+                        .phone("12345678901")
+                        .email("dept@example.com")
+                        .remark("Test remark")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .eventId(1L)
+                        .build();
         deptDO2.setTenantId(1L);
         deptDO2.setCreateTime(now);
         deptDO2.setUpdateTime(now);
@@ -201,15 +206,9 @@ class DeptDOTest {
     @Test
     void deptDO_EqualsAndHashCode_DifferentValues_ShouldNotBeEqual() {
         // Given
-        DeptDO deptDO1 = DeptDO.builder()
-                .id(1L)
-                .name("Test Department 1")
-                .build();
+        DeptDO deptDO1 = DeptDO.builder().id(1L).name("Test Department 1").build();
 
-        DeptDO deptDO2 = DeptDO.builder()
-                .id(2L)
-                .name("Test Department 2")
-                .build();
+        DeptDO deptDO2 = DeptDO.builder().id(2L).name("Test Department 2").build();
 
         // When & Then
         assertNotEquals(deptDO1, deptDO2);
@@ -219,17 +218,18 @@ class DeptDOTest {
     @Test
     void deptDO_ToString_ShouldWork() {
         // Given
-        DeptDO deptDO = DeptDO.builder()
-                .id(1L)
-                .name("Test Department")
-                .sort(1)
-                .leadUserId(2L)
-                .phone("12345678901")
-                .email("dept@example.com")
-                .remark("Test remark")
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .eventId(1L)
-                .build();
+        DeptDO deptDO =
+                DeptDO.builder()
+                        .id(1L)
+                        .name("Test Department")
+                        .sort(1)
+                        .leadUserId(2L)
+                        .phone("12345678901")
+                        .email("dept@example.com")
+                        .remark("Test remark")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .eventId(1L)
+                        .build();
 
         // When
         String toString = deptDO.toString();
@@ -250,13 +250,9 @@ class DeptDOTest {
     @Test
     void deptDO_StatusValues_ShouldWork() {
         // Given
-        DeptDO enabledDept = DeptDO.builder()
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .build();
+        DeptDO enabledDept = DeptDO.builder().status(CommonStatusEnum.ENABLE.getStatus()).build();
 
-        DeptDO disabledDept = DeptDO.builder()
-                .status(CommonStatusEnum.DISABLE.getStatus())
-                .build();
+        DeptDO disabledDept = DeptDO.builder().status(CommonStatusEnum.DISABLE.getStatus()).build();
 
         // When & Then
         assertEquals(0, enabledDept.getStatus());

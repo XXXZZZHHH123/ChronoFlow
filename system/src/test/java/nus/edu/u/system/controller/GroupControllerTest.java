@@ -22,15 +22,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-
 @ExtendWith(MockitoExtension.class)
 class GroupControllerTest {
 
-    @Mock
-    private GroupService groupService;
+    @Mock private GroupService groupService;
 
-    @InjectMocks
-    private GroupController groupController;
+    @InjectMocks private GroupController groupController;
 
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
@@ -57,9 +54,10 @@ class GroupControllerTest {
         when(groupService.createGroup(any(CreateGroupReqVO.class))).thenReturn(expectedGroupId);
 
         // When & Then
-        mockMvc.perform(post("/system/group/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reqVO)))
+        mockMvc.perform(
+                        post("/system/group/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(reqVO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data").value(expectedGroupId));
@@ -75,9 +73,10 @@ class GroupControllerTest {
         reqVO.setEventId(1L);
 
         // When & Then
-        mockMvc.perform(post("/system/group/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reqVO)))
+        mockMvc.perform(
+                        post("/system/group/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(reqVO)))
                 .andExpect(status().isBadRequest());
 
         verify(groupService, never()).createGroup(any());
@@ -99,9 +98,10 @@ class GroupControllerTest {
         doNothing().when(groupService).updateGroup(any(UpdateGroupReqVO.class));
 
         // When & Then
-        mockMvc.perform(put("/system/group/update")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reqVO)))
+        mockMvc.perform(
+                        put("/system/group/update")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(reqVO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data").value(true));
@@ -160,24 +160,24 @@ class GroupControllerTest {
     void getGroupMembers_Success() throws Exception {
         // Given
         Long groupId = 1L;
-        List<GroupRespVO.MemberInfo> members = Arrays.asList(
-                GroupRespVO.MemberInfo.builder()
-                        .userId(1L)
-                        .username("user1")
-                        .email("user1@example.com")
-                        .phone("12345678901")
-                        .roleId(1L)
-                        .roleName("Member")
-                        .build(),
-                GroupRespVO.MemberInfo.builder()
-                        .userId(2L)
-                        .username("user2")
-                        .email("user2@example.com")
-                        .phone("12345678902")
-                        .roleId(2L)
-                        .roleName("Leader")
-                        .build()
-        );
+        List<GroupRespVO.MemberInfo> members =
+                Arrays.asList(
+                        GroupRespVO.MemberInfo.builder()
+                                .userId(1L)
+                                .username("user1")
+                                .email("user1@example.com")
+                                .phone("12345678901")
+                                .roleId(1L)
+                                .roleName("Member")
+                                .build(),
+                        GroupRespVO.MemberInfo.builder()
+                                .userId(2L)
+                                .username("user2")
+                                .email("user2@example.com")
+                                .phone("12345678902")
+                                .roleId(2L)
+                                .roleName("Leader")
+                                .build());
 
         when(groupService.getGroupMembers(groupId)).thenReturn(members);
 
@@ -203,9 +203,10 @@ class GroupControllerTest {
         doNothing().when(groupService).addMembersToGroup(groupId, userIds);
 
         // When & Then
-        mockMvc.perform(post("/system/group/{groupId}/members/batch", groupId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userIds)))
+        mockMvc.perform(
+                        post("/system/group/{groupId}/members/batch", groupId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(userIds)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data").value(true));
@@ -221,9 +222,10 @@ class GroupControllerTest {
         doNothing().when(groupService).removeMembersToGroup(groupId, userIds);
 
         // When & Then
-        mockMvc.perform(delete("/system/group/{groupId}/members/batch", groupId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userIds)))
+        mockMvc.perform(
+                        delete("/system/group/{groupId}/members/batch", groupId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(userIds)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data").value(true));
