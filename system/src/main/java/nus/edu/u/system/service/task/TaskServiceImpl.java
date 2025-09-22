@@ -55,8 +55,8 @@ public class TaskServiceImpl implements TaskService {
             throw exception(TASK_ASSIGNEE_TENANT_MISMATCH);
         }
 
-        LocalDateTime start = toLocalDateTime(reqVO.getStartTime());
-        LocalDateTime end = toLocalDateTime(reqVO.getEndTime());
+        LocalDateTime start = reqVO.getStartTime();
+        LocalDateTime end = reqVO.getEndTime();
         validateTimeRange(start, end);
 
         TaskStatusEnum statusEnum = TaskStatusEnum.fromStatusOrDefault(reqVO.getStatus());

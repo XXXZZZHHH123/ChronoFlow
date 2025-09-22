@@ -13,7 +13,6 @@ public interface TaskConvert {
 
     @Mapping(target = "userId", source = "assignedUserId")
     @Mapping(target = "eventId", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
     @Mapping(target = "remark", ignore = true)
     TaskDO convert(TaskCreateReqVO bean);
 

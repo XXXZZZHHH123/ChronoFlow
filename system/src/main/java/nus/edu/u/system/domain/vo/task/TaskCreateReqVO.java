@@ -3,6 +3,8 @@ package nus.edu.u.system.domain.vo.task;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import lombok.Data;
 import nus.edu.u.common.annotation.InEnum;
@@ -19,10 +21,10 @@ public class TaskCreateReqVO {
     private Integer status;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
-    private OffsetDateTime startTime;
+    private LocalDateTime startTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
-    private OffsetDateTime endTime;
+    private LocalDateTime endTime;
 
     @NotNull(message = "assignedUserId cannot be null")
     private Long assignedUserId;
