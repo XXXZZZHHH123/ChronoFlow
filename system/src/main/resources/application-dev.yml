@@ -3,12 +3,18 @@ spring:
     url: jdbc:mysql://${PORD_DB_HOST}:${PORD_DB_PORT}/${PORD_DB_NAME}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
     username: ${PORD_DB_USER}
     password: ${PORD_DB_PASSWORD}
+#    url: jdbc:mysql://localhost:3306/chronoflow_dev?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8
+#    username: root
+#    password: SQL010605@fyzt
   data:
     redis:
       host: ${PORD_REDIS_HOST}
       port: ${PORD_REDIS_PORT}
       database: ${PORD_REDIS_DATABASE}
       password: ${PORD_REDIS_PASSWORD}
+#      host: localhost
+#      port: 6379
+#      database: 0
 
 # log config
 logging:
