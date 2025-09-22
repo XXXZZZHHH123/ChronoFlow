@@ -7,6 +7,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.annotation.Resource;
 import java.util.ArrayList;
@@ -72,11 +73,11 @@ public class GroupServiceImpl implements GroupService {
             }
         }
 
-        // 4. Validate if event is existed
-        EventDO eventDO = eventMapper.selectById(reqVO.getEventId());
-        if (ObjectUtil.isNull(eventDO)) {
-            throw exception(EVENT_NOT_FOUND);
-        }
+        //        // 4. Validate if event is existed
+        //        EventDO eventDO = eventMapper.selectById(reqVO.getEventId());
+        //        if (ObjectUtil.isNull(eventDO)) {
+        //            throw exception(EVENT_NOT_FOUND);
+        //        }
 
         // 5. Create group
         DeptDO deptDO =
@@ -146,22 +147,22 @@ public class GroupServiceImpl implements GroupService {
             }
 
             if (ObjectUtil.isNotNull(leaderId)) {
-                LambdaUpdateWrapper<UserDO> updateWrapper =
-                        new LambdaUpdateWrapper<UserDO>()
-                                .eq(UserDO::getId, leaderId)
-                                .set(UserDO::getDeptId, null);
-                userMapper.update(null, updateWrapper);
+                // Update user to remove them from the group
+                UpdateWrapper<UserDO> userUpdateWrapper = new UpdateWrapper<>();
+                userUpdateWrapper
+                        .set("dept_id", null) // Use actual database column name
+                        .eq("id", leaderId);
+
+                userMapper.update(null, userUpdateWrapper);
                 log.info("Removed leader {} from group {}", leaderId, id);
             }
         }
 
         // Soft delete by updating status
-        LambdaUpdateWrapper<DeptDO> updateWrapper =
-                new LambdaUpdateWrapper<DeptDO>()
-                        .eq(DeptDO::getId, id)
-                        .set(DeptDO::getStatus, CommonStatusEnum.DISABLE.getStatus());
+        UpdateWrapper<DeptDO> deptUpdateWrapper = new UpdateWrapper<>();
+        deptUpdateWrapper.set("status", CommonStatusEnum.DISABLE.getStatus()).eq("id", id);
 
-        deptMapper.update(null, updateWrapper);
+        deptMapper.update(null, deptUpdateWrapper);
         log.info("Soft deleted group ID: {}", id);
     }
 
