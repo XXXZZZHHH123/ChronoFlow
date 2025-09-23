@@ -11,17 +11,23 @@ import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.EventStatusEnum;
+import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.convert.event.EventConvert;
+import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.task.EventParticipantDO;
+import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.EventDTO;
 import nus.edu.u.system.domain.vo.event.*;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.EventParticipantMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
+import nus.edu.u.system.mapper.dept.DeptMapper;
+import nus.edu.u.system.mapper.task.TaskMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import nus.edu.u.system.enums.task.TaskStatusEnum;
 
 @Service
 @Slf4j
@@ -29,6 +35,8 @@ public class EventServiceImpl implements EventService {
     @Resource private EventMapper eventMapper;
     @Resource private EventParticipantMapper eventParticipantMapper;
     @Resource private UserMapper userMapper;
+    @Resource private DeptMapper deptMapper;
+    @Resource private TaskMapper taskMapper;
 
     @Override
     @Transactional
@@ -78,8 +86,9 @@ public class EventServiceImpl implements EventService {
                                 .eq(EventParticipantDO::getEventId, eventId));
         resp.setJoiningParticipants(count.intValue());
 
-        resp.setGroups(buildDefaultGroups());
-        resp.setTaskStatus(buildDefaultTaskStatus());
+        resp.setGroups(fetchGroupsByEventIds(List.of(eventId)).getOrDefault(eventId, List.of()));
+        resp.setTaskStatus(
+                fetchTaskStatusesByEventIds(List.of(eventId)).getOrDefault(eventId, emptyTaskStatus()));
 
         return resp;
     }
@@ -111,14 +120,19 @@ public class EventServiceImpl implements EventService {
                                         EventParticipantDO::getEventId,
                                         Collectors.summingInt(e -> 1)));
 
+        Map<Long, List<EventRespVO.GroupVO>> groupsByEventId = fetchGroupsByEventIds(eventIds);
+        Map<Long, EventRespVO.TaskStatusVO> taskStatusByEventId = fetchTaskStatusesByEventIds(eventIds);
+
         return events.stream()
                 .map(
                         event -> {
                             EventRespVO vo = EventConvert.INSTANCE.DOconvertVO(event);
                             vo.setJoiningParticipants(
                                     countsByEventId.getOrDefault(event.getId(), 0));
-                            vo.setGroups(buildDefaultGroups());
-                            vo.setTaskStatus(buildDefaultTaskStatus());
+                            vo.setGroups(groupsByEventId.getOrDefault(event.getId(), List.of()));
+                            vo.setTaskStatus(
+                                    taskStatusByEventId.getOrDefault(
+                                            event.getId(), emptyTaskStatus()));
                             return vo;
                         })
                 .toList();
@@ -271,23 +285,78 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private List<EventRespVO.GroupVO> buildDefaultGroups() {
-        EventRespVO.GroupVO g1 = new EventRespVO.GroupVO();
-        g1.setId("grp_a");
-        g1.setName("Logistics");
+    private Map<Long, List<EventRespVO.GroupVO>> fetchGroupsByEventIds(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Map.of();
+        }
 
-        EventRespVO.GroupVO g2 = new EventRespVO.GroupVO();
-        g2.setId("grp_b");
-        g2.setName("Registration");
+        List<DeptDO> groups =
+                deptMapper.selectList(
+                        Wrappers.<DeptDO>lambdaQuery()
+                                .in(DeptDO::getEventId, eventIds)
+                                .eq(DeptDO::getStatus, CommonStatusEnum.ENABLE.getStatus()));
 
-        return List.of(g1, g2);
+        return groups.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                DeptDO::getEventId,
+                                Collectors.mapping(this::toGroupVO, Collectors.toList())));
     }
 
-    private EventRespVO.TaskStatusVO buildDefaultTaskStatus() {
-        EventRespVO.TaskStatusVO ts = new EventRespVO.TaskStatusVO();
-        ts.setTotal(0);
-        ts.setRemaining(0);
-        ts.setCompleted(0);
-        return ts;
+    private Map<Long, EventRespVO.TaskStatusVO> fetchTaskStatusesByEventIds(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<TaskDO> tasks =
+                taskMapper.selectList(
+                        Wrappers.<TaskDO>lambdaQuery().in(TaskDO::getEventId, eventIds));
+
+        Map<Long, List<TaskDO>> tasksByEvent =
+                tasks.stream().collect(Collectors.groupingBy(TaskDO::getEventId));
+
+        Map<Long, EventRespVO.TaskStatusVO> result = new HashMap<>();
+        for (Long eventId : eventIds) {
+            List<TaskDO> taskList = tasksByEvent.get(eventId);
+            if (taskList == null || taskList.isEmpty()) {
+                result.put(eventId, emptyTaskStatus());
+            } else {
+                result.put(eventId, toTaskStatusVO(taskList));
+            }
+        }
+        return result;
+    }
+
+    private EventRespVO.GroupVO toGroupVO(DeptDO dept) {
+        EventRespVO.GroupVO vo = new EventRespVO.GroupVO();
+        vo.setId(String.valueOf(dept.getId()));
+        vo.setName(dept.getName());
+        return vo;
+    }
+
+    private EventRespVO.TaskStatusVO toTaskStatusVO(List<TaskDO> tasks) {
+        EventRespVO.TaskStatusVO statusVO = new EventRespVO.TaskStatusVO();
+        int total = tasks.size();
+        int completed =
+                (int)
+                        tasks.stream()
+                                .filter(
+                                        task ->
+                                                Objects.equals(
+                                                        task.getStatus(),
+                                                        TaskStatusEnum.DONE.getStatus()))
+                                .count();
+        statusVO.setTotal(total);
+        statusVO.setCompleted(completed);
+        statusVO.setRemaining(total - completed);
+        return statusVO;
+    }
+
+    private EventRespVO.TaskStatusVO emptyTaskStatus() {
+        EventRespVO.TaskStatusVO statusVO = new EventRespVO.TaskStatusVO();
+        statusVO.setTotal(0);
+        statusVO.setCompleted(0);
+        statusVO.setRemaining(0);
+        return statusVO;
     }
 }

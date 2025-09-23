@@ -11,7 +11,11 @@ import nus.edu.u.system.domain.vo.event.EventCreateReqVO;
 import nus.edu.u.system.domain.vo.event.EventRespVO;
 import nus.edu.u.system.domain.vo.event.EventUpdateReqVO;
 import nus.edu.u.system.domain.vo.event.UpdateEventRespVO;
+import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
+import nus.edu.u.system.domain.vo.task.TaskRespVO;
+import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
 import nus.edu.u.system.service.event.EventService;
+import nus.edu.u.system.service.task.TaskService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class EventController {
     @Resource private EventService eventService;
+    @Resource private TaskService taskService;
 
     @PostMapping()
     public CommonResult<EventRespVO> createEvent(@Valid @RequestBody EventCreateReqVO req) {
@@ -39,6 +44,56 @@ public class EventController {
     public CommonResult<List<EventRespVO>> getByOrganizerId() {
         Long organizerId = StpUtil.getLoginIdAsLong();
         return CommonResult.success(eventService.getByOrganizerId(organizerId));
+    }
+
+    @PostMapping("/{eventId}/tasks")
+    public CommonResult<TaskRespVO> createTask(
+            @PathVariable("eventId") @NotNull Long eventId,
+            @Valid @RequestBody TaskCreateReqVO reqVO) {
+        TaskRespVO resp = taskService.createTask(eventId, reqVO);
+        CommonResult<TaskRespVO> result = CommonResult.success(resp);
+        result.setMsg("Task created successfully");
+        return result;
+    }
+
+    @GetMapping("/{eventId}/tasks")
+    public CommonResult<List<TaskRespVO>> listTasksByEvent(
+            @PathVariable("eventId") @NotNull Long eventId) {
+        List<TaskRespVO> resp = taskService.listTasksByEvent(eventId);
+        CommonResult<List<TaskRespVO>> result = CommonResult.success(resp);
+        result.setMsg("Tasks retrieved successfully");
+        return result;
+    }
+
+    @GetMapping("/{eventId}/tasks/{taskId}")
+    public CommonResult<TaskRespVO> getTask(
+            @PathVariable("eventId") @NotNull Long eventId,
+            @PathVariable("taskId") @NotNull Long taskId) {
+        TaskRespVO resp = taskService.getTask(eventId, taskId);
+        CommonResult<TaskRespVO> result = CommonResult.success(resp);
+        result.setMsg("Task retrieved successfully");
+        return result;
+    }
+
+    @PatchMapping("/{eventId}/tasks/{taskId}")
+    public CommonResult<TaskRespVO> updateTask(
+            @PathVariable("eventId") @NotNull Long eventId,
+            @PathVariable("taskId") @NotNull Long taskId,
+            @Valid @RequestBody TaskUpdateReqVO reqVO) {
+        TaskRespVO resp = taskService.updateTask(eventId, taskId, reqVO);
+        CommonResult<TaskRespVO> result = CommonResult.success(resp);
+        result.setMsg("Task updated successfully");
+        return result;
+    }
+
+    @DeleteMapping("/{eventId}/tasks/{taskId}")
+    public CommonResult<Void> deleteTask(
+            @PathVariable("eventId") @NotNull Long eventId,
+            @PathVariable("taskId") @NotNull Long taskId) {
+        taskService.deleteTask(eventId, taskId);
+        CommonResult<Void> result = CommonResult.success(null);
+        result.setMsg("Task deleted successfully");
+        return result;
     }
 
     @PatchMapping("/{id}")

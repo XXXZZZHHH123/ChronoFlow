@@ -3,10 +3,14 @@ package nus.edu.u.system.service.task;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import nus.edu.u.system.convert.task.TaskConvert;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
@@ -66,15 +70,7 @@ public class TaskServiceImpl implements TaskService {
         task.setEndTime(end);
         taskMapper.insert(task);
 
-        TaskRespVO resp = TaskConvert.INSTANCE.toRespVO(task);
-        if (assignee != null) {
-            TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
-            assignedUserVO.setId(assignee.getId());
-            assignedUserVO.setName(assignee.getUsername());
-            assignedUserVO.setGroups(resolveGroups(assignee.getDeptId()));
-            resp.setAssignedUser(assignedUserVO);
-        }
-        return resp;
+        return buildTaskResponse(task, assignee);
     }
 
     @Override
@@ -135,17 +131,7 @@ public class TaskServiceImpl implements TaskService {
         task.setTenantId(event.getTenantId());
         taskMapper.updateById(task);
 
-        TaskRespVO resp = TaskConvert.INSTANCE.toRespVO(task);
-        if (assignee != null) {
-            TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
-            assignedUserVO.setId(assignee.getId());
-            assignedUserVO.setName(assignee.getUsername());
-            assignedUserVO.setGroups(resolveGroups(assignee.getDeptId()));
-            resp.setAssignedUser(assignedUserVO);
-        } else {
-            resp.setAssignedUser(null);
-        }
-        return resp;
+        return buildTaskResponse(task, assignee);
     }
 
     @Override
@@ -162,6 +148,56 @@ public class TaskServiceImpl implements TaskService {
         }
 
         taskMapper.deleteById(taskId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TaskRespVO getTask(Long eventId, Long taskId) {
+        EventDO event = eventMapper.selectById(eventId);
+        if (event == null) {
+            throw exception(EVENT_NOT_FOUND);
+        }
+
+        TaskDO task = taskMapper.selectById(taskId);
+        if (task == null || !Objects.equals(task.getEventId(), eventId)) {
+            throw exception(TASK_NOT_FOUND);
+        }
+
+        return buildTaskResponse(task, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskRespVO> listTasksByEvent(Long eventId) {
+        EventDO event = eventMapper.selectById(eventId);
+        if (event == null) {
+            throw exception(EVENT_NOT_FOUND);
+        }
+
+        List<TaskDO> tasks =
+                taskMapper.selectList(
+                        Wrappers.<TaskDO>lambdaQuery().eq(TaskDO::getEventId, eventId));
+
+        if (tasks.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> userIds =
+                tasks.stream()
+                        .map(TaskDO::getUserId)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .toList();
+
+        Map<Long, UserDO> usersById =
+                userIds.isEmpty()
+                        ? Map.of()
+                        : userMapper.selectBatchIds(userIds).stream()
+                                .collect(Collectors.toMap(UserDO::getId, Function.identity()));
+
+        return tasks.stream()
+                .map(task -> buildTaskResponse(task, usersById.get(task.getUserId())))
+                .toList();
     }
 
     private void validateTimeRange(LocalDateTime start, LocalDateTime end) {
@@ -182,6 +218,27 @@ public class TaskServiceImpl implements TaskService {
         if (taskEnd != null && eventEnd != null && taskEnd.isAfter(eventEnd)) {
             throw exception(TASK_TIME_OUTSIDE_EVENT);
         }
+    }
+
+    private TaskRespVO buildTaskResponse(TaskDO task, UserDO assignee) {
+        TaskRespVO resp = TaskConvert.INSTANCE.toRespVO(task);
+        UserDO user = assignee;
+
+        if (user == null && task.getUserId() != null) {
+            user = userMapper.selectById(task.getUserId());
+        }
+
+        if (user != null) {
+            TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
+            assignedUserVO.setId(user.getId());
+            assignedUserVO.setName(user.getUsername());
+            assignedUserVO.setGroups(resolveGroups(user.getDeptId()));
+            resp.setAssignedUser(assignedUserVO);
+        } else {
+            resp.setAssignedUser(null);
+        }
+
+        return resp;
     }
 
     private List<TaskRespVO.AssignedUserVO.GroupVO> resolveGroups(Long deptId) {
