@@ -7,19 +7,17 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 import nus.edu.u.common.enums.EventStatusEnum;
 import nus.edu.u.common.exception.ErrorCode;
+import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.task.EventParticipantDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.event.*;
+import nus.edu.u.system.enums.ErrorCodeConstants;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.EventParticipantMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
-import nus.edu.u.system.enums.ErrorCodeConstants;
-import nus.edu.u.common.exception.ServiceException;
-
 import nus.edu.u.system.service.event.EventServiceImpl;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.*;
@@ -69,14 +67,20 @@ class EventServiceImplTest {
         // 组织者、参与者存在
         when(userMapper.selectById(111L)).thenReturn(UserDO.builder().id(111L).build());
         when(userMapper.selectBatchIds(List.of(201L, 202L)))
-                .thenReturn(List.of(UserDO.builder().id(201L).build(), UserDO.builder().id(202L).build()));
+                .thenReturn(
+                        List.of(
+                                UserDO.builder().id(201L).build(),
+                                UserDO.builder().id(202L).build()));
 
         // insert 时通常由 MyBatis-Plus 赋 ID。这里模拟：insert 后，我们再去 selectById 返回持久化后的对象
         // 你也可以在 doAnswer 里把 event.setId(xxx)；这里走简单路径：调用结束后我们用 mapper.count 计算参与者数返回
-        doAnswer(inv -> {
-            // 写入成功
-            return 1;
-        }).when(eventMapper).insert(any(EventDO.class));
+        doAnswer(
+                        inv -> {
+                            // 写入成功
+                            return 1;
+                        })
+                .when(eventMapper)
+                .insert(any(EventDO.class));
 
         when(eventParticipantMapper.insert(any(EventParticipantDO.class))).thenReturn(1);
 
@@ -118,7 +122,7 @@ class EventServiceImplTest {
 
         assertThat(vo.getId()).isEqualTo(eventId);
         assertThat(vo.getJoiningParticipants()).isEqualTo(3);
-        assertThat(vo.getGroups()).hasSize(2);        // 默认硬编码
+        assertThat(vo.getGroups()).hasSize(2); // 默认硬编码
         assertThat(vo.getTaskStatus().getTotal()).isEqualTo(0);
     }
 
@@ -137,22 +141,21 @@ class EventServiceImplTest {
 
         when(eventMapper.selectById(id)).thenReturn(persistedEvent(id));
 
-        when(userMapper.selectById(222L))
-                .thenReturn(UserDO.builder().id(222L).build());
+        when(userMapper.selectById(222L)).thenReturn(UserDO.builder().id(222L).build());
         when(userMapper.selectBatchIds(List.of(301L, 303L)))
-                .thenReturn(List.of(
-                        UserDO.builder().id(301L).build(),
-                        UserDO.builder().id(303L).build()
-                ));
+                .thenReturn(
+                        List.of(
+                                UserDO.builder().id(301L).build(),
+                                UserDO.builder().id(303L).build()));
 
         // 关键：只保留这条连续 thenReturn
         when(eventParticipantMapper.selectList(any()))
-                .thenReturn(List.of( // 第一次：当前存在 301,302
-                        ep(id,301L), ep(id,302L)
-                ))
-                .thenReturn(List.of( // 第二次：更新后 301,303
-                        ep(id,301L), ep(id,303L)
-                ));
+                .thenReturn(
+                        List.of( // 第一次：当前存在 301,302
+                                ep(id, 301L), ep(id, 302L)))
+                .thenReturn(
+                        List.of( // 第二次：更新后 301,303
+                                ep(id, 301L), ep(id, 303L)));
 
         when(eventMapper.updateById(any(EventDO.class))).thenReturn(1);
         when(eventParticipantMapper.delete(any())).thenReturn(1); // 删除 302
@@ -171,7 +174,7 @@ class EventServiceImplTest {
         assertThat(resp.getRemarks()).isEqualTo("patched");
         assertThat(resp.getParticipantUserIds()).containsExactlyInAnyOrder(301L, 303L);
 
-        verify(eventParticipantMapper, times(1)).delete(any());                 // 删 302
+        verify(eventParticipantMapper, times(1)).delete(any()); // 删 302
         verify(eventParticipantMapper, times(1)).insert(any(EventParticipantDO.class)); // 加 303
     }
 
@@ -229,28 +232,38 @@ class EventServiceImplTest {
     @Test
     void getByOrganizerId_hasEvents_returnsWithCountsAndExtras() {
         Long organizerId = 111L;
-        when(userMapper.selectById(organizerId)).thenReturn(UserDO.builder().id(organizerId).build());
+        when(userMapper.selectById(organizerId))
+                .thenReturn(UserDO.builder().id(organizerId).build());
 
         EventDO e1 = persistedEvent(1L).toBuilder().userId(organizerId).build();
         EventDO e2 = persistedEvent(2L).toBuilder().userId(organizerId).build();
         when(eventMapper.selectList(any())).thenReturn(List.of(e1, e2));
 
         // e1 有两人，e2 有一人
-        when(eventParticipantMapper.selectList(any())).thenReturn(List.of(
-                EventParticipantDO.builder().eventId(1L).userId(301L).build(),
-                EventParticipantDO.builder().eventId(1L).userId(302L).build(),
-                EventParticipantDO.builder().eventId(2L).userId(303L).build()
-        ));
+        when(eventParticipantMapper.selectList(any()))
+                .thenReturn(
+                        List.of(
+                                EventParticipantDO.builder().eventId(1L).userId(301L).build(),
+                                EventParticipantDO.builder().eventId(1L).userId(302L).build(),
+                                EventParticipantDO.builder().eventId(2L).userId(303L).build()));
 
         List<EventRespVO> list = service.getByOrganizerId(organizerId);
 
         assertThat(list).hasSize(2);
-        assertThat(list.stream()
-                .filter(v -> v.getId().equals(1L))
-                .findFirst().orElseThrow().getJoiningParticipants()).isEqualTo(2);
-        assertThat(list.stream()
-                .filter(v -> v.getId().equals(2L))
-                .findFirst().orElseThrow().getJoiningParticipants()).isEqualTo(1);
+        assertThat(
+                        list.stream()
+                                .filter(v -> v.getId().equals(1L))
+                                .findFirst()
+                                .orElseThrow()
+                                .getJoiningParticipants())
+                .isEqualTo(2);
+        assertThat(
+                        list.stream()
+                                .filter(v -> v.getId().equals(2L))
+                                .findFirst()
+                                .orElseThrow()
+                                .getJoiningParticipants())
+                .isEqualTo(1);
 
         // groups / taskStatus 是硬编码
         EventRespVO any = list.get(0);
@@ -263,8 +276,8 @@ class EventServiceImplTest {
     void createEvent_timeInvalid_throws() {
         EventCreateReqVO req = new EventCreateReqVO();
         req.setOrganizerId(111L);
-        req.setStartTime(LocalDateTime.of(2025,1,1,10,0));
-        req.setEndTime(LocalDateTime.of(2025,1,1,10,0)); // start >= end
+        req.setStartTime(LocalDateTime.of(2025, 1, 1, 10, 0));
+        req.setEndTime(LocalDateTime.of(2025, 1, 1, 10, 0)); // start >= end
 
         // 不要 stub userMapper.selectById(111L)
 
@@ -376,23 +389,17 @@ class EventServiceImplTest {
     void updateEvent_timeRange_invalid() {
         when(eventMapper.selectById(7L)).thenReturn(persistedEvent(7L));
         EventUpdateReqVO req = new EventUpdateReqVO();
-        req.setStartTime(LocalDateTime.of(2025,10,1,10,0));
-        req.setEndTime(LocalDateTime.of(2025,10,1,9,0)); // start>=end
+        req.setStartTime(LocalDateTime.of(2025, 10, 1, 10, 0));
+        req.setEndTime(LocalDateTime.of(2025, 10, 1, 9, 0)); // start>=end
 
-        assertThrowsCode(
-                () -> service.updateEvent(7L, req),
-                TIME_RANGE_INVALID
-        );
+        assertThrowsCode(() -> service.updateEvent(7L, req), TIME_RANGE_INVALID);
     }
 
     @Test
     void createEvent_noOrganizer_throws() {
         EventCreateReqVO req = baseCreate();
         req.setOrganizerId(null);
-        assertThrowsCode(
-                () -> service.createEvent(req),
-                ORGANIZER_NOT_FOUND
-        );
+        assertThrowsCode(() -> service.createEvent(req), ORGANIZER_NOT_FOUND);
     }
 
     @Test
@@ -400,10 +407,7 @@ class EventServiceImplTest {
         EventCreateReqVO req = baseCreate();
         req.setOrganizerId(111L);
         when(userMapper.selectById(111L)).thenReturn(null);
-        assertThrowsCode(
-                () -> service.createEvent(req),
-                ORGANIZER_NOT_FOUND
-        );
+        assertThrowsCode(() -> service.createEvent(req), ORGANIZER_NOT_FOUND);
     }
 
     @Test
@@ -442,12 +446,9 @@ class EventServiceImplTest {
     @Test
     void createEvent_participants_duplicate_throws() {
         EventCreateReqVO req = baseCreate();
-        req.setParticipantUserIds(List.of(1L,1L));
+        req.setParticipantUserIds(List.of(1L, 1L));
         okOrganizer(req.getOrganizerId());
-        assertThrowsCode(
-                () -> service.createEvent(req),
-                DUPLICATE_PARTICIPANTS
-        );
+        assertThrowsCode(() -> service.createEvent(req), DUPLICATE_PARTICIPANTS);
     }
 
     @Test
@@ -455,12 +456,9 @@ class EventServiceImplTest {
         EventCreateReqVO req = baseCreate();
         req.setParticipantUserIds(List.of(1L, 999L));
         okOrganizer(req.getOrganizerId());
-        when(userMapper.selectBatchIds(List.of(1L,999L)))
+        when(userMapper.selectBatchIds(List.of(1L, 999L)))
                 .thenReturn(List.of(UserDO.builder().id(1L).build())); // 999 缺失
-        assertThrowsCode(
-                () -> service.createEvent(req),
-                PARTICIPANT_NOT_FOUND
-        );
+        assertThrowsCode(() -> service.createEvent(req), PARTICIPANT_NOT_FOUND);
     }
 
     @Test
@@ -468,10 +466,9 @@ class EventServiceImplTest {
         EventCreateReqVO req = baseCreate();
         req.setParticipantUserIds(List.of(1L, 2L));
         okOrganizer(req.getOrganizerId());
-        when(userMapper.selectBatchIds(List.of(1L,2L)))
-                .thenReturn(List.of(
-                        UserDO.builder().id(1L).build(),
-                        UserDO.builder().id(2L).build()));
+        when(userMapper.selectBatchIds(List.of(1L, 2L)))
+                .thenReturn(
+                        List.of(UserDO.builder().id(1L).build(), UserDO.builder().id(2L).build()));
         when(eventMapper.insert(any())).thenReturn(1);
         when(eventParticipantMapper.insert(any())).thenReturn(1);
         when(eventParticipantMapper.selectCount(any())).thenReturn(2L);
@@ -505,19 +502,17 @@ class EventServiceImplTest {
     @Test
     void getByOrganizerId_notFound_throws() {
         when(userMapper.selectById(888L)).thenReturn(null);
-        assertThrowsCode(
-                () -> service.getByOrganizerId(888L),
-                ORGANIZER_NOT_FOUND
-        );
+        assertThrowsCode(() -> service.getByOrganizerId(888L), ORGANIZER_NOT_FOUND);
     }
 
     @Test
     void getByOrganizerId_ok() {
         when(userMapper.selectById(111L)).thenReturn(UserDO.builder().id(111L).build());
-        when(eventMapper.selectList(any())).thenReturn(List.of(
-                persistedEvent(1L).toBuilder().userId(111L).build(),
-                persistedEvent(2L).toBuilder().userId(111L).build()
-        ));
+        when(eventMapper.selectList(any()))
+                .thenReturn(
+                        List.of(
+                                persistedEvent(1L).toBuilder().userId(111L).build(),
+                                persistedEvent(2L).toBuilder().userId(111L).build()));
         when(eventParticipantMapper.selectList(any())).thenReturn(List.of()); // 0人
         List<EventRespVO> list = service.getByOrganizerId(111L);
         assertThat(list).hasSize(2);
@@ -552,15 +547,16 @@ class EventServiceImplTest {
     private void assertThrowsCode(ThrowableAssert.ThrowingCallable call, ErrorCode code) {
         assertThatThrownBy(call)
                 .isInstanceOf(ServiceException.class)
-                .satisfies(ex -> {
-                    ServiceException se = (ServiceException) ex;
-                    // 主断言：code
-                    org.assertj.core.api.Assertions.assertThat(se.getCode())
-                            .isEqualTo(code.getCode());
-                    // 辅助断言（可选）：message 与常量文案一致
-                    org.assertj.core.api.Assertions.assertThat(se.getMessage())
-                            .contains(code.getMsg()); // 或者 .isEqualTo(code.getMsg())
-                });
+                .satisfies(
+                        ex -> {
+                            ServiceException se = (ServiceException) ex;
+                            // 主断言：code
+                            org.assertj.core.api.Assertions.assertThat(se.getCode())
+                                    .isEqualTo(code.getCode());
+                            // 辅助断言（可选）：message 与常量文案一致
+                            org.assertj.core.api.Assertions.assertThat(se.getMessage())
+                                    .contains(code.getMsg()); // 或者 .isEqualTo(code.getMsg())
+                        });
     }
 
     @Test
@@ -570,8 +566,7 @@ class EventServiceImplTest {
         req.setStartTime(null);
         req.setEndTime(LocalDateTime.now().plusHours(1));
 
-        when(userMapper.selectById(111L))
-                .thenReturn(UserDO.builder().id(111L).build());
+        when(userMapper.selectById(111L)).thenReturn(UserDO.builder().id(111L).build());
         when(eventMapper.insert(any())).thenReturn(1);
 
         // 不抛异常即可
@@ -585,8 +580,7 @@ class EventServiceImplTest {
         req.setStartTime(LocalDateTime.now().plusHours(1));
         req.setEndTime(LocalDateTime.now().plusHours(2));
 
-        when(userMapper.selectById(111L))
-                .thenReturn(UserDO.builder().id(111L).build());
+        when(userMapper.selectById(111L)).thenReturn(UserDO.builder().id(111L).build());
         when(eventMapper.insert(any())).thenReturn(1);
 
         service.createEvent(req); // 不抛异常
@@ -615,8 +609,7 @@ class EventServiceImplTest {
         req.setLocation("x");
 
         // 其他校验最小化通过
-        when(userMapper.selectById(111L))
-                .thenReturn(UserDO.builder().id(111L).build());
+        when(userMapper.selectById(111L)).thenReturn(UserDO.builder().id(111L).build());
         when(eventMapper.insert(any(EventDO.class))).thenReturn(1);
         when(eventParticipantMapper.selectCount(any())).thenReturn(0L);
 
@@ -628,36 +621,39 @@ class EventServiceImplTest {
     void validateTimeRange_trueBranch_throws() {
         LocalDateTime s = LocalDateTime.now().plusHours(2);
         LocalDateTime e = LocalDateTime.now().plusHours(1);
-        assertThatThrownBy(() ->
-                ReflectionTestUtils.invokeMethod(service, "validateTimeRange", s, e)
-        ).hasMessageContaining("The start time must be earlier than the end time");
+        assertThatThrownBy(
+                        () -> ReflectionTestUtils.invokeMethod(service, "validateTimeRange", s, e))
+                .hasMessageContaining("The start time must be earlier than the end time");
     }
 
     @Test
     void validateTimeRange_falseBranch_ok() {
         LocalDateTime s = LocalDateTime.now().plusHours(1);
         LocalDateTime e = LocalDateTime.now().plusHours(2);
-        assertThatCode(() ->
-                ReflectionTestUtils.invokeMethod(service, "validateTimeRange", s, e)
-        ).doesNotThrowAnyException();
+        assertThatCode(() -> ReflectionTestUtils.invokeMethod(service, "validateTimeRange", s, e))
+                .doesNotThrowAnyException();
     }
 
     @Test
     void validateTimeRange_startNull_ok() {
         LocalDateTime end = LocalDateTime.now().plusHours(1);
         // start = null
-        assertThatCode(() ->
-                ReflectionTestUtils.invokeMethod(service, "validateTimeRange", null, end)
-        ).doesNotThrowAnyException();
+        assertThatCode(
+                        () ->
+                                ReflectionTestUtils.invokeMethod(
+                                        service, "validateTimeRange", null, end))
+                .doesNotThrowAnyException();
     }
 
     @Test
     void validateTimeRange_endNull_ok() {
         LocalDateTime start = LocalDateTime.now().plusHours(1);
         // end = null
-        assertThatCode(() ->
-                ReflectionTestUtils.invokeMethod(service, "validateTimeRange", start, null)
-        ).doesNotThrowAnyException();
+        assertThatCode(
+                        () ->
+                                ReflectionTestUtils.invokeMethod(
+                                        service, "validateTimeRange", start, null))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -679,7 +675,7 @@ class EventServiceImplTest {
         when(eventMapper.selectById(eventId)).thenReturn(null);
 
         // act & assert
-        assertThatThrownBy(() -> service.updateEvent(eventId,reqVO))
+        assertThatThrownBy(() -> service.updateEvent(eventId, reqVO))
                 .hasMessageContaining("Event not found");
     }
 
@@ -695,9 +691,8 @@ class EventServiceImplTest {
         req.setRemark("only patch");
 
         when(eventMapper.updateById(any(EventDO.class))).thenReturn(1);
-        when(eventMapper.selectById(id)).thenReturn(
-                persistedEvent(id).toBuilder().remark("only patch").build()
-        );
+        when(eventMapper.selectById(id))
+                .thenReturn(persistedEvent(id).toBuilder().remark("only patch").build());
         when(eventParticipantMapper.selectList(any())).thenReturn(List.of()); // 用于最后组装resp
 
         UpdateEventRespVO resp = service.updateEvent(id, req);
@@ -713,14 +708,12 @@ class EventServiceImplTest {
         when(eventMapper.selectById(id)).thenReturn(persistedEvent(id));
         // 当前 301,302（第一次 selectList，用于差异计算）
         when(eventParticipantMapper.selectList(any()))
-                .thenReturn(List.of(
-                        EventParticipantDO.builder().eventId(id).userId(301L).build(),
-                        EventParticipantDO.builder().eventId(id).userId(302L).build()
-                ))
+                .thenReturn(
+                        List.of(
+                                EventParticipantDO.builder().eventId(id).userId(301L).build(),
+                                EventParticipantDO.builder().eventId(id).userId(302L).build()))
                 // 第二次：组装 resp
-                .thenReturn(List.of(
-                        EventParticipantDO.builder().eventId(id).userId(301L).build()
-                ));
+                .thenReturn(List.of(EventParticipantDO.builder().eventId(id).userId(301L).build()));
 
         EventUpdateReqVO req = new EventUpdateReqVO();
         req.setParticipantUserIds(List.of(301L));
@@ -743,22 +736,20 @@ class EventServiceImplTest {
         long id = 4L;
         when(eventMapper.selectById(id)).thenReturn(persistedEvent(id));
         when(eventParticipantMapper.selectList(any()))
-                .thenReturn(List.of(
-                        EventParticipantDO.builder().eventId(id).userId(301L).build()
-                ))
-                .thenReturn(List.of(
-                        EventParticipantDO.builder().eventId(id).userId(301L).build(),
-                        EventParticipantDO.builder().eventId(id).userId(303L).build()
-                ));
+                .thenReturn(List.of(EventParticipantDO.builder().eventId(id).userId(301L).build()))
+                .thenReturn(
+                        List.of(
+                                EventParticipantDO.builder().eventId(id).userId(301L).build(),
+                                EventParticipantDO.builder().eventId(id).userId(303L).build()));
 
         EventUpdateReqVO req = new EventUpdateReqVO();
         req.setParticipantUserIds(List.of(301L, 303L));
 
         when(userMapper.selectBatchIds(List.of(301L, 303L)))
-                .thenReturn(List.of(
-                        UserDO.builder().id(301L).build(),
-                        UserDO.builder().id(303L).build()
-                ));
+                .thenReturn(
+                        List.of(
+                                UserDO.builder().id(301L).build(),
+                                UserDO.builder().id(303L).build()));
 
         when(eventMapper.updateById(any(EventDO.class))).thenReturn(1);
         when(eventMapper.selectById(id)).thenReturn(persistedEvent(id));
@@ -775,23 +766,23 @@ class EventServiceImplTest {
         long id = 5L;
         when(eventMapper.selectById(id)).thenReturn(persistedEvent(id));
         when(eventParticipantMapper.selectList(any()))
-                .thenReturn(List.of(
-                        EventParticipantDO.builder().eventId(id).userId(301L).build(),
-                        EventParticipantDO.builder().eventId(id).userId(302L).build()
-                ))
-                .thenReturn(List.of(
-                        EventParticipantDO.builder().eventId(id).userId(301L).build(),
-                        EventParticipantDO.builder().eventId(id).userId(302L).build()
-                ));
+                .thenReturn(
+                        List.of(
+                                EventParticipantDO.builder().eventId(id).userId(301L).build(),
+                                EventParticipantDO.builder().eventId(id).userId(302L).build()))
+                .thenReturn(
+                        List.of(
+                                EventParticipantDO.builder().eventId(id).userId(301L).build(),
+                                EventParticipantDO.builder().eventId(id).userId(302L).build()));
 
         EventUpdateReqVO req = new EventUpdateReqVO();
         req.setParticipantUserIds(List.of(301L, 302L));
 
         when(userMapper.selectBatchIds(List.of(301L, 302L)))
-                .thenReturn(List.of(
-                        UserDO.builder().id(301L).build(),
-                        UserDO.builder().id(302L).build()
-                ));
+                .thenReturn(
+                        List.of(
+                                UserDO.builder().id(301L).build(),
+                                UserDO.builder().id(302L).build()));
 
         when(eventMapper.updateById(any(EventDO.class))).thenReturn(1);
         when(eventMapper.selectById(id)).thenReturn(persistedEvent(id));
