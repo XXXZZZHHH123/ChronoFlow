@@ -22,6 +22,5 @@ public class TaskUpdateReqVO {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
     private LocalDateTime endTime;
 
-    
     private Long assignedUserId;
 }

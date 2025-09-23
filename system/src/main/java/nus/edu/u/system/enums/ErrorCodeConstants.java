@@ -79,8 +79,7 @@ public interface ErrorCodeConstants {
 
     // ========= Task module 13-02-000 ============
     ErrorCode TASK_STATUS_INVALID = new ErrorCode(13_02_001, "Illegal task status");
-    ErrorCode TASK_ASSIGNEE_NOT_FOUND =
-            new ErrorCode(13_02_002, "Assigned user does not exist");
+    ErrorCode TASK_ASSIGNEE_NOT_FOUND = new ErrorCode(13_02_002, "Assigned user does not exist");
     ErrorCode TASK_TIME_RANGE_INVALID =
             new ErrorCode(13_02_003, "The task start time must be earlier than the end time");
     ErrorCode TASK_ASSIGNEE_TENANT_MISMATCH =

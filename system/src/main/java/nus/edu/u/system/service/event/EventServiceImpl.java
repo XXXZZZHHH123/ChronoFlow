@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import nus.edu.u.common.enums.EventStatusEnum;
 import nus.edu.u.common.enums.CommonStatusEnum;
+import nus.edu.u.common.enums.EventStatusEnum;
 import nus.edu.u.system.convert.event.EventConvert;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
@@ -20,14 +20,14 @@ import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.EventDTO;
 import nus.edu.u.system.domain.vo.event.*;
+import nus.edu.u.system.enums.task.TaskStatusEnum;
+import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.EventParticipantMapper;
-import nus.edu.u.system.mapper.user.UserMapper;
-import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.TaskMapper;
+import nus.edu.u.system.mapper.user.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import nus.edu.u.system.enums.task.TaskStatusEnum;
 
 @Service
 @Slf4j
@@ -88,7 +88,8 @@ public class EventServiceImpl implements EventService {
 
         resp.setGroups(fetchGroupsByEventIds(List.of(eventId)).getOrDefault(eventId, List.of()));
         resp.setTaskStatus(
-                fetchTaskStatusesByEventIds(List.of(eventId)).getOrDefault(eventId, emptyTaskStatus()));
+                fetchTaskStatusesByEventIds(List.of(eventId))
+                        .getOrDefault(eventId, emptyTaskStatus()));
 
         return resp;
     }
@@ -121,7 +122,8 @@ public class EventServiceImpl implements EventService {
                                         Collectors.summingInt(e -> 1)));
 
         Map<Long, List<EventRespVO.GroupVO>> groupsByEventId = fetchGroupsByEventIds(eventIds);
-        Map<Long, EventRespVO.TaskStatusVO> taskStatusByEventId = fetchTaskStatusesByEventIds(eventIds);
+        Map<Long, EventRespVO.TaskStatusVO> taskStatusByEventId =
+                fetchTaskStatusesByEventIds(eventIds);
 
         return events.stream()
                 .map(

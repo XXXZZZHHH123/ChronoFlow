@@ -87,9 +87,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         Long assigneeId =
-                reqVO.getAssignedUserId() != null
-                        ? reqVO.getAssignedUserId()
-                        : task.getUserId();
+                reqVO.getAssignedUserId() != null ? reqVO.getAssignedUserId() : task.getUserId();
 
         UserDO assignee = null;
         if (assigneeId != null) {
@@ -183,11 +181,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         List<Long> userIds =
-                tasks.stream()
-                        .map(TaskDO::getUserId)
-                        .filter(Objects::nonNull)
-                        .distinct()
-                        .toList();
+                tasks.stream().map(TaskDO::getUserId).filter(Objects::nonNull).distinct().toList();
 
         Map<Long, UserDO> usersById =
                 userIds.isEmpty()
