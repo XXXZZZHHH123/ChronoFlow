@@ -189,15 +189,14 @@ public class TaskServiceImpl implements TaskService {
                         : userMapper.selectBatchIds(userIds).stream()
                                 .collect(Collectors.toMap(UserDO::getId, Function.identity()));
 
-        Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> groupsByDeptId = buildGroupsByDept(usersById);
+        Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> groupsByDeptId =
+                buildGroupsByDept(usersById);
 
         return tasks.stream()
                 .map(
                         task ->
                                 buildTaskResponse(
-                                        task,
-                                        usersById.get(task.getUserId()),
-                                        groupsByDeptId))
+                                        task, usersById.get(task.getUserId()), groupsByDeptId))
                 .toList();
     }
 
@@ -240,8 +239,7 @@ public class TaskServiceImpl implements TaskService {
             TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
             assignedUserVO.setId(user.getId());
             assignedUserVO.setName(user.getUsername());
-            assignedUserVO.setGroups(
-                    resolveGroups(user.getDeptId(), groupsByDeptId));
+            assignedUserVO.setGroups(resolveGroups(user.getDeptId(), groupsByDeptId));
             resp.setAssignedUser(assignedUserVO);
         } else {
             resp.setAssignedUser(null);
@@ -287,10 +285,7 @@ public class TaskServiceImpl implements TaskService {
 
         return deptMapper.selectBatchIds(deptIds).stream()
                 .filter(Objects::nonNull)
-                .collect(
-                        Collectors.toMap(
-                                DeptDO::getId,
-                                dept -> List.of(toGroupVO(dept))));
+                .collect(Collectors.toMap(DeptDO::getId, dept -> List.of(toGroupVO(dept))));
     }
 
     private TaskRespVO.AssignedUserVO.GroupVO toGroupVO(DeptDO dept) {
