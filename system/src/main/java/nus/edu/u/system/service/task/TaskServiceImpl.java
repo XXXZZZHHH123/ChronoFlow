@@ -189,8 +189,15 @@ public class TaskServiceImpl implements TaskService {
                         : userMapper.selectBatchIds(userIds).stream()
                                 .collect(Collectors.toMap(UserDO::getId, Function.identity()));
 
+        Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> groupsByDeptId = buildGroupsByDept(usersById);
+
         return tasks.stream()
-                .map(task -> buildTaskResponse(task, usersById.get(task.getUserId())))
+                .map(
+                        task ->
+                                buildTaskResponse(
+                                        task,
+                                        usersById.get(task.getUserId()),
+                                        groupsByDeptId))
                 .toList();
     }
 
@@ -215,6 +222,13 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private TaskRespVO buildTaskResponse(TaskDO task, UserDO assignee) {
+        return buildTaskResponse(task, assignee, null);
+    }
+
+    private TaskRespVO buildTaskResponse(
+            TaskDO task,
+            UserDO assignee,
+            Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> groupsByDeptId) {
         TaskRespVO resp = TaskConvert.INSTANCE.toRespVO(task);
         UserDO user = assignee;
 
@@ -226,7 +240,8 @@ public class TaskServiceImpl implements TaskService {
             TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
             assignedUserVO.setId(user.getId());
             assignedUserVO.setName(user.getUsername());
-            assignedUserVO.setGroups(resolveGroups(user.getDeptId()));
+            assignedUserVO.setGroups(
+                    resolveGroups(user.getDeptId(), groupsByDeptId));
             resp.setAssignedUser(assignedUserVO);
         } else {
             resp.setAssignedUser(null);
@@ -235,9 +250,14 @@ public class TaskServiceImpl implements TaskService {
         return resp;
     }
 
-    private List<TaskRespVO.AssignedUserVO.GroupVO> resolveGroups(Long deptId) {
+    private List<TaskRespVO.AssignedUserVO.GroupVO> resolveGroups(
+            Long deptId, Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> groupsByDeptId) {
         if (deptId == null) {
             return List.of();
+        }
+
+        if (groupsByDeptId != null && groupsByDeptId.containsKey(deptId)) {
+            return groupsByDeptId.get(deptId);
         }
 
         DeptDO dept = deptMapper.selectById(deptId);
@@ -245,9 +265,38 @@ public class TaskServiceImpl implements TaskService {
             return List.of();
         }
 
-        TaskRespVO.AssignedUserVO.GroupVO group = new TaskRespVO.AssignedUserVO.GroupVO();
-        group.setId(dept.getId());
-        group.setName(dept.getName());
-        return List.of(group);
+        return List.of(toGroupVO(dept));
+    }
+
+    private Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> buildGroupsByDept(
+            Map<Long, UserDO> usersById) {
+        if (usersById.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Long> deptIds =
+                usersById.values().stream()
+                        .map(UserDO::getDeptId)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .toList();
+
+        if (deptIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return deptMapper.selectBatchIds(deptIds).stream()
+                .filter(Objects::nonNull)
+                .collect(
+                        Collectors.toMap(
+                                DeptDO::getId,
+                                dept -> List.of(toGroupVO(dept))));
+    }
+
+    private TaskRespVO.AssignedUserVO.GroupVO toGroupVO(DeptDO dept) {
+        TaskRespVO.AssignedUserVO.GroupVO groupVO = new TaskRespVO.AssignedUserVO.GroupVO();
+        groupVO.setId(dept.getId());
+        groupVO.setName(dept.getName());
+        return groupVO;
     }
 }
