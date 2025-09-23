@@ -51,6 +51,7 @@ public class TaskServiceImpl implements TaskService {
         LocalDateTime start = reqVO.getStartTime();
         LocalDateTime end = reqVO.getEndTime();
         validateTimeRange(start, end);
+        validateTaskWithinEventRange(start, end, event);
 
         TaskStatusEnum statusEnum = TaskStatusEnum.fromStatusOrDefault(reqVO.getStatus());
         if (statusEnum == null) {
@@ -66,11 +67,13 @@ public class TaskServiceImpl implements TaskService {
         taskMapper.insert(task);
 
         TaskRespVO resp = TaskConvert.INSTANCE.toRespVO(task);
-        TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
-        assignedUserVO.setId(assignee.getId());
-        assignedUserVO.setName(assignee.getUsername());
-        assignedUserVO.setGroups(resolveGroups(assignee.getDeptId()));
-        resp.setAssignedUser(assignedUserVO);
+        if (assignee != null) {
+            TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
+            assignedUserVO.setId(assignee.getId());
+            assignedUserVO.setName(assignee.getUsername());
+            assignedUserVO.setGroups(resolveGroups(assignee.getDeptId()));
+            resp.setAssignedUser(assignedUserVO);
+        }
         return resp;
     }
 
@@ -87,45 +90,81 @@ public class TaskServiceImpl implements TaskService {
             throw exception(TASK_NOT_FOUND);
         }
 
-        UserDO assignee = userMapper.selectById(reqVO.getAssignedUserId());
-        if (assignee == null) {
-            throw exception(TASK_ASSIGNEE_NOT_FOUND);
+        Long assigneeId =
+                reqVO.getAssignedUserId() != null
+                        ? reqVO.getAssignedUserId()
+                        : task.getUserId();
+
+        UserDO assignee = null;
+        if (assigneeId != null) {
+            assignee = userMapper.selectById(assigneeId);
+            if (assignee == null) {
+                throw exception(TASK_ASSIGNEE_NOT_FOUND);
+            }
+
+            if (!Objects.equals(event.getTenantId(), assignee.getTenantId())) {
+                throw exception(TASK_ASSIGNEE_TENANT_MISMATCH);
+            }
         }
 
-        if (!Objects.equals(event.getTenantId(), assignee.getTenantId())) {
-            throw exception(TASK_ASSIGNEE_TENANT_MISMATCH);
-        }
-
-        LocalDateTime start = reqVO.getStartTime();
-        LocalDateTime end = reqVO.getEndTime();
+        LocalDateTime start =
+                reqVO.getStartTime() != null ? reqVO.getStartTime() : task.getStartTime();
+        LocalDateTime end = reqVO.getEndTime() != null ? reqVO.getEndTime() : task.getEndTime();
         validateTimeRange(start, end);
+        validateTaskWithinEventRange(start, end, event);
 
-        TaskStatusEnum statusEnum = TaskStatusEnum.fromStatusOrDefault(reqVO.getStatus());
-        if (statusEnum == null) {
-            throw exception(TASK_STATUS_INVALID);
+        Integer status = task.getStatus();
+        if (reqVO.getStatus() != null) {
+            TaskStatusEnum statusEnum = TaskStatusEnum.fromStatusOrDefault(reqVO.getStatus());
+            if (statusEnum == null) {
+                throw exception(TASK_STATUS_INVALID);
+            }
+            status = statusEnum.getStatus();
         }
 
-        task.setName(reqVO.getName());
-        task.setDescription(reqVO.getDescription());
-        task.setStatus(statusEnum.getStatus());
+        if (reqVO.getName() != null) {
+            task.setName(reqVO.getName());
+        }
+        if (reqVO.getDescription() != null) {
+            task.setDescription(reqVO.getDescription());
+        }
+        task.setStatus(status);
         task.setStartTime(start);
         task.setEndTime(end);
-        task.setUserId(reqVO.getAssignedUserId());
+        task.setUserId(assigneeId);
         task.setTenantId(event.getTenantId());
         taskMapper.updateById(task);
 
         TaskRespVO resp = TaskConvert.INSTANCE.toRespVO(task);
-        TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
-        assignedUserVO.setId(assignee.getId());
-        assignedUserVO.setName(assignee.getUsername());
-        assignedUserVO.setGroups(resolveGroups(assignee.getDeptId()));
-        resp.setAssignedUser(assignedUserVO);
+        if (assignee != null) {
+            TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
+            assignedUserVO.setId(assignee.getId());
+            assignedUserVO.setName(assignee.getUsername());
+            assignedUserVO.setGroups(resolveGroups(assignee.getDeptId()));
+            resp.setAssignedUser(assignedUserVO);
+        } else {
+            resp.setAssignedUser(null);
+        }
         return resp;
     }
 
     private void validateTimeRange(LocalDateTime start, LocalDateTime end) {
         if (start != null && end != null && !start.isBefore(end)) {
             throw exception(TASK_TIME_RANGE_INVALID);
+        }
+    }
+
+    private void validateTaskWithinEventRange(
+            LocalDateTime taskStart, LocalDateTime taskEnd, EventDO event) {
+        LocalDateTime eventStart = event.getStartTime();
+        LocalDateTime eventEnd = event.getEndTime();
+
+        if (taskStart != null && eventStart != null && taskStart.isBefore(eventStart)) {
+            throw exception(TASK_TIME_OUTSIDE_EVENT);
+        }
+
+        if (taskEnd != null && eventEnd != null && taskEnd.isAfter(eventEnd)) {
+            throw exception(TASK_TIME_OUTSIDE_EVENT);
         }
     }
 

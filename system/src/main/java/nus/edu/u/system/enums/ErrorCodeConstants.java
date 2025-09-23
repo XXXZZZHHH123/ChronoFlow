@@ -86,4 +86,6 @@ public interface ErrorCodeConstants {
     ErrorCode TASK_ASSIGNEE_TENANT_MISMATCH =
             new ErrorCode(13_02_004, "The assigned user does not belong to this event");
     ErrorCode TASK_NOT_FOUND = new ErrorCode(13_02_005, "Task does not exist");
+    ErrorCode TASK_TIME_OUTSIDE_EVENT =
+            new ErrorCode(13_02_006, "The task timeframe must fall within the event timeframe");
 }
