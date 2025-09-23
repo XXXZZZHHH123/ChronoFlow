@@ -148,6 +148,22 @@ public class TaskServiceImpl implements TaskService {
         return resp;
     }
 
+    @Override
+    @Transactional
+    public void deleteTask(Long eventId, Long taskId) {
+        EventDO event = eventMapper.selectById(eventId);
+        if (event == null) {
+            throw exception(EVENT_NOT_FOUND);
+        }
+
+        TaskDO task = taskMapper.selectById(taskId);
+        if (task == null || !Objects.equals(task.getEventId(), eventId)) {
+            throw exception(TASK_NOT_FOUND);
+        }
+
+        taskMapper.deleteById(taskId);
+    }
+
     private void validateTimeRange(LocalDateTime start, LocalDateTime end) {
         if (start != null && end != null && !start.isBefore(end)) {
             throw exception(TASK_TIME_RANGE_INVALID);

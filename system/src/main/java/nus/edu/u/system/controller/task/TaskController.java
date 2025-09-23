@@ -10,6 +10,7 @@ import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
 import nus.edu.u.system.service.task.TaskService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,6 +42,16 @@ public class TaskController {
         TaskRespVO resp = taskService.updateTask(eventId, taskId, reqVO);
         CommonResult<TaskRespVO> result = CommonResult.success(resp);
         result.setMsg("Task updated successfully");
+        return result;
+    }
+
+    @DeleteMapping("/{taskId}")
+    public CommonResult<Void> deleteTask(
+            @PathVariable("eventId") @NotNull Long eventId,
+            @PathVariable("taskId") @NotNull Long taskId) {
+        taskService.deleteTask(eventId, taskId);
+        CommonResult<Void> result = CommonResult.success(null);
+        result.setMsg("Task deleted successfully");
         return result;
     }
 }

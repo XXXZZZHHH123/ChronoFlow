@@ -8,4 +8,6 @@ public interface TaskService {
     TaskRespVO createTask(Long eventId, TaskCreateReqVO reqVO);
 
     TaskRespVO updateTask(Long eventId, Long taskId, TaskUpdateReqVO reqVO);
+
+    void deleteTask(Long eventId, Long taskId);
 }
