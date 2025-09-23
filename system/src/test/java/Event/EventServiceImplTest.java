@@ -8,9 +8,6 @@ import static org.mockito.Mockito.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.enums.EventStatusEnum;
 import nus.edu.u.common.exception.ErrorCode;
@@ -220,8 +217,7 @@ class EventServiceImplTest {
     @Test
     void fetchTaskStatusesByEventIds_empty_returnsEmptyMap() {
         Map<Long, EventRespVO.TaskStatusVO> result =
-                ReflectionTestUtils.invokeMethod(
-                        service, "fetchTaskStatusesByEventIds", List.of());
+                ReflectionTestUtils.invokeMethod(service, "fetchTaskStatusesByEventIds", List.of());
 
         assertThat(result).isEmpty();
         verifyNoInteractions(taskMapper);
@@ -239,8 +235,7 @@ class EventServiceImplTest {
                                         .build()));
 
         Map<Long, EventRespVO.TaskStatusVO> result =
-                ReflectionTestUtils.invokeMethod(
-                        service, "fetchTaskStatusesByEventIds", eventIds);
+                ReflectionTestUtils.invokeMethod(service, "fetchTaskStatusesByEventIds", eventIds);
 
         assertThat(result.get(1L).getTotal()).isEqualTo(1);
         assertThat(result.get(2L).getTotal()).isZero();
@@ -303,7 +298,8 @@ class EventServiceImplTest {
     @Test
     void getByOrganizerId_noEvents_returnsEmptyList() {
         long organizerId = 888L;
-        when(userMapper.selectById(organizerId)).thenReturn(UserDO.builder().id(organizerId).build());
+        when(userMapper.selectById(organizerId))
+                .thenReturn(UserDO.builder().id(organizerId).build());
         when(eventMapper.selectList(any())).thenReturn(List.of());
 
         assertThat(service.getByOrganizerId(organizerId)).isEmpty();
@@ -312,7 +308,8 @@ class EventServiceImplTest {
     @Test
     void getByOrganizerId_withEvents_populatesAggregates() {
         long organizerId = 777L;
-        when(userMapper.selectById(organizerId)).thenReturn(UserDO.builder().id(organizerId).build());
+        when(userMapper.selectById(organizerId))
+                .thenReturn(UserDO.builder().id(organizerId).build());
         EventDO e1 = persistedEvent(101L).toBuilder().userId(organizerId).build();
         EventDO e2 = persistedEvent(202L).toBuilder().userId(organizerId).build();
         when(eventMapper.selectList(any())).thenReturn(List.of(e1, e2));
@@ -623,7 +620,7 @@ class EventServiceImplTest {
         okOrganizer(req.getOrganizerId());
         when(eventMapper.insert(any())).thenReturn(1);
         when(eventParticipantMapper.selectCount(any())).thenReturn(0L);
-        service.createEvent(req); 
+        service.createEvent(req);
         verify(userMapper, never()).selectBatchIds(any());
     }
 
