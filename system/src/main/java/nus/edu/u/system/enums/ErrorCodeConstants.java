@@ -85,4 +85,5 @@ public interface ErrorCodeConstants {
             new ErrorCode(13_02_003, "The task start time must be earlier than the end time");
     ErrorCode TASK_ASSIGNEE_TENANT_MISMATCH =
             new ErrorCode(13_02_004, "The assigned user does not belong to this event");
+    ErrorCode TASK_NOT_FOUND = new ErrorCode(13_02_005, "Task does not exist");
 }

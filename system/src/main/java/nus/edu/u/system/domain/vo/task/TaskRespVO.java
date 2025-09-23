@@ -18,6 +18,12 @@ public class TaskRespVO {
     public static class AssignedUserVO {
         private Long id;
         private String name;
-        private List<String> positionTitles;
+        private List<GroupVO> groups;
+
+        @Data
+        public static class GroupVO {
+            private Long id;
+            private String name;
+        }
     }
 }

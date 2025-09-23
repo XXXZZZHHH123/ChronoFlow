@@ -6,10 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
+import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
 import nus.edu.u.system.service.task.TaskService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +30,17 @@ public class TaskController {
         TaskRespVO resp = taskService.createTask(eventId, reqVO);
         CommonResult<TaskRespVO> result = CommonResult.success(resp);
         result.setMsg("Task created successfully");
+        return result;
+    }
+
+    @PutMapping("/{taskId}")
+    public CommonResult<TaskRespVO> updateTask(
+            @PathVariable("eventId") @NotNull Long eventId,
+            @PathVariable("taskId") @NotNull Long taskId,
+            @Valid @RequestBody TaskUpdateReqVO reqVO) {
+        TaskRespVO resp = taskService.updateTask(eventId, taskId, reqVO);
+        CommonResult<TaskRespVO> result = CommonResult.success(resp);
+        result.setMsg("Task updated successfully");
         return result;
     }
 }
