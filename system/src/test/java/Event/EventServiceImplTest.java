@@ -7,16 +7,26 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.enums.EventStatusEnum;
 import nus.edu.u.common.exception.ErrorCode;
 import nus.edu.u.common.exception.ServiceException;
+import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.task.EventParticipantDO;
+import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.event.*;
 import nus.edu.u.system.enums.ErrorCodeConstants;
+import nus.edu.u.system.enums.task.TaskStatusEnum;
+import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.EventParticipantMapper;
+import nus.edu.u.system.mapper.task.TaskMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.event.EventServiceImpl;
 import org.assertj.core.api.ThrowableAssert;
@@ -32,6 +42,8 @@ class EventServiceImplTest {
     @Mock private EventMapper eventMapper;
     @Mock private EventParticipantMapper eventParticipantMapper;
     @Mock private UserMapper userMapper;
+    @Mock private DeptMapper deptMapper;
+    @Mock private TaskMapper taskMapper;
 
     @InjectMocks private EventServiceImpl service;
 
@@ -112,28 +124,127 @@ class EventServiceImplTest {
                 .isEqualTo(ErrorCodeConstants.ORGANIZER_NOT_FOUND.getCode());
     }
 
-    // @Test
-    // void getByEventId_success() {
-    //     Long eventId = 9001L;
-    //     when(eventMapper.selectById(eventId)).thenReturn(persistedEvent(eventId));
-    //     when(eventParticipantMapper.selectCount(any())).thenReturn(3L);
+    @Test
+    void getByEventId_missing_throws() {
+        when(eventMapper.selectById(1L)).thenReturn(null);
 
-    //     EventRespVO vo = service.getByEventId(eventId);
+        assertThrowsCode(() -> service.getByEventId(1L), EVENT_NOT_FOUND);
+    }
 
-    //     assertThat(vo.getId()).isEqualTo(eventId);
-    //     assertThat(vo.getJoiningParticipants()).isEqualTo(3);
-    //     assertThat(vo.getGroups()).hasSize(2); // 默认硬编码
-    //     assertThat(vo.getTaskStatus().getTotal()).isEqualTo(0);
-    // }
+    @Test
+    void getByEventId_success_populatesAggregates() {
+        long eventId = 42L;
+        EventDO event = persistedEvent(eventId);
+        when(eventMapper.selectById(eventId)).thenReturn(event);
+        when(eventParticipantMapper.selectCount(any())).thenReturn(3L);
+        when(deptMapper.selectList(any()))
+                .thenReturn(
+                        List.of(
+                                DeptDO.builder()
+                                        .id(10L)
+                                        .eventId(eventId)
+                                        .name("Alpha")
+                                        .status(CommonStatusEnum.ENABLE.getStatus())
+                                        .build()));
+        when(taskMapper.selectList(any()))
+                .thenReturn(
+                        List.of(
+                                TaskDO.builder()
+                                        .eventId(eventId)
+                                        .status(TaskStatusEnum.DONE.getStatus())
+                                        .build(),
+                                TaskDO.builder()
+                                        .eventId(eventId)
+                                        .status(TaskStatusEnum.DOING.getStatus())
+                                        .build()));
 
-    // @Test
-    // void getByEventId_notFound() {
-    //     when(eventMapper.selectById(1L)).thenReturn(null);
-    //     assertThatThrownBy(() -> service.getByEventId(1L))
-    //             .isInstanceOf(ServiceException.class)
-    //             .extracting("code")
-    //             .isEqualTo(ErrorCodeConstants.EVENT_NOT_FOUND.getCode());
-    // }
+        EventRespVO resp = service.getByEventId(eventId);
+
+        assertThat(resp.getId()).isEqualTo(eventId);
+        assertThat(resp.getJoiningParticipants()).isEqualTo(3);
+        assertThat(resp.getGroups())
+                .singleElement()
+                .satisfies(
+                        group -> {
+                            assertThat(group.getId()).isEqualTo("10");
+                            assertThat(group.getName()).isEqualTo("Alpha");
+                        });
+        assertThat(resp.getTaskStatus().getTotal()).isEqualTo(2);
+        assertThat(resp.getTaskStatus().getCompleted()).isEqualTo(1);
+        assertThat(resp.getTaskStatus().getRemaining()).isEqualTo(1);
+    }
+
+    @Test
+    void getByEventId_success_withoutTasksUsesEmptyStatus() {
+        long eventId = 43L;
+        when(eventMapper.selectById(eventId)).thenReturn(persistedEvent(eventId));
+        when(eventParticipantMapper.selectCount(any())).thenReturn(0L);
+        when(deptMapper.selectList(any())).thenReturn(List.of());
+        when(taskMapper.selectList(any())).thenReturn(List.of());
+
+        EventRespVO resp = service.getByEventId(eventId);
+
+        assertThat(resp.getTaskStatus().getTotal()).isZero();
+        assertThat(resp.getTaskStatus().getCompleted()).isZero();
+        assertThat(resp.getTaskStatus().getRemaining()).isZero();
+    }
+
+    @Test
+    void fetchGroupsByEventIds_null_returnsEmptyMap() {
+        Map<Long, List<EventRespVO.GroupVO>> result =
+                ReflectionTestUtils.invokeMethod(service, "fetchGroupsByEventIds", (Object) null);
+
+        assertThat(result).isEmpty();
+        verifyNoInteractions(deptMapper);
+    }
+
+    @Test
+    void fetchGroupsByEventIds_empty_returnsEmptyMap() {
+        Map<Long, List<EventRespVO.GroupVO>> result =
+                ReflectionTestUtils.invokeMethod(service, "fetchGroupsByEventIds", List.of());
+
+        assertThat(result).isEmpty();
+        verifyNoInteractions(deptMapper);
+    }
+
+    @Test
+    void fetchTaskStatusesByEventIds_null_returnsEmptyMap() {
+        Map<Long, EventRespVO.TaskStatusVO> result =
+                ReflectionTestUtils.invokeMethod(
+                        service, "fetchTaskStatusesByEventIds", (Object) null);
+
+        assertThat(result).isEmpty();
+        verifyNoInteractions(taskMapper);
+    }
+
+    @Test
+    void fetchTaskStatusesByEventIds_empty_returnsEmptyMap() {
+        Map<Long, EventRespVO.TaskStatusVO> result =
+                ReflectionTestUtils.invokeMethod(
+                        service, "fetchTaskStatusesByEventIds", List.of());
+
+        assertThat(result).isEmpty();
+        verifyNoInteractions(taskMapper);
+    }
+
+    @Test
+    void fetchTaskStatusesByEventIds_missingTasks_returnsEmptyStatusPerEvent() {
+        List<Long> eventIds = List.of(1L, 2L);
+        when(taskMapper.selectList(any()))
+                .thenReturn(
+                        List.of(
+                                TaskDO.builder()
+                                        .eventId(1L)
+                                        .status(TaskStatusEnum.DONE.getStatus())
+                                        .build()));
+
+        Map<Long, EventRespVO.TaskStatusVO> result =
+                ReflectionTestUtils.invokeMethod(
+                        service, "fetchTaskStatusesByEventIds", eventIds);
+
+        assertThat(result.get(1L).getTotal()).isEqualTo(1);
+        assertThat(result.get(2L).getTotal()).isZero();
+    }
 
     @Test
     void updateEvent_success_patchAndSyncParticipants() {
@@ -180,6 +291,90 @@ class EventServiceImplTest {
 
     private static EventParticipantDO ep(Long eventId, Long userId) {
         return EventParticipantDO.builder().eventId(eventId).userId(userId).build();
+    }
+
+    @Test
+    void getByOrganizerId_missingOrganizer_throws() {
+        when(userMapper.selectById(999L)).thenReturn(null);
+
+        assertThrowsCode(() -> service.getByOrganizerId(999L), ORGANIZER_NOT_FOUND);
+    }
+
+    @Test
+    void getByOrganizerId_noEvents_returnsEmptyList() {
+        long organizerId = 888L;
+        when(userMapper.selectById(organizerId)).thenReturn(UserDO.builder().id(organizerId).build());
+        when(eventMapper.selectList(any())).thenReturn(List.of());
+
+        assertThat(service.getByOrganizerId(organizerId)).isEmpty();
+    }
+
+    @Test
+    void getByOrganizerId_withEvents_populatesAggregates() {
+        long organizerId = 777L;
+        when(userMapper.selectById(organizerId)).thenReturn(UserDO.builder().id(organizerId).build());
+        EventDO e1 = persistedEvent(101L).toBuilder().userId(organizerId).build();
+        EventDO e2 = persistedEvent(202L).toBuilder().userId(organizerId).build();
+        when(eventMapper.selectList(any())).thenReturn(List.of(e1, e2));
+        when(eventParticipantMapper.selectList(any()))
+                .thenReturn(
+                        List.of(
+                                EventParticipantDO.builder().eventId(101L).userId(1L).build(),
+                                EventParticipantDO.builder().eventId(101L).userId(2L).build(),
+                                EventParticipantDO.builder().eventId(202L).userId(3L).build()));
+        when(deptMapper.selectList(any()))
+                .thenReturn(
+                        List.of(
+                                DeptDO.builder()
+                                        .id(500L)
+                                        .eventId(101L)
+                                        .name("Group-101")
+                                        .status(CommonStatusEnum.ENABLE.getStatus())
+                                        .build(),
+                                DeptDO.builder()
+                                        .id(600L)
+                                        .eventId(202L)
+                                        .name("Group-202")
+                                        .status(CommonStatusEnum.ENABLE.getStatus())
+                                        .build()));
+        when(taskMapper.selectList(any()))
+                .thenReturn(
+                        List.of(
+                                TaskDO.builder()
+                                        .eventId(101L)
+                                        .status(TaskStatusEnum.DONE.getStatus())
+                                        .build(),
+                                TaskDO.builder()
+                                        .eventId(101L)
+                                        .status(TaskStatusEnum.DOING.getStatus())
+                                        .build(),
+                                TaskDO.builder()
+                                        .eventId(202L)
+                                        .status(TaskStatusEnum.DOING.getStatus())
+                                        .build()));
+
+        List<EventRespVO> resp = service.getByOrganizerId(organizerId);
+
+        assertThat(resp).hasSize(2);
+        EventRespVO first =
+                resp.stream().filter(vo -> vo.getId().equals(101L)).findFirst().orElseThrow();
+        assertThat(first.getJoiningParticipants()).isEqualTo(2);
+        assertThat(first.getGroups())
+                .extracting(EventRespVO.GroupVO::getName)
+                .containsExactly("Group-101");
+        assertThat(first.getTaskStatus().getTotal()).isEqualTo(2);
+        assertThat(first.getTaskStatus().getCompleted()).isEqualTo(1);
+        assertThat(first.getTaskStatus().getRemaining()).isEqualTo(1);
+
+        EventRespVO second =
+                resp.stream().filter(vo -> vo.getId().equals(202L)).findFirst().orElseThrow();
+        assertThat(second.getJoiningParticipants()).isEqualTo(1);
+        assertThat(second.getGroups())
+                .extracting(EventRespVO.GroupVO::getName)
+                .containsExactly("Group-202");
+        assertThat(second.getTaskStatus().getTotal()).isEqualTo(1);
+        assertThat(second.getTaskStatus().getCompleted()).isZero();
+        assertThat(second.getTaskStatus().getRemaining()).isEqualTo(1);
     }
 
     @Test
@@ -428,7 +623,7 @@ class EventServiceImplTest {
         okOrganizer(req.getOrganizerId());
         when(eventMapper.insert(any())).thenReturn(1);
         when(eventParticipantMapper.selectCount(any())).thenReturn(0L);
-        service.createEvent(req); // 不会访问 userMapper.selectBatchIds
+        service.createEvent(req); 
         verify(userMapper, never()).selectBatchIds(any());
     }
 
