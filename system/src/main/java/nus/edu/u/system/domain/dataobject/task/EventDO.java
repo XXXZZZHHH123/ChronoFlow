@@ -1,5 +1,7 @@
 package nus.edu.u.system.domain.dataobject.task;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
@@ -18,7 +20,7 @@ import nus.edu.u.system.enums.event.EventStatusEnum;
 @TableName(value = "event")
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class EventDO extends TenantBaseDO implements Serializable {
@@ -28,14 +30,22 @@ public class EventDO extends TenantBaseDO implements Serializable {
     @TableId private Long id;
 
     /** Related to {@link UserDO#getId()} */
+    @TableField(updateStrategy = FieldStrategy.NOT_NULL)
     private Long userId;
 
+    @TableField(updateStrategy = FieldStrategy.NOT_NULL)
     private String name;
 
+    @TableField(updateStrategy = FieldStrategy.NOT_NULL)
     private String description;
 
+    @TableField(updateStrategy = FieldStrategy.NOT_NULL)
     private LocalDateTime startTime;
 
+    @TableField(updateStrategy = FieldStrategy.NOT_NULL)
+    private String location;
+
+    @TableField(updateStrategy = FieldStrategy.NOT_NULL)
     private LocalDateTime endTime;
 
     /**
@@ -43,7 +53,9 @@ public class EventDO extends TenantBaseDO implements Serializable {
      *
      * <p>Enum {@link EventStatusEnum}
      */
+    @TableField(updateStrategy = FieldStrategy.NOT_NULL)
     private Integer status;
 
+    @TableField(updateStrategy = FieldStrategy.NOT_NULL)
     private String remark;
 }
