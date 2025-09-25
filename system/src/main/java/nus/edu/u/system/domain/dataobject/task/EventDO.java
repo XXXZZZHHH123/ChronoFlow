@@ -20,7 +20,7 @@ import nus.edu.u.system.enums.event.EventStatusEnum;
 @TableName(value = "event")
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class EventDO extends TenantBaseDO implements Serializable {

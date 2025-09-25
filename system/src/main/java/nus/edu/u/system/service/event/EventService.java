@@ -15,12 +15,4 @@ public interface EventService {
     Boolean deleteEvent(Long id);
 
     Boolean restoreEvent(Long id);
-    //
-    //    Boolean updateEvent(EventUpdateReqVO reqVO);
-    //
-    //    Boolean deleteEvent(Long id);
-    //
-    //    EventRespVO getEvent(Long id);
-    //
-    //    PageResult<EventRespVO> getEventPage(EventPageReqVO reqVO);
 }

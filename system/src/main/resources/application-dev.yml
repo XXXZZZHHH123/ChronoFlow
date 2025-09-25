@@ -3,6 +3,7 @@ spring:
     url: jdbc:mysql://${PORD_DB_HOST}:${PORD_DB_PORT}/${PORD_DB_NAME}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
     username: ${PORD_DB_USER}
     password: ${PORD_DB_PASSWORD}
+
   data:
     redis:
       host: ${PORD_REDIS_HOST}

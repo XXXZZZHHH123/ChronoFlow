@@ -1,6 +1,7 @@
 package nus.edu.u.system.enums.task;
 
 import java.util.Arrays;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nus.edu.u.common.core.ArrayValuable;
@@ -14,9 +15,9 @@ import nus.edu.u.common.core.ArrayValuable;
 @Getter
 @AllArgsConstructor
 public enum TaskStatusEnum implements ArrayValuable<Integer> {
-    WAITING(1, "Waiting"),
-    DOING(2, "Doing"),
-    DONE(3, "Done");
+    WAITING(0, "Waiting"),
+    DOING(1, "Doing"),
+    DONE(2, "Done");
 
     public static final Integer[] ARRAYS =
             Arrays.stream(values()).map(TaskStatusEnum::getStatus).toArray(Integer[]::new);
@@ -24,6 +25,16 @@ public enum TaskStatusEnum implements ArrayValuable<Integer> {
     private final Integer status;
 
     private final String name;
+
+    public static TaskStatusEnum fromStatusOrDefault(Integer status) {
+        if (status == null) {
+            return WAITING;
+        }
+        return Arrays.stream(values())
+                .filter(e -> Objects.equals(e.status, status))
+                .findFirst()
+                .orElse(null);
+    }
 
     @Override
     public Integer[] array() {
