@@ -5,8 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.core.util.StrUtil;
-
+import java.util.concurrent.TimeUnit;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.framework.security.config.SecurityProperties;
 import nus.edu.u.system.domain.dto.UserTokenDTO;
@@ -20,23 +19,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 @ExtendWith(MockitoExtension.class)
 class TokenServiceImplTest {
 
-    @Mock
-    private StringRedisTemplate stringRedisTemplate;
+    @Mock private StringRedisTemplate stringRedisTemplate;
 
-    @Mock
-    private SecurityProperties securityProperties;
+    @Mock private SecurityProperties securityProperties;
 
-    @Mock
-    private ValueOperations<String, String> valueOperations;
+    @Mock private ValueOperations<String, String> valueOperations;
 
-    @InjectMocks
-    private TokenServiceImpl tokenService;
+    @InjectMocks private TokenServiceImpl tokenService;
 
     private UserTokenDTO userTokenDTO;
     // 根据实际的Redis key前缀
@@ -65,15 +57,17 @@ class TokenServiceImplTest {
         assertNotNull(result);
         assertTrue(result.length() > 0);
         // 验证 UUID 格式（36个字符，包含4个连字符）
-        assertTrue(result.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"));
+        assertTrue(
+                result.matches(
+                        "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"));
 
         // 验证 Redis 存储操作被正确调用
-        verify(valueOperations).set(
-                eq(LOGIN_REFRESH_TOKEN_KEY + result),
-                eq("1"),
-                eq(REFRESH_TOKEN_EXPIRE),
-                eq(TimeUnit.SECONDS)
-        );
+        verify(valueOperations)
+                .set(
+                        eq(LOGIN_REFRESH_TOKEN_KEY + result),
+                        eq("1"),
+                        eq(REFRESH_TOKEN_EXPIRE),
+                        eq(TimeUnit.SECONDS));
     }
 
     @Test
@@ -88,10 +82,13 @@ class TokenServiceImplTest {
         assertNotNull(result);
         assertTrue(result.length() > 0);
         // 验证 UUID 格式
-        assertTrue(result.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"));
+        assertTrue(
+                result.matches(
+                        "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"));
 
         // 验证没有存储到Redis
-        verify(valueOperations, never()).set(anyString(), anyString(), anyLong(), any(TimeUnit.class));
+        verify(valueOperations, never())
+                .set(anyString(), anyString(), anyLong(), any(TimeUnit.class));
         verify(securityProperties, never()).getRefreshTokenExpire();
     }
 
@@ -110,15 +107,17 @@ class TokenServiceImplTest {
         assertNotNull(result);
         assertTrue(result.length() > 0);
         // 验证 UUID 格式
-        assertTrue(result.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"));
+        assertTrue(
+                result.matches(
+                        "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"));
 
         // 验证 Redis 存储操作被正确调用，用户ID为999
-        verify(valueOperations).set(
-                eq(LOGIN_REFRESH_TOKEN_KEY + result),
-                eq("999"),
-                eq(REFRESH_TOKEN_EXPIRE),
-                eq(TimeUnit.SECONDS)
-        );
+        verify(valueOperations)
+                .set(
+                        eq(LOGIN_REFRESH_TOKEN_KEY + result),
+                        eq("999"),
+                        eq(REFRESH_TOKEN_EXPIRE),
+                        eq(TimeUnit.SECONDS));
     }
 
     @Test
@@ -148,9 +147,11 @@ class TokenServiceImplTest {
 
         try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
             // When & Then
-            assertThrows(ServiceException.class, () -> {
-                tokenService.removeToken(token);
-            });
+            assertThrows(
+                    ServiceException.class,
+                    () -> {
+                        tokenService.removeToken(token);
+                    });
 
             verify(stringRedisTemplate).delete(LOGIN_REFRESH_TOKEN_KEY + token);
             // 验证由于异常，logout 不会被调用
@@ -168,9 +169,11 @@ class TokenServiceImplTest {
 
         try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
             // When & Then
-            assertThrows(ServiceException.class, () -> {
-                tokenService.removeToken(token);
-            });
+            assertThrows(
+                    ServiceException.class,
+                    () -> {
+                        tokenService.removeToken(token);
+                    });
 
             verify(stringRedisTemplate).delete(LOGIN_REFRESH_TOKEN_KEY + token);
             // 验证由于异常，logout 不会被调用
@@ -249,9 +252,11 @@ class TokenServiceImplTest {
         when(valueOperations.get(LOGIN_REFRESH_TOKEN_KEY + refreshToken)).thenReturn("   ");
 
         // When & Then
-        assertThrows(NumberFormatException.class, () -> {
-            tokenService.getUserIdFromRefreshToken(refreshToken);
-        });
+        assertThrows(
+                NumberFormatException.class,
+                () -> {
+                    tokenService.getUserIdFromRefreshToken(refreshToken);
+                });
         verify(valueOperations).get(LOGIN_REFRESH_TOKEN_KEY + refreshToken);
     }
 
@@ -260,12 +265,15 @@ class TokenServiceImplTest {
         // Given
         String refreshToken = "invalid-number-token";
         when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get(LOGIN_REFRESH_TOKEN_KEY + refreshToken)).thenReturn("not-a-number");
+        when(valueOperations.get(LOGIN_REFRESH_TOKEN_KEY + refreshToken))
+                .thenReturn("not-a-number");
 
         // When & Then
-        assertThrows(NumberFormatException.class, () -> {
-            tokenService.getUserIdFromRefreshToken(refreshToken);
-        });
+        assertThrows(
+                NumberFormatException.class,
+                () -> {
+                    tokenService.getUserIdFromRefreshToken(refreshToken);
+                });
         verify(valueOperations).get(LOGIN_REFRESH_TOKEN_KEY + refreshToken);
     }
 
@@ -318,9 +326,11 @@ class TokenServiceImplTest {
     @Test
     void createRefreshToken_NullUserTokenDTO_ThrowsException() {
         // When & Then
-        assertThrows(NullPointerException.class, () -> {
-            tokenService.createRefreshToken(null);
-        });
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    tokenService.createRefreshToken(null);
+                });
     }
 
     @Test
@@ -330,8 +340,10 @@ class TokenServiceImplTest {
         userTokenDTO.setRemember(true);
 
         // When & Then
-        assertThrows(NullPointerException.class, () -> {
-            tokenService.createRefreshToken(userTokenDTO);
-        });
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    tokenService.createRefreshToken(userTokenDTO);
+                });
     }
 }

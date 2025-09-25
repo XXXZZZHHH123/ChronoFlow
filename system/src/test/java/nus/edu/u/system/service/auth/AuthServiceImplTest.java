@@ -5,7 +5,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import cn.dev33.satoken.stp.StpUtil;
-
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.RoleDTO;
@@ -22,21 +24,14 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
 
-    @Mock
-    private UserService userService;
+    @Mock private UserService userService;
 
-    @Mock
-    private TokenService tokenService;
+    @Mock private TokenService tokenService;
 
-    @InjectMocks
-    private AuthServiceImpl authService;
+    @InjectMocks private AuthServiceImpl authService;
 
     private UserDO testUser;
     private LoginReqVO loginReqVO;
@@ -92,9 +87,11 @@ class AuthServiceImplTest {
         when(userService.getUserByUsername("nonexistent")).thenReturn(null);
 
         // When & Then
-        assertThrows(RuntimeException.class, () -> {
-            authService.authenticate("nonexistent", "password123");
-        });
+        assertThrows(
+                RuntimeException.class,
+                () -> {
+                    authService.authenticate("nonexistent", "password123");
+                });
         verify(userService).getUserByUsername("nonexistent");
         verify(userService, never()).isPasswordMatch(anyString(), anyString());
     }
@@ -106,9 +103,11 @@ class AuthServiceImplTest {
         when(userService.isPasswordMatch("wrongpassword", "hashedPassword")).thenReturn(false);
 
         // When & Then
-        assertThrows(RuntimeException.class, () -> {
-            authService.authenticate("testuser", "wrongpassword");
-        });
+        assertThrows(
+                RuntimeException.class,
+                () -> {
+                    authService.authenticate("testuser", "wrongpassword");
+                });
         verify(userService).getUserByUsername("testuser");
         verify(userService).isPasswordMatch("wrongpassword", "hashedPassword");
     }
@@ -121,9 +120,11 @@ class AuthServiceImplTest {
         when(userService.isPasswordMatch("password123", "hashedPassword")).thenReturn(true);
 
         // When & Then
-        assertThrows(RuntimeException.class, () -> {
-            authService.authenticate("testuser", "password123");
-        });
+        assertThrows(
+                RuntimeException.class,
+                () -> {
+                    authService.authenticate("testuser", "password123");
+                });
         verify(userService).getUserByUsername("testuser");
         verify(userService).isPasswordMatch("password123", "hashedPassword");
     }
@@ -133,12 +134,15 @@ class AuthServiceImplTest {
         // Given
         when(userService.getUserByUsername("testuser")).thenReturn(testUser);
         when(userService.isPasswordMatch("password123", "hashedPassword")).thenReturn(true);
-        when(tokenService.createRefreshToken(any(UserTokenDTO.class))).thenReturn("refresh_token_123");
+        when(tokenService.createRefreshToken(any(UserTokenDTO.class)))
+                .thenReturn("refresh_token_123");
         when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
 
         try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
             stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
-            stpUtilMock.when(StpUtil::getSession).thenReturn(mock(cn.dev33.satoken.session.SaSession.class));
+            stpUtilMock
+                    .when(StpUtil::getSession)
+                    .thenReturn(mock(cn.dev33.satoken.session.SaSession.class));
             stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
 
             // When
@@ -169,7 +173,9 @@ class AuthServiceImplTest {
 
         try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
             stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
-            stpUtilMock.when(StpUtil::getSession).thenReturn(mock(cn.dev33.satoken.session.SaSession.class));
+            stpUtilMock
+                    .when(StpUtil::getSession)
+                    .thenReturn(mock(cn.dev33.satoken.session.SaSession.class));
             stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
 
             // When
@@ -255,9 +261,11 @@ class AuthServiceImplTest {
             stpUtilMock.when(StpUtil::isLogin).thenReturn(false);
 
             // When & Then
-            assertThrows(RuntimeException.class, () -> {
-                authService.refresh(invalidRefreshToken);
-            });
+            assertThrows(
+                    RuntimeException.class,
+                    () -> {
+                        authService.refresh(invalidRefreshToken);
+                    });
             verify(tokenService).getUserIdFromRefreshToken(invalidRefreshToken);
         }
     }
@@ -272,9 +280,11 @@ class AuthServiceImplTest {
             stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
 
             // When & Then
-            assertThrows(RuntimeException.class, () -> {
-                authService.refresh(refreshToken);
-            });
+            assertThrows(
+                    RuntimeException.class,
+                    () -> {
+                        authService.refresh(refreshToken);
+                    });
             verify(userService).selectUserWithRole(1L);
         }
     }
