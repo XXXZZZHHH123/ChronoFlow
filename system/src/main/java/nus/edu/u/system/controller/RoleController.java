@@ -1,15 +1,15 @@
 package nus.edu.u.system.controller;
 
 import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
-import nus.edu.u.system.domain.vo.role.RoleListRespVO;
+import nus.edu.u.system.domain.vo.role.RoleReqVO;
+import nus.edu.u.system.domain.vo.role.RoleRespVO;
 import nus.edu.u.system.service.role.RoleService;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Role Controller
@@ -18,14 +18,38 @@ import org.springframework.web.bind.annotation.RestController;
  * @date 2025-09-13
  */
 @RestController
-@RequestMapping("/system/role")
+@RequestMapping("/system/roles")
 @Validated
 @Slf4j
 public class RoleController {
+
     @Resource private RoleService roleService;
 
-    @GetMapping("/list")
-    public CommonResult<List<RoleListRespVO>> listRoles() {
-        return CommonResult.success(roleService.listRolesExcludingAdmin());
+    @GetMapping
+    public CommonResult<List<RoleRespVO>> listRoles() {
+        return CommonResult.success(roleService.listRoles());
+    }
+
+    @PostMapping
+    public CommonResult<RoleRespVO> createRole(
+            @RequestBody @Valid RoleReqVO roleReqVO) {
+        return CommonResult.success(roleService.createRole(roleReqVO));
+    }
+
+    @GetMapping("/{roleId}")
+    public CommonResult<RoleRespVO> getRole(@PathVariable("roleId") Long roleId) {
+        return CommonResult.success(roleService.getRole(roleId));
+    }
+
+    @DeleteMapping("/{roleId}")
+    public CommonResult<Boolean> deleteRole(@PathVariable("roleId") Long roleId) {
+        roleService.deleteRole(roleId);
+        return CommonResult.success(true);
+    }
+
+    @PatchMapping("/{roleId}")
+    public CommonResult<RoleRespVO> updateRole(@PathVariable("roleId") Long roleId,
+                                               @RequestBody @Valid RoleReqVO roleReqVO) {
+        return CommonResult.success(roleService.updateRole(roleId, roleReqVO));
     }
 }

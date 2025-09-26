@@ -87,4 +87,9 @@ public interface ErrorCodeConstants {
     ErrorCode TASK_NOT_FOUND = new ErrorCode(13_02_005, "Task does not exist");
     ErrorCode TASK_TIME_OUTSIDE_EVENT =
             new ErrorCode(13_02_006, "The task timeframe must fall within the event timeframe");
+
+    // ========= RolePermission module 14-01-000 ============
+    ErrorCode CREATE_ROLE_FAILED = new ErrorCode(14_01_001, "Create role failed");
+    ErrorCode CANNOT_FIND_ROLE = new ErrorCode(14_01_002, "Role not found");
+    ErrorCode UPDATE_ROLE_FAILED = new ErrorCode(14_01_003, "Update role failed");
 }

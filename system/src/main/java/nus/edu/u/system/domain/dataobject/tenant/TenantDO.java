@@ -2,6 +2,8 @@ package nus.edu.u.system.domain.dataobject.tenant;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.io.Serial;
 import java.io.Serializable;
 import lombok.*;
 import nus.edu.u.common.core.domain.base.BaseDO;
@@ -23,6 +25,7 @@ import nus.edu.u.system.domain.dataobject.user.UserDO;
 @NoArgsConstructor
 public class TenantDO extends BaseDO implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @TableId private Long id;

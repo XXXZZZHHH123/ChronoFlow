@@ -1,6 +1,8 @@
 package nus.edu.u.system.domain.dataobject.user;
 
 import com.baomidou.mybatisplus.annotation.*;
+
+import java.io.Serial;
 import java.io.Serializable;
 import lombok.*;
 import nus.edu.u.common.core.domain.base.TenantBaseDO;
@@ -18,6 +20,7 @@ import nus.edu.u.system.domain.dataobject.role.RoleDO;
 @NoArgsConstructor
 public class UserRoleDO extends TenantBaseDO implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @TableId private Long id;
