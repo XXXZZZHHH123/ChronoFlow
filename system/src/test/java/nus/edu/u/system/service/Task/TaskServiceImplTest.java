@@ -62,11 +62,12 @@ class TaskServiceImplTest {
         DeptDO dept = dept(55L, tenantId, "Tech");
         when(deptMapper.selectById(55L)).thenReturn(dept);
 
-        doAnswer(invocation -> {
-                    TaskDO task = invocation.getArgument(0);
-                    task.setId(99L);
-                    return 1;
-                })
+        doAnswer(
+                        invocation -> {
+                            TaskDO task = invocation.getArgument(0);
+                            task.setId(99L);
+                            return 1;
+                        })
                 .when(taskMapper)
                 .insert(any(TaskDO.class));
 
@@ -86,10 +87,11 @@ class TaskServiceImplTest {
         assertThat(resp.getAssignedUser().getName()).isEqualTo("Alice");
         assertThat(resp.getAssignedUser().getGroups())
                 .singleElement()
-                .satisfies(group -> {
-                    assertThat(group.getId()).isEqualTo(55L);
-                    assertThat(group.getName()).isEqualTo("Tech");
-                });
+                .satisfies(
+                        group -> {
+                            assertThat(group.getId()).isEqualTo(55L);
+                            assertThat(group.getName()).isEqualTo("Tech");
+                        });
     }
 
     @Test
@@ -165,13 +167,14 @@ class TaskServiceImplTest {
         event.setEndTime(LocalDateTime.of(2025, 6, 1, 12, 0));
         when(eventMapper.selectById(eventId)).thenReturn(event);
 
-        TaskDO task = TaskDO.builder()
-                .id(taskId)
-                .eventId(eventId)
-                .status(TaskStatusEnum.WAITING.getStatus())
-                .startTime(LocalDateTime.of(2025, 6, 1, 8, 0))
-                .endTime(LocalDateTime.of(2025, 6, 1, 10, 0))
-                .build();
+        TaskDO task =
+                TaskDO.builder()
+                        .id(taskId)
+                        .eventId(eventId)
+                        .status(TaskStatusEnum.WAITING.getStatus())
+                        .startTime(LocalDateTime.of(2025, 6, 1, 8, 0))
+                        .endTime(LocalDateTime.of(2025, 6, 1, 10, 0))
+                        .build();
         task.setTenantId(44L);
         task.setUserId(90L);
         when(taskMapper.selectById(taskId)).thenReturn(task);
@@ -210,7 +213,8 @@ class TaskServiceImplTest {
         when(eventMapper.selectById(eventId)).thenReturn(event(eventId, 1L));
         when(taskMapper.selectById(2L)).thenReturn(null);
 
-        assertThrowsCode(() -> service.updateTask(eventId, 2L, new TaskUpdateReqVO()), TASK_NOT_FOUND);
+        assertThrowsCode(
+                () -> service.updateTask(eventId, 2L, new TaskUpdateReqVO()), TASK_NOT_FOUND);
     }
 
     @Test
@@ -221,7 +225,8 @@ class TaskServiceImplTest {
         foreignTask.setTenantId(1L);
         when(taskMapper.selectById(3L)).thenReturn(foreignTask);
 
-        assertThrowsCode(() -> service.updateTask(eventId, 3L, new TaskUpdateReqVO()), TASK_NOT_FOUND);
+        assertThrowsCode(
+                () -> service.updateTask(eventId, 3L, new TaskUpdateReqVO()), TASK_NOT_FOUND);
     }
 
     @Test
@@ -256,7 +261,8 @@ class TaskServiceImplTest {
 
         when(userMapper.selectById(90L)).thenReturn(user(90L, 999L, 1L));
 
-        assertThrowsCode(() -> service.updateTask(eventId, taskId, req), TASK_ASSIGNEE_TENANT_MISMATCH);
+        assertThrowsCode(
+                () -> service.updateTask(eventId, taskId, req), TASK_ASSIGNEE_TENANT_MISMATCH);
     }
 
     @Test
@@ -265,7 +271,12 @@ class TaskServiceImplTest {
         long taskId = 2L;
         EventDO event = event(eventId, 5L);
         when(eventMapper.selectById(eventId)).thenReturn(event);
-        TaskDO task = TaskDO.builder().id(taskId).eventId(eventId).status(TaskStatusEnum.WAITING.getStatus()).build();
+        TaskDO task =
+                TaskDO.builder()
+                        .id(taskId)
+                        .eventId(eventId)
+                        .status(TaskStatusEnum.WAITING.getStatus())
+                        .build();
         task.setTenantId(5L);
         when(taskMapper.selectById(taskId)).thenReturn(task);
 
@@ -283,16 +294,17 @@ class TaskServiceImplTest {
         EventDO event = event(eventId, tenantId);
         when(eventMapper.selectById(eventId)).thenReturn(event);
 
-        TaskDO existing = TaskDO.builder()
-                .id(taskId)
-                .eventId(eventId)
-                .userId(11L)
-                .name("Old")
-                .description("Old Desc")
-                .status(TaskStatusEnum.WAITING.getStatus())
-                .startTime(LocalDateTime.of(2025, 1, 1, 9, 0))
-                .endTime(LocalDateTime.of(2025, 1, 1, 10, 0))
-                .build();
+        TaskDO existing =
+                TaskDO.builder()
+                        .id(taskId)
+                        .eventId(eventId)
+                        .userId(11L)
+                        .name("Old")
+                        .description("Old Desc")
+                        .status(TaskStatusEnum.WAITING.getStatus())
+                        .startTime(LocalDateTime.of(2025, 1, 1, 9, 0))
+                        .endTime(LocalDateTime.of(2025, 1, 1, 10, 0))
+                        .build();
         existing.setTenantId(tenantId);
         when(taskMapper.selectById(taskId)).thenReturn(existing);
 
@@ -380,15 +392,16 @@ class TaskServiceImplTest {
         EventDO event = event(eventId, tenantId);
         when(eventMapper.selectById(eventId)).thenReturn(event);
 
-        TaskDO task = TaskDO.builder()
-                .id(taskId)
-                .eventId(eventId)
-                .userId(50L)
-                .name("Demo")
-                .status(TaskStatusEnum.DOING.getStatus())
-                .startTime(LocalDateTime.of(2025, 3, 1, 9, 0))
-                .endTime(LocalDateTime.of(2025, 3, 1, 11, 0))
-                .build();
+        TaskDO task =
+                TaskDO.builder()
+                        .id(taskId)
+                        .eventId(eventId)
+                        .userId(50L)
+                        .name("Demo")
+                        .status(TaskStatusEnum.DOING.getStatus())
+                        .startTime(LocalDateTime.of(2025, 3, 1, 9, 0))
+                        .endTime(LocalDateTime.of(2025, 3, 1, 11, 0))
+                        .build();
         task.setTenantId(tenantId);
         when(taskMapper.selectById(taskId)).thenReturn(task);
 
@@ -428,36 +441,39 @@ class TaskServiceImplTest {
         long eventId = 3L;
         when(eventMapper.selectById(eventId)).thenReturn(event(eventId, 4L));
 
-        TaskDO task1 = TaskDO.builder()
-                .id(101L)
-                .eventId(eventId)
-                .userId(11L)
-                .name("Task A")
-                .description("Desc A")
-                .status(TaskStatusEnum.DOING.getStatus())
-                .startTime(LocalDateTime.of(2025, 4, 1, 9, 0))
-                .endTime(LocalDateTime.of(2025, 4, 1, 10, 0))
-                .build();
-        TaskDO task2 = TaskDO.builder()
-                .id(102L)
-                .eventId(eventId)
-                .userId(22L)
-                .name("Task B")
-                .description("Desc B")
-                .status(TaskStatusEnum.WAITING.getStatus())
-                .startTime(LocalDateTime.of(2025, 4, 1, 11, 0))
-                .endTime(LocalDateTime.of(2025, 4, 1, 12, 0))
-                .build();
-        TaskDO task3 = TaskDO.builder()
-                .id(103L)
-                .eventId(eventId)
-                .userId(null)
-                .name("Task C")
-                .description("Desc C")
-                .status(TaskStatusEnum.DONE.getStatus())
-                .startTime(LocalDateTime.of(2025, 4, 1, 13, 0))
-                .endTime(LocalDateTime.of(2025, 4, 1, 14, 0))
-                .build();
+        TaskDO task1 =
+                TaskDO.builder()
+                        .id(101L)
+                        .eventId(eventId)
+                        .userId(11L)
+                        .name("Task A")
+                        .description("Desc A")
+                        .status(TaskStatusEnum.DOING.getStatus())
+                        .startTime(LocalDateTime.of(2025, 4, 1, 9, 0))
+                        .endTime(LocalDateTime.of(2025, 4, 1, 10, 0))
+                        .build();
+        TaskDO task2 =
+                TaskDO.builder()
+                        .id(102L)
+                        .eventId(eventId)
+                        .userId(22L)
+                        .name("Task B")
+                        .description("Desc B")
+                        .status(TaskStatusEnum.WAITING.getStatus())
+                        .startTime(LocalDateTime.of(2025, 4, 1, 11, 0))
+                        .endTime(LocalDateTime.of(2025, 4, 1, 12, 0))
+                        .build();
+        TaskDO task3 =
+                TaskDO.builder()
+                        .id(103L)
+                        .eventId(eventId)
+                        .userId(null)
+                        .name("Task C")
+                        .description("Desc C")
+                        .status(TaskStatusEnum.DONE.getStatus())
+                        .startTime(LocalDateTime.of(2025, 4, 1, 13, 0))
+                        .endTime(LocalDateTime.of(2025, 4, 1, 14, 0))
+                        .build();
         when(taskMapper.selectList(any())).thenReturn(List.of(task1, task2, task3));
 
         UserDO user1 = user(11L, 4L, 501L);
@@ -510,13 +526,14 @@ class TaskServiceImplTest {
         long eventId = 4L;
         when(eventMapper.selectById(eventId)).thenReturn(event(eventId, 5L));
 
-        TaskDO task = TaskDO.builder()
-                .id(201L)
-                .eventId(eventId)
-                .userId(77L)
-                .name("Task No Dept")
-                .status(TaskStatusEnum.WAITING.getStatus())
-                .build();
+        TaskDO task =
+                TaskDO.builder()
+                        .id(201L)
+                        .eventId(eventId)
+                        .userId(77L)
+                        .name("Task No Dept")
+                        .status(TaskStatusEnum.WAITING.getStatus())
+                        .build();
         when(taskMapper.selectList(any())).thenReturn(List.of(task));
 
         UserDO user = user(77L, 5L, null);
@@ -525,9 +542,12 @@ class TaskServiceImplTest {
 
         List<TaskRespVO> resp = service.listTasksByEvent(eventId);
 
-        assertThat(resp).singleElement().satisfies(vo -> {
-            assertThat(vo.getAssignedUser().getGroups()).isEmpty();
-        });
+        assertThat(resp)
+                .singleElement()
+                .satisfies(
+                        vo -> {
+                            assertThat(vo.getAssignedUser().getGroups()).isEmpty();
+                        });
 
         verify(deptMapper, never()).selectBatchIds(anyList());
     }
@@ -543,16 +563,17 @@ class TaskServiceImplTest {
     }
 
     private EventDO event(Long id, Long tenantId) {
-        EventDO event = EventDO.builder()
-                .id(id)
-                .name("Event")
-                .description("Desc")
-                .location("LT1")
-                .startTime(LocalDateTime.of(2025, 1, 1, 9, 0))
-                .endTime(LocalDateTime.of(2025, 1, 1, 17, 0))
-                .status(1)
-                .remark("remark")
-                .build();
+        EventDO event =
+                EventDO.builder()
+                        .id(id)
+                        .name("Event")
+                        .description("Desc")
+                        .location("LT1")
+                        .startTime(LocalDateTime.of(2025, 1, 1, 9, 0))
+                        .endTime(LocalDateTime.of(2025, 1, 1, 17, 0))
+                        .status(1)
+                        .remark("remark")
+                        .build();
         event.setTenantId(tenantId);
         return event;
     }
@@ -572,10 +593,11 @@ class TaskServiceImplTest {
     private void assertThrowsCode(ThrowableAssert.ThrowingCallable call, ErrorCode code) {
         assertThatThrownBy(call)
                 .isInstanceOf(ServiceException.class)
-                .satisfies(ex -> {
-                    ServiceException se = (ServiceException) ex;
-                    assertThat(se.getCode()).isEqualTo(code.getCode());
-                    assertThat(se.getMessage()).contains(code.getMsg());
-                });
+                .satisfies(
+                        ex -> {
+                            ServiceException se = (ServiceException) ex;
+                            assertThat(se.getCode()).isEqualTo(code.getCode());
+                            assertThat(se.getMessage()).contains(code.getMsg());
+                        });
     }
 }
