@@ -12,7 +12,7 @@ import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.permission.PermissionDO;
 import nus.edu.u.system.domain.dataobject.role.RoleDO;
 import nus.edu.u.system.domain.dataobject.role.RolePermissionDO;
-import nus.edu.u.system.domain.vo.permission.PermissionVO;
+import nus.edu.u.system.domain.vo.permission.PermissionRespVO;
 import nus.edu.u.system.domain.vo.role.RoleReqVO;
 import nus.edu.u.system.domain.vo.role.RoleRespVO;
 import nus.edu.u.system.mapper.permission.PermissionMapper;
@@ -102,6 +102,11 @@ public class RoleServiceImpl implements RoleService {
         if (ObjUtil.isNull(roleId)) {
             throw exception(BAD_REQUEST);
         }
+        List<RolePermissionDO> rolePermissionList = rolePermissionMapper.selectList(
+                new LambdaQueryWrapper<RolePermissionDO>().eq(RolePermissionDO::getRoleId, roleId));
+        if (CollectionUtil.isNotEmpty(rolePermissionList)) {
+            throw exception(CANNOT_DELETE_ROLE);
+        }
         roleMapper.deleteById(roleId);
         rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermissionDO>()
                 .eq(RolePermissionDO::getRoleId, roleId));
@@ -165,15 +170,16 @@ public class RoleServiceImpl implements RoleService {
             return roleRespVO;
         }
         List<PermissionDO> permissions = permissionMapper.selectBatchIds(role.getPermissionList());
-        List<PermissionVO> permissionVOList = permissions.stream()
-                .map(permission -> PermissionVO.builder()
+        List<PermissionRespVO> permissionRespVOList = permissions.stream()
+                .map(permission -> PermissionRespVO.builder()
                         .id(permission.getId())
                         .name(permission.getName())
                         .key(permission.getPermissionKey())
+                        .description(permission.getDescription())
                         .build()
                 )
                 .toList();
-        roleRespVO.setPermissions(permissionVOList);
+        roleRespVO.setPermissions(permissionRespVOList);
         return roleRespVO;
     }
 }

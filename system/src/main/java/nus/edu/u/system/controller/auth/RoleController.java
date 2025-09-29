@@ -1,4 +1,4 @@
-package nus.edu.u.system.controller;
+package nus.edu.u.system.controller.auth;
 
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;

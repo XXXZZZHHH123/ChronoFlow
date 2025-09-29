@@ -32,6 +32,8 @@ public class PermissionDO extends TenantBaseDO implements Serializable {
     /** Key to judge the permission */
     private String permissionKey;
 
+    private String description;
+
     /**
      * 1-menu 2-button 3-API
      *

@@ -13,11 +13,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PermissionVO {
+public class PermissionRespVO {
 
     private Long id;
 
     private String name;
 
     private String key;
+
+    private String description;
 }
