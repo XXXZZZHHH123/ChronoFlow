@@ -2,6 +2,7 @@ package nus.edu.u.system.controller.auth;
 
 import static nus.edu.u.common.core.domain.CommonResult.success;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/system/permissions")
 @Validated
 @Slf4j
+@SaCheckRole("ADMIN")
 public class PermissionController {
 
     @Resource private PermissionService permissionService;

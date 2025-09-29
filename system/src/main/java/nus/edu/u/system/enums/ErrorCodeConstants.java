@@ -103,4 +103,5 @@ public interface ErrorCodeConstants {
             new ErrorCode(
                     14_02_003,
                     "Permission cannot be deleted because it has been assigned to role(s)");
+    ErrorCode CREATE_PERMISSION_FAILED = new ErrorCode(14_02_004, "Create permission failed");
 }

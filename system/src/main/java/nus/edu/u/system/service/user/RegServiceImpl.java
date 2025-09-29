@@ -162,7 +162,7 @@ public class RegServiceImpl implements RegService {
                         new LambdaQueryWrapper<PermissionDO>()
                                 .eq(
                                         PermissionDO::getPermissionKey,
-                                        PermissionConstants.ALL_ORGANIZER_PERMISSION));
+                                        PermissionConstants.ALL_SYSTEM_PERMISSION));
         if (ObjUtil.isEmpty(permissionDO)) {
             throw exception(REG_FAIL);
         }

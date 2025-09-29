@@ -55,6 +55,10 @@ public class PermissionServiceImpl implements PermissionService {
                         .description(permissionReqVO.getDescription())
                         .type(PermissionTypeEnum.API.getType())
                         .build();
+        boolean isSuccess = permissionMapper.insert(permission) > 0;
+        if (!isSuccess) {
+            throw exception(CREATE_PERMISSION_FAILED);
+        }
         return permission.getId();
     }
 
