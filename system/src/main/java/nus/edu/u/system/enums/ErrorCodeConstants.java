@@ -95,6 +95,7 @@ public interface ErrorCodeConstants {
     ErrorCode CANNOT_DELETE_ROLE =
             new ErrorCode(
                     14_01_004, "Role cannot be deleted because it has been assigned to user(s)");
+    ErrorCode ASSIGN_ROLE_FAILED = new ErrorCode(14_01_004, "Assign role failed");
 
     ErrorCode CANNOT_FIND_PERMISSION = new ErrorCode(14_02_001, "Permission not fount");
     ErrorCode UPDATE_PERMISSION_FAILED = new ErrorCode(14_02_002, "Update permission failed");

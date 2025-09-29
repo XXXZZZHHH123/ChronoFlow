@@ -9,17 +9,25 @@ import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.permission.PermissionDO;
 import nus.edu.u.system.domain.dataobject.role.RoleDO;
 import nus.edu.u.system.domain.dataobject.role.RolePermissionDO;
+import nus.edu.u.system.domain.dataobject.user.UserRoleDO;
+import nus.edu.u.system.domain.dto.RoleDTO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.vo.permission.PermissionRespVO;
+import nus.edu.u.system.domain.vo.role.RoleAssignReqVO;
 import nus.edu.u.system.domain.vo.role.RoleReqVO;
 import nus.edu.u.system.domain.vo.role.RoleRespVO;
 import nus.edu.u.system.mapper.permission.PermissionMapper;
 import nus.edu.u.system.mapper.role.RoleMapper;
 import nus.edu.u.system.mapper.role.RolePermissionMapper;
+import nus.edu.u.system.mapper.user.UserRoleMapper;
+import nus.edu.u.system.service.auth.AuthService;
+import nus.edu.u.system.service.user.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +40,12 @@ public class RoleServiceImpl implements RoleService {
     @Resource private PermissionMapper permissionMapper;
 
     @Resource private RolePermissionMapper rolePermissionMapper;
+
+    @Resource private UserRoleMapper userRoleMapper;
+
+    @Resource private UserService userService;
+
+    @Resource private AuthService authService;
 
     public static final String ORGANIZER_ROLE_KEY = "ORGANIZER";
 
@@ -167,6 +181,52 @@ public class RoleServiceImpl implements RoleService {
         }
 
         return convert(role);
+    }
+
+    @Override
+    @Transactional
+    public void assignRoles(RoleAssignReqVO reqVO) {
+        if (Objects.isNull(reqVO)) {
+            throw exception(BAD_REQUEST);
+        }
+        UserRoleDTO userRole = userService.selectUserWithRole(reqVO.getUserId());
+        if (ObjUtil.isNull(userRole)) {
+            throw exception(USER_NOTFOUND);
+        }
+        Set<Long> existRoleIds =
+                userRole.getRoles().stream().map(RoleDTO::getId).collect(Collectors.toSet());
+        Set<Long> currentRoleIds = CollectionUtil.newHashSet(reqVO.getRoles());
+
+        Set<Long> toDelete = new HashSet<>(existRoleIds);
+        toDelete.removeAll(currentRoleIds);
+        if (CollectionUtil.isNotEmpty(toDelete)) {
+            boolean isSuccess =
+                    userRoleMapper.delete(
+                                    new LambdaQueryWrapper<UserRoleDO>()
+                                            .in(UserRoleDO::getRoleId, toDelete))
+                            > 0;
+            if (!isSuccess) {
+                throw exception(ASSIGN_ROLE_FAILED);
+            }
+        }
+
+        Set<Long> toInsert = new HashSet<>(currentRoleIds);
+        toInsert.removeAll(existRoleIds);
+        if (CollectionUtil.isNotEmpty(toInsert)) {
+            toInsert.forEach(
+                    roleId -> {
+                        boolean isSuccess =
+                                userRoleMapper.insert(
+                                                UserRoleDO.builder()
+                                                        .roleId(roleId)
+                                                        .userId(reqVO.getUserId())
+                                                        .build())
+                                        > 0;
+                        if (!isSuccess) {
+                            throw exception(ASSIGN_ROLE_FAILED);
+                        }
+                    });
+        }
     }
 
     private RoleRespVO convert(RoleDO role) {

@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
+import nus.edu.u.system.domain.vo.role.RoleAssignReqVO;
 import nus.edu.u.system.domain.vo.role.RoleReqVO;
 import nus.edu.u.system.domain.vo.role.RoleRespVO;
 import nus.edu.u.system.service.role.RoleService;
@@ -50,5 +51,11 @@ public class RoleController {
     public CommonResult<RoleRespVO> updateRole(
             @PathVariable("roleId") Long roleId, @RequestBody @Valid RoleReqVO roleReqVO) {
         return CommonResult.success(roleService.updateRole(roleId, roleReqVO));
+    }
+
+    @PostMapping("assign")
+    public CommonResult<Boolean> assignRole(@RequestBody RoleAssignReqVO reqVO) {
+        roleService.assignRoles(reqVO);
+        return CommonResult.success(true);
     }
 }
