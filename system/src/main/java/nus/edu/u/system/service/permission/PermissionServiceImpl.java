@@ -1,9 +1,15 @@
 package nus.edu.u.system.service.permission;
 
+import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.BAD_REQUEST;
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.*;
+
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
+import java.util.List;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.system.domain.dataobject.permission.PermissionDO;
 import nus.edu.u.system.domain.dataobject.role.RolePermissionDO;
@@ -13,13 +19,6 @@ import nus.edu.u.system.enums.permission.PermissionTypeEnum;
 import nus.edu.u.system.mapper.permission.PermissionMapper;
 import nus.edu.u.system.mapper.role.RolePermissionMapper;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Objects;
-
-import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.BAD_REQUEST;
-import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
 /**
  * @author Lu Shuwen
@@ -37,10 +36,10 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public List<PermissionRespVO> listPermissions() {
-        List<PermissionDO> permissionList = permissionMapper.selectList(
-                new LambdaQueryWrapper<PermissionDO>()
-                        .likeRight(PermissionDO::getPermissionKey, USER_PERMISSION_PREFIX)
-        );
+        List<PermissionDO> permissionList =
+                permissionMapper.selectList(
+                        new LambdaQueryWrapper<PermissionDO>()
+                                .likeRight(PermissionDO::getPermissionKey, USER_PERMISSION_PREFIX));
         return permissionList.stream().map(this::convert).toList();
     }
 
@@ -49,12 +48,13 @@ public class PermissionServiceImpl implements PermissionService {
         if (Objects.isNull(permissionReqVO)) {
             throw exception(BAD_REQUEST);
         }
-        PermissionDO permission = PermissionDO.builder()
-                .name(permissionReqVO.getName())
-                .permissionKey(permissionReqVO.getKey())
-                .description(permissionReqVO.getDescription())
-                .type(PermissionTypeEnum.API.getType())
-                .build();
+        PermissionDO permission =
+                PermissionDO.builder()
+                        .name(permissionReqVO.getName())
+                        .permissionKey(permissionReqVO.getKey())
+                        .description(permissionReqVO.getDescription())
+                        .type(PermissionTypeEnum.API.getType())
+                        .build();
         return permission.getId();
     }
 
@@ -75,12 +75,13 @@ public class PermissionServiceImpl implements PermissionService {
         if (ObjUtil.isNull(currentPermission)) {
             throw exception(CANNOT_FIND_PERMISSION);
         }
-        PermissionDO permission = PermissionDO.builder()
-                .id(id)
-                .name(reqVO.getName())
-                .permissionKey(reqVO.getKey())
-                .description(reqVO.getDescription())
-                .build();
+        PermissionDO permission =
+                PermissionDO.builder()
+                        .id(id)
+                        .name(reqVO.getName())
+                        .permissionKey(reqVO.getKey())
+                        .description(reqVO.getDescription())
+                        .build();
         boolean isSuccess = permissionMapper.updateById(permission) > 0;
         if (!isSuccess) {
             throw exception(UPDATE_PERMISSION_FAILED);
@@ -93,9 +94,10 @@ public class PermissionServiceImpl implements PermissionService {
         if (ObjUtil.isNull(id)) {
             throw exception(BAD_REQUEST);
         }
-        List<RolePermissionDO> rolePermissionList = rolePermissionMapper.selectList(
-                new LambdaQueryWrapper<RolePermissionDO>().eq(RolePermissionDO::getPermissionId, id)
-        );
+        List<RolePermissionDO> rolePermissionList =
+                rolePermissionMapper.selectList(
+                        new LambdaQueryWrapper<RolePermissionDO>()
+                                .eq(RolePermissionDO::getPermissionId, id));
         if (CollectionUtil.isNotEmpty(rolePermissionList)) {
             throw exception(CANNOT_DELETE_PERMISSION);
         }

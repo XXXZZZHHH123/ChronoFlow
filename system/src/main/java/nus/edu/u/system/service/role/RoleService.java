@@ -15,6 +15,7 @@ public interface RoleService {
 
     /**
      * Create a role with permissions
+     *
      * @param roleReqVO
      * @return
      */
@@ -22,6 +23,7 @@ public interface RoleService {
 
     /**
      * Get role by id
+     *
      * @param roleId
      * @return
      */
@@ -29,12 +31,14 @@ public interface RoleService {
 
     /**
      * Delete a role by id
+     *
      * @param roleId
      */
     void deleteRole(Long roleId);
 
     /**
      * Update a role by id
+     *
      * @param roleId
      * @param roleReqVO
      * @return

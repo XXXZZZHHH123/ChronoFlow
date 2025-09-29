@@ -1,7 +1,10 @@
 package nus.edu.u.system.controller.auth;
 
+import static nus.edu.u.common.core.domain.CommonResult.success;
+
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.system.domain.vo.permission.PermissionReqVO;
@@ -9,10 +12,6 @@ import nus.edu.u.system.domain.vo.permission.PermissionRespVO;
 import nus.edu.u.system.service.permission.PermissionService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-import static nus.edu.u.common.core.domain.CommonResult.success;
 
 /**
  * @author Lu Shuwen
@@ -42,7 +41,8 @@ public class PermissionController {
     }
 
     @PatchMapping("/{id}")
-    public CommonResult<PermissionRespVO> update(@PathVariable("id") Long id, @RequestBody @Valid PermissionReqVO reqVO) {
+    public CommonResult<PermissionRespVO> update(
+            @PathVariable("id") Long id, @RequestBody @Valid PermissionReqVO reqVO) {
         return success(permissionService.updatePermission(id, reqVO));
     }
 
@@ -50,5 +50,4 @@ public class PermissionController {
     public CommonResult<Boolean> delete(@PathVariable("id") Long id) {
         return success(permissionService.deletePermission(id));
     }
-
 }

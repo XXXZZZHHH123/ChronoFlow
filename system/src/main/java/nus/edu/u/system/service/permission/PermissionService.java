@@ -1,9 +1,8 @@
 package nus.edu.u.system.service.permission;
 
+import java.util.List;
 import nus.edu.u.system.domain.vo.permission.PermissionReqVO;
 import nus.edu.u.system.domain.vo.permission.PermissionRespVO;
-
-import java.util.List;
 
 /**
  * @author Lu Shuwen
@@ -13,6 +12,7 @@ public interface PermissionService {
 
     /**
      * Get All user permissions
+     *
      * @return
      */
     List<PermissionRespVO> listPermissions();

@@ -92,9 +92,14 @@ public interface ErrorCodeConstants {
     ErrorCode CREATE_ROLE_FAILED = new ErrorCode(14_01_001, "Create role failed");
     ErrorCode CANNOT_FIND_ROLE = new ErrorCode(14_01_002, "Role not found");
     ErrorCode UPDATE_ROLE_FAILED = new ErrorCode(14_01_003, "Update role failed");
-    ErrorCode CANNOT_DELETE_ROLE = new ErrorCode(14_01_004, "Role cannot be deleted because it has been assigned to user(s)");
+    ErrorCode CANNOT_DELETE_ROLE =
+            new ErrorCode(
+                    14_01_004, "Role cannot be deleted because it has been assigned to user(s)");
 
     ErrorCode CANNOT_FIND_PERMISSION = new ErrorCode(14_02_001, "Permission not fount");
     ErrorCode UPDATE_PERMISSION_FAILED = new ErrorCode(14_02_002, "Update permission failed");
-    ErrorCode CANNOT_DELETE_PERMISSION = new ErrorCode(14_02_003, "Permission cannot be deleted because it has been assigned to role(s)");
+    ErrorCode CANNOT_DELETE_PERMISSION =
+            new ErrorCode(
+                    14_02_003,
+                    "Permission cannot be deleted because it has been assigned to role(s)");
 }

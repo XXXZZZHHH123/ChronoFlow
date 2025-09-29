@@ -127,10 +127,11 @@ public class AuthServiceImpl implements AuthService {
                                         .map(RoleDTO::getRoleKey)
                                         .collect(Collectors.joining(DEFAULT_DELIMITER)))
                         .build();
-        List<RoleRespVO> roleRespVOList = userRoleDTO.getRoles().stream()
-                .map(role -> roleService.getRole(role.getId()))
-                .filter(ObjUtil::isNotNull)
-                .toList();
+        List<RoleRespVO> roleRespVOList =
+                userRoleDTO.getRoles().stream()
+                        .map(role -> roleService.getRole(role.getId()))
+                        .filter(ObjUtil::isNotNull)
+                        .toList();
         return LoginRespVO.builder()
                 .refreshToken(refreshToken)
                 .user(userVO)

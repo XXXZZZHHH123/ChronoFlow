@@ -1,13 +1,12 @@
 package nus.edu.u.system.domain.vo.auth;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nus.edu.u.system.domain.vo.role.RoleRespVO;
-
-import java.util.List;
 
 /** User login response VO */
 @Data

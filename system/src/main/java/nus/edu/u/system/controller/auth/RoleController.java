@@ -31,8 +31,7 @@ public class RoleController {
     }
 
     @PostMapping
-    public CommonResult<RoleRespVO> createRole(
-            @RequestBody @Valid RoleReqVO roleReqVO) {
+    public CommonResult<RoleRespVO> createRole(@RequestBody @Valid RoleReqVO roleReqVO) {
         return CommonResult.success(roleService.createRole(roleReqVO));
     }
 
@@ -48,8 +47,8 @@ public class RoleController {
     }
 
     @PatchMapping("/{roleId}")
-    public CommonResult<RoleRespVO> updateRole(@PathVariable("roleId") Long roleId,
-                                               @RequestBody @Valid RoleReqVO roleReqVO) {
+    public CommonResult<RoleRespVO> updateRole(
+            @PathVariable("roleId") Long roleId, @RequestBody @Valid RoleReqVO roleReqVO) {
         return CommonResult.success(roleService.updateRole(roleId, roleReqVO));
     }
 }
