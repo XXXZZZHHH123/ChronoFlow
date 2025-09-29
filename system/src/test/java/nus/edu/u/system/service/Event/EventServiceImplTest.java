@@ -1,4 +1,4 @@
-package Event;
+package nus.edu.u.system.service.Event;
 
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 import static org.assertj.core.api.Assertions.*;

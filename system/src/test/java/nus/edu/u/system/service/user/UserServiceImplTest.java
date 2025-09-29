@@ -1,3 +1,5 @@
+package nus.edu.u.system.service.user;
+
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,8 +29,6 @@ import nus.edu.u.system.enums.user.UserStatusEnum;
 import nus.edu.u.system.mapper.role.RoleMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.mapper.user.UserRoleMapper;
-import nus.edu.u.system.service.user.UserService;
-import nus.edu.u.system.service.user.UserServiceImpl;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

@@ -23,7 +23,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/system/event")
+@RequestMapping("/system/events")
 @Validated
 @Slf4j
 public class EventController {
