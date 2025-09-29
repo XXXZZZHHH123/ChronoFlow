@@ -332,38 +332,101 @@ class RoleServiceImplTest {
     void deleteRole_RoleIdNull_ThrowsException() {
         // When & Then
         assertThrows(ServiceException.class, () -> roleService.deleteRole(null));
+        verify(roleMapper, never()).selectById(any());
         verify(roleMapper, never()).deleteById(any());
     }
 
     @Test
-    void deleteRole_HasPermissions_ThrowsException() {
+    void deleteRole_RoleNotFound_ThrowsException() {
         // Given
-        List<RolePermissionDO> permissions =
-                Arrays.asList(RolePermissionDO.builder().roleId(1L).permissionId(1L).build());
-        when(rolePermissionMapper.selectList(any(LambdaQueryWrapper.class)))
-                .thenReturn(permissions);
+        when(roleMapper.selectById(1L)).thenReturn(null);
 
         // When & Then
         assertThrows(ServiceException.class, () -> roleService.deleteRole(1L));
-        verify(rolePermissionMapper).selectList(any(LambdaQueryWrapper.class));
+        verify(roleMapper).selectById(1L);
+        verify(roleMapper, never()).deleteById(any());
+    }
+
+    @Test
+    void deleteRole_OrganizerRole_ThrowsException() {
+        // Given
+        when(roleMapper.selectById(2L)).thenReturn(organizerRole);
+
+        // When & Then
+        assertThrows(ServiceException.class, () -> roleService.deleteRole(2L));
+        verify(roleMapper).selectById(2L);
+        verify(userRoleMapper, never()).selectList(any());
+        verify(roleMapper, never()).deleteById(any());
+    }
+
+    @Test
+    void deleteRole_MemberRole_ThrowsException() {
+        // Given
+        RoleDO memberRole =
+                RoleDO.builder()
+                        .id(3L)
+                        .name("Member")
+                        .roleKey("MEMBER")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
+        when(roleMapper.selectById(3L)).thenReturn(memberRole);
+
+        // When & Then
+        assertThrows(ServiceException.class, () -> roleService.deleteRole(3L));
+        verify(roleMapper).selectById(3L);
+        verify(userRoleMapper, never()).selectList(any());
+        verify(roleMapper, never()).deleteById(any());
+    }
+
+    @Test
+    void deleteRole_HasUserRoles_ThrowsException() {
+        // Given
+        List<UserRoleDO> userRoles =
+                Arrays.asList(UserRoleDO.builder().userId(1L).roleId(1L).build());
+        when(roleMapper.selectById(1L)).thenReturn(roleDO);
+        when(userRoleMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(userRoles);
+
+        // When & Then
+        assertThrows(ServiceException.class, () -> roleService.deleteRole(1L));
+        verify(roleMapper).selectById(1L);
+        verify(userRoleMapper).selectList(any(LambdaQueryWrapper.class));
         verify(roleMapper, never()).deleteById(any());
     }
 
     @Test
     void deleteRole_Success() {
         // Given
-        when(rolePermissionMapper.selectList(any(LambdaQueryWrapper.class)))
+        when(roleMapper.selectById(1L)).thenReturn(roleDO);
+        when(userRoleMapper.selectList(any(LambdaQueryWrapper.class)))
                 .thenReturn(Collections.emptyList());
         when(roleMapper.deleteById(1L)).thenReturn(1);
-        when(rolePermissionMapper.delete(any(LambdaQueryWrapper.class))).thenReturn(0);
+        when(rolePermissionMapper.delete(any(LambdaQueryWrapper.class))).thenReturn(1);
 
         // When
         roleService.deleteRole(1L);
 
         // Then
-        verify(rolePermissionMapper).selectList(any(LambdaQueryWrapper.class));
+        verify(roleMapper).selectById(1L);
+        verify(userRoleMapper).selectList(any(LambdaQueryWrapper.class));
         verify(roleMapper).deleteById(1L);
         verify(rolePermissionMapper).delete(any(LambdaQueryWrapper.class));
+    }
+
+    @Test
+    void deleteRole_MultipleUserRoles_ThrowsException() {
+        // Given - 角色被多个用户使用
+        List<UserRoleDO> userRoles =
+                Arrays.asList(
+                        UserRoleDO.builder().userId(1L).roleId(1L).build(),
+                        UserRoleDO.builder().userId(2L).roleId(1L).build());
+        when(roleMapper.selectById(1L)).thenReturn(roleDO);
+        when(userRoleMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(userRoles);
+
+        // When & Then
+        assertThrows(ServiceException.class, () -> roleService.deleteRole(1L));
+        verify(roleMapper).selectById(1L);
+        verify(userRoleMapper).selectList(any(LambdaQueryWrapper.class));
+        verify(roleMapper, never()).deleteById(any());
     }
 
     // ==================== updateRole 方法测试 ====================
@@ -575,6 +638,90 @@ class RoleServiceImplTest {
     }
 
     @Test
+    void assignRoles_Success_PreserveOrganizerRole() {
+        // Given - 用户有ORGANIZER角色，即使新角色列表中没有也应该保留
+        RoleDTO adminRole = RoleDTO.builder().id(1L).roleKey("ADMIN").build();
+        RoleDTO organizerRoleDTO = RoleDTO.builder().id(10L).roleKey("ORGANIZER").build();
+        userRoleDTO.setRoles(Arrays.asList(adminRole, organizerRoleDTO));
+
+        // 新角色列表只包含ADMIN，不包含ORGANIZER
+        roleAssignReqVO.setRoles(Collections.singletonList(1L));
+
+        when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+
+        // When
+        roleService.assignRoles(roleAssignReqVO);
+
+        // Then
+        // ORGANIZER角色被保护，不应该被删除
+        verify(userRoleMapper, never()).delete(any());
+        verify(userRoleMapper, never()).insert(any());
+    }
+
+    @Test
+    void assignRoles_Success_AddRolesWithOrganizerPreserved() {
+        // Given - 用户有ORGANIZER和ADMIN角色，要添加USER角色
+        RoleDTO adminRole = RoleDTO.builder().id(1L).roleKey("ADMIN").build();
+        RoleDTO organizerRoleDTO = RoleDTO.builder().id(10L).roleKey("ORGANIZER").build();
+        userRoleDTO.setRoles(Arrays.asList(adminRole, organizerRoleDTO));
+
+        // 新角色列表包含ADMIN和USER，不包含ORGANIZER（但应该被自动保留）
+        roleAssignReqVO.setRoles(Arrays.asList(1L, 2L));
+
+        when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(userRoleMapper.insert(any(UserRoleDO.class))).thenReturn(1);
+
+        // When
+        roleService.assignRoles(roleAssignReqVO);
+
+        // Then
+        // 应该只插入USER角色（ID=2），不删除ORGANIZER
+        verify(userRoleMapper).insert(argThat(ur -> ur.getRoleId().equals(2L)));
+        verify(userRoleMapper, never()).delete(any());
+    }
+
+    @Test
+    void assignRoles_Success_RemoveRolesButKeepOrganizer() {
+        // Given - 用户有ORGANIZER、ADMIN、USER三个角色，要删除ADMIN和USER
+        RoleDTO adminRole = RoleDTO.builder().id(1L).roleKey("ADMIN").build();
+        RoleDTO userRole = RoleDTO.builder().id(2L).roleKey("USER").build();
+        RoleDTO organizerRoleDTO = RoleDTO.builder().id(10L).roleKey("ORGANIZER").build();
+        userRoleDTO.setRoles(Arrays.asList(adminRole, userRole, organizerRoleDTO));
+
+        // 新角色列表为空（但ORGANIZER应该被保留）
+        roleAssignReqVO.setRoles(Collections.emptyList());
+
+        when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(userRoleMapper.delete(any(LambdaQueryWrapper.class))).thenReturn(1);
+
+        // When
+        roleService.assignRoles(roleAssignReqVO);
+
+        // Then
+        // 应该删除ADMIN和USER，但保留ORGANIZER
+        verify(userRoleMapper).delete(any(LambdaQueryWrapper.class));
+        verify(userRoleMapper, never()).insert(any());
+    }
+
+    @Test
+    void assignRoles_Success_NoOrganizerRole() {
+        // Given - 用户没有ORGANIZER角色，普通角色分配
+        RoleDTO adminRole = RoleDTO.builder().id(1L).roleKey("ADMIN").build();
+        userRoleDTO.setRoles(Collections.singletonList(adminRole));
+        roleAssignReqVO.setRoles(Arrays.asList(1L, 2L));
+
+        when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(userRoleMapper.insert(any(UserRoleDO.class))).thenReturn(1);
+
+        // When
+        roleService.assignRoles(roleAssignReqVO);
+
+        // Then
+        verify(userRoleMapper).insert(argThat(ur -> ur.getRoleId().equals(2L)));
+        verify(userRoleMapper, never()).delete(any());
+    }
+
+    @Test
     void assignRoles_ReqVONull_ThrowsException() {
         // When & Then
         assertThrows(ServiceException.class, () -> roleService.assignRoles(null));
@@ -595,8 +742,12 @@ class RoleServiceImplTest {
 
     @Test
     void assignRoles_DeleteFailed_ThrowsException() {
-        // Given
+        // Given - 用户没有ORGANIZER角色
+        RoleDTO adminRole = RoleDTO.builder().id(1L).roleKey("ADMIN").build();
+        RoleDTO userRole = RoleDTO.builder().id(2L).roleKey("USER").build();
+        userRoleDTO.setRoles(Arrays.asList(adminRole, userRole));
         roleAssignReqVO.setRoles(Collections.singletonList(1L));
+
         when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
         when(userRoleMapper.delete(any(LambdaQueryWrapper.class))).thenReturn(0);
 
@@ -637,8 +788,11 @@ class RoleServiceImplTest {
     }
 
     @Test
-    void assignRoles_Success_EmptyNewRoles() {
-        // Given - 用户原有角色：1,2，新角色：空
+    void assignRoles_Success_EmptyNewRolesWithoutOrganizer() {
+        // Given - 用户原有角色：1,2（没有ORGANIZER），新角色：空
+        RoleDTO adminRole = RoleDTO.builder().id(1L).roleKey("ADMIN").build();
+        RoleDTO userRole = RoleDTO.builder().id(2L).roleKey("USER").build();
+        userRoleDTO.setRoles(Arrays.asList(adminRole, userRole));
         roleAssignReqVO.setRoles(Collections.emptyList());
 
         when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
@@ -657,10 +811,9 @@ class RoleServiceImplTest {
     @Test
     void convert_NullRole_ReturnsNull() {
         // Given
+        roleDO.setPermissionList(null); // 设置为null，不会调用selectBatchIds
         when(roleMapper.selectById(1L)).thenReturn(roleDO);
-
-        // 通过getRole间接测试，当permissions为空时convert的行为
-        roleDO.setPermissionList(null);
+        // 注意：不需要mock permissionMapper.selectBatchIds，因为permissionList为null时不会调用
 
         // When
         RoleRespVO result = roleService.getRole(1L);
