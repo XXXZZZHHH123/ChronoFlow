@@ -6,6 +6,7 @@ import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import java.util.*;
@@ -48,6 +49,8 @@ public class RoleServiceImpl implements RoleService {
     @Resource private AuthService authService;
 
     public static final String ORGANIZER_ROLE_KEY = "ORGANIZER";
+
+    public static final String MEMBER_ROLE_KEY = "MEMBER";
 
     @Override
     public List<RoleRespVO> listRoles() {
@@ -123,11 +126,18 @@ public class RoleServiceImpl implements RoleService {
         if (ObjUtil.isNull(roleId)) {
             throw exception(BAD_REQUEST);
         }
-        List<RolePermissionDO> rolePermissionList =
-                rolePermissionMapper.selectList(
-                        new LambdaQueryWrapper<RolePermissionDO>()
-                                .eq(RolePermissionDO::getRoleId, roleId));
-        if (CollectionUtil.isNotEmpty(rolePermissionList)) {
+        RoleDO role = roleMapper.selectById(roleId);
+        if (ObjectUtil.isNull(role)) {
+            throw exception(CANNOT_FIND_ROLE);
+        }
+        if (ORGANIZER_ROLE_KEY.equals(role.getRoleKey())
+                || MEMBER_ROLE_KEY.equals(role.getRoleKey())) {
+            throw exception(DEFAULT_ROLE);
+        }
+        List<UserRoleDO> userRoleList =
+                userRoleMapper.selectList(
+                        new LambdaQueryWrapper<UserRoleDO>().eq(UserRoleDO::getRoleId, roleId));
+        if (CollectionUtil.isNotEmpty(userRoleList)) {
             throw exception(CANNOT_DELETE_ROLE);
         }
         roleMapper.deleteById(roleId);
@@ -193,9 +203,19 @@ public class RoleServiceImpl implements RoleService {
         if (ObjUtil.isNull(userRole)) {
             throw exception(USER_NOTFOUND);
         }
+        Long organizerRoleId =
+                userRole.getRoles().stream()
+                        .filter(roleDTO -> ORGANIZER_ROLE_KEY.equals(roleDTO.getRoleKey()))
+                        .map(RoleDTO::getId)
+                        .findFirst()
+                        .orElse(null);
+
         Set<Long> existRoleIds =
                 userRole.getRoles().stream().map(RoleDTO::getId).collect(Collectors.toSet());
         Set<Long> currentRoleIds = CollectionUtil.newHashSet(reqVO.getRoles());
+        if (ObjectUtil.isNotNull(organizerRoleId)) {
+            currentRoleIds.add(organizerRoleId);
+        }
 
         Set<Long> toDelete = new HashSet<>(existRoleIds);
         toDelete.removeAll(currentRoleIds);

@@ -61,7 +61,7 @@ public class RoleController {
     }
 
     @SaCheckPermission(ASSIGN_ROLE)
-    @PostMapping("assign")
+    @PostMapping("/assign")
     public CommonResult<Boolean> assignRole(@RequestBody RoleAssignReqVO reqVO) {
         roleService.assignRoles(reqVO);
         return CommonResult.success(true);
