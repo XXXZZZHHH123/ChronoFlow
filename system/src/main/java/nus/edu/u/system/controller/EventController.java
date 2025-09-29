@@ -1,7 +1,8 @@
 package nus.edu.u.system.controller;
 
+import static nus.edu.u.common.constant.PermissionConstants.*;
+
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.stp.StpUtil;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -20,8 +21,6 @@ import nus.edu.u.system.service.event.EventService;
 import nus.edu.u.system.service.task.TaskService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import static nus.edu.u.common.constant.PermissionConstants.*;
 
 @RestController
 @RequestMapping("/system/event")

@@ -51,5 +51,4 @@ public class PermissionConstants {
     public static final String QUERY_TASK = "system:event:task:query";
 
     public static final String ASSIGN_TASK = "system:event:task:assign";
-
 }
