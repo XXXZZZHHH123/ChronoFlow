@@ -6,6 +6,7 @@ import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.constant.PermissionConstants;
 import nus.edu.u.common.enums.CommonStatusEnum;
@@ -155,12 +156,23 @@ public class RegServiceImpl implements RegService {
         if (!isSuccess) {
             throw exception(REG_FAIL);
         }
+        // Give all organizer permission
+        PermissionDO permissionDO =
+                permissionMapper.selectOne(
+                        new LambdaQueryWrapper<PermissionDO>()
+                                .eq(
+                                        PermissionDO::getPermissionKey,
+                                        PermissionConstants.ALL_SYSTEM_PERMISSION));
+        if (ObjUtil.isEmpty(permissionDO)) {
+            throw exception(REG_FAIL);
+        }
         // Insert organizer role
         RoleDO role =
                 RoleDO.builder()
                         .name(ORGANIZER_ROLE_NAME)
                         .roleKey(ORGANIZER_ROLE_KEY)
                         .status(CommonStatusEnum.ENABLE.getStatus())
+                        .permissionList(List.of(permissionDO.getId()))
                         .build();
         role.setTenantId(tenant.getId());
         isSuccess = roleMapper.insert(role) > 0;
@@ -185,16 +197,6 @@ public class RegServiceImpl implements RegService {
         userRole.setTenantId(tenant.getId());
         isSuccess = userRoleMapper.insert(userRole) > 0;
         if (!isSuccess) {
-            throw exception(REG_FAIL);
-        }
-        // Give all organizer permission
-        PermissionDO permissionDO =
-                permissionMapper.selectOne(
-                        new LambdaQueryWrapper<PermissionDO>()
-                                .eq(
-                                        PermissionDO::getPermissionKey,
-                                        PermissionConstants.ALL_ORGANIZER_PERMISSION));
-        if (ObjUtil.isEmpty(permissionDO)) {
             throw exception(REG_FAIL);
         }
         RolePermissionDO rolePermissionDO =

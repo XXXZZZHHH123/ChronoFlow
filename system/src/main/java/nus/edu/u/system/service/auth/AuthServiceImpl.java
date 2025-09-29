@@ -11,6 +11,7 @@ import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
@@ -21,6 +22,8 @@ import nus.edu.u.system.domain.dto.UserTokenDTO;
 import nus.edu.u.system.domain.vo.auth.LoginReqVO;
 import nus.edu.u.system.domain.vo.auth.LoginRespVO;
 import nus.edu.u.system.domain.vo.auth.UserVO;
+import nus.edu.u.system.domain.vo.role.RoleRespVO;
+import nus.edu.u.system.service.role.RoleService;
 import nus.edu.u.system.service.user.UserService;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +40,8 @@ public class AuthServiceImpl implements AuthService {
     @Resource private UserService userService;
 
     @Resource private TokenService tokenService;
+
+    @Resource private RoleService roleService;
 
     @Override
     public UserDO authenticate(String username, String password) {
@@ -122,6 +127,15 @@ public class AuthServiceImpl implements AuthService {
                                         .map(RoleDTO::getRoleKey)
                                         .collect(Collectors.joining(DEFAULT_DELIMITER)))
                         .build();
-        return LoginRespVO.builder().refreshToken(refreshToken).user(userVO).build();
+        List<RoleRespVO> roleRespVOList =
+                userRoleDTO.getRoles().stream()
+                        .map(role -> roleService.getRole(role.getId()))
+                        .filter(ObjUtil::isNotNull)
+                        .toList();
+        return LoginRespVO.builder()
+                .refreshToken(refreshToken)
+                .user(userVO)
+                .roles(roleRespVOList)
+                .build();
     }
 }

@@ -1,21 +1,27 @@
 package nus.edu.u.system.service.auth;
 
+import static nus.edu.u.common.constant.Constants.DEFAULT_DELIMITER;
+import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import nus.edu.u.common.enums.CommonStatusEnum;
+import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.RoleDTO;
 import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.dto.UserTokenDTO;
 import nus.edu.u.system.domain.vo.auth.LoginReqVO;
 import nus.edu.u.system.domain.vo.auth.LoginRespVO;
+import nus.edu.u.system.domain.vo.role.RoleRespVO;
+import nus.edu.u.system.service.role.RoleService;
 import nus.edu.u.system.service.user.UserService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +30,11 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+/**
+ * Unit tests for AuthServiceImpl
+ *
+ * @author Test Author
+ */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
 
@@ -31,54 +42,83 @@ class AuthServiceImplTest {
 
     @Mock private TokenService tokenService;
 
+    @Mock private RoleService roleService;
+
+    @Mock private SaSession saSession;
+
     @InjectMocks private AuthServiceImpl authService;
 
-    private UserDO testUser;
+    private MockedStatic<StpUtil> stpUtilMock;
+
+    private UserDO userDO;
     private LoginReqVO loginReqVO;
     private UserRoleDTO userRoleDTO;
+    private RoleDTO roleDTO1;
+    private RoleDTO roleDTO2;
+    private RoleRespVO roleRespVO1;
+    private RoleRespVO roleRespVO2;
 
     @BeforeEach
     void setUp() {
+        stpUtilMock = mockStatic(StpUtil.class);
+
         // 初始化测试数据
-        testUser = new UserDO();
-        testUser.setId(1L);
-        testUser.setUsername("testuser");
-        testUser.setPassword("hashedPassword");
-        testUser.setStatus(CommonStatusEnum.ENABLE.getStatus());
-        testUser.setTenantId(100L);
-        testUser.setEmail("test@example.com");
+        userDO =
+                UserDO.builder()
+                        .id(1L)
+                        .username("testuser")
+                        .password("encodedPassword")
+                        .email("test@example.com")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
+        userDO.setTenantId(100L);
 
         loginReqVO = new LoginReqVO();
         loginReqVO.setUsername("testuser");
         loginReqVO.setPassword("password123");
         loginReqVO.setRemember(false);
 
-        // 模拟用户角色数据
-        RoleDTO roleDTO = new RoleDTO();
-        roleDTO.setRoleKey("admin");
+        roleDTO1 = RoleDTO.builder().id(1L).roleKey("ADMIN").name("Administrator").build();
 
-        userRoleDTO = new UserRoleDTO();
-        userRoleDTO.setUserId(1L);
-        userRoleDTO.setUsername("testuser");
-        userRoleDTO.setEmail("test@example.com");
-        userRoleDTO.setRoles(List.of(roleDTO));
+        roleDTO2 = RoleDTO.builder().id(2L).roleKey("USER").name("User").build();
+
+        userRoleDTO =
+                UserRoleDTO.builder()
+                        .userId(1L)
+                        .username("testuser")
+                        .email("test@example.com")
+                        .roles(Arrays.asList(roleDTO1, roleDTO2))
+                        .build();
+
+        roleRespVO1 = RoleRespVO.builder().id(1L).key("ADMIN").name("Administrator").build();
+
+        roleRespVO2 = RoleRespVO.builder().id(2L).key("USER").name("User").build();
     }
+
+    @AfterEach
+    void tearDown() {
+        if (stpUtilMock != null) {
+            stpUtilMock.close();
+        }
+    }
+
+    // ==================== authenticate 方法测试 ====================
 
     @Test
     void authenticate_Success() {
         // Given
-        when(userService.getUserByUsername("testuser")).thenReturn(testUser);
-        when(userService.isPasswordMatch("password123", "hashedPassword")).thenReturn(true);
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("password123", "encodedPassword")).thenReturn(true);
 
         // When
         UserDO result = authService.authenticate("testuser", "password123");
 
         // Then
         assertNotNull(result);
-        assertEquals(testUser.getId(), result.getId());
-        assertEquals(testUser.getUsername(), result.getUsername());
+        assertEquals(1L, result.getId());
+        assertEquals("testuser", result.getUsername());
         verify(userService).getUserByUsername("testuser");
-        verify(userService).isPasswordMatch("password123", "hashedPassword");
+        verify(userService).isPasswordMatch("password123", "encodedPassword");
     }
 
     @Test
@@ -87,253 +127,388 @@ class AuthServiceImplTest {
         when(userService.getUserByUsername("nonexistent")).thenReturn(null);
 
         // When & Then
-        assertThrows(
-                RuntimeException.class,
-                () -> {
-                    authService.authenticate("nonexistent", "password123");
-                });
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class,
+                        () -> authService.authenticate("nonexistent", "password123"));
+
         verify(userService).getUserByUsername("nonexistent");
         verify(userService, never()).isPasswordMatch(anyString(), anyString());
     }
 
     @Test
-    void authenticate_PasswordMismatch_ThrowsException() {
+    void authenticate_WrongPassword_ThrowsException() {
         // Given
-        when(userService.getUserByUsername("testuser")).thenReturn(testUser);
-        when(userService.isPasswordMatch("wrongpassword", "hashedPassword")).thenReturn(false);
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("wrongpassword", "encodedPassword")).thenReturn(false);
 
         // When & Then
-        assertThrows(
-                RuntimeException.class,
-                () -> {
-                    authService.authenticate("testuser", "wrongpassword");
-                });
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class,
+                        () -> authService.authenticate("testuser", "wrongpassword"));
+
         verify(userService).getUserByUsername("testuser");
-        verify(userService).isPasswordMatch("wrongpassword", "hashedPassword");
+        verify(userService).isPasswordMatch("wrongpassword", "encodedPassword");
     }
 
     @Test
     void authenticate_UserDisabled_ThrowsException() {
         // Given
-        testUser.setStatus(CommonStatusEnum.DISABLE.getStatus());
-        when(userService.getUserByUsername("testuser")).thenReturn(testUser);
-        when(userService.isPasswordMatch("password123", "hashedPassword")).thenReturn(true);
+        userDO.setStatus(CommonStatusEnum.DISABLE.getStatus());
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("password123", "encodedPassword")).thenReturn(true);
 
         // When & Then
-        assertThrows(
-                RuntimeException.class,
-                () -> {
-                    authService.authenticate("testuser", "password123");
-                });
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class,
+                        () -> authService.authenticate("testuser", "password123"));
+
         verify(userService).getUserByUsername("testuser");
-        verify(userService).isPasswordMatch("password123", "hashedPassword");
+        verify(userService).isPasswordMatch("password123", "encodedPassword");
     }
 
+    // ==================== login 方法测试 ====================
+
     @Test
-    void login_Success() {
+    void login_Success_WithoutRememberMe_WithoutRefreshToken() {
         // Given
-        when(userService.getUserByUsername("testuser")).thenReturn(testUser);
-        when(userService.isPasswordMatch("password123", "hashedPassword")).thenReturn(true);
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("password123", "encodedPassword")).thenReturn(true);
         when(tokenService.createRefreshToken(any(UserTokenDTO.class)))
-                .thenReturn("refresh_token_123");
+                .thenReturn("new-refresh-token");
         when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(roleService.getRole(1L)).thenReturn(roleRespVO1);
+        when(roleService.getRole(2L)).thenReturn(roleRespVO2);
 
-        try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
-            stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
-            stpUtilMock
-                    .when(StpUtil::getSession)
-                    .thenReturn(mock(cn.dev33.satoken.session.SaSession.class));
-            stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+        stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
+        stpUtilMock.when(StpUtil::getSession).thenReturn(saSession);
+        stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
 
-            // When
-            LoginRespVO result = authService.login(loginReqVO);
+        // When
+        LoginRespVO result = authService.login(loginReqVO);
 
-            // Then
-            assertNotNull(result);
-            assertNotNull(result.getRefreshToken());
-            assertNotNull(result.getUser());
-            assertEquals("testuser", result.getUser().getName());
-            assertEquals("test@example.com", result.getUser().getEmail());
-            assertEquals("admin", result.getUser().getRole());
+        // Then
+        assertNotNull(result);
+        assertEquals("new-refresh-token", result.getRefreshToken());
+        assertNotNull(result.getUser());
+        assertEquals(1L, result.getUser().getId());
+        assertEquals("testuser", result.getUser().getName());
+        assertEquals("ADMIN" + DEFAULT_DELIMITER + "USER", result.getUser().getRole());
+        assertEquals(2, result.getRoles().size());
 
-            verify(userService).getUserByUsername("testuser");
-            verify(userService).isPasswordMatch("password123", "hashedPassword");
-            verify(tokenService).createRefreshToken(any(UserTokenDTO.class));
-            verify(userService).selectUserWithRole(1L);
-        }
+        verify(userService).getUserByUsername("testuser");
+        verify(tokenService).createRefreshToken(any(UserTokenDTO.class));
+        verify(saSession).set(SESSION_TENANT_ID, 100L);
+        stpUtilMock.verify(() -> StpUtil.login(1L));
     }
 
     @Test
-    void login_WithExistingRefreshToken_Success() {
+    void login_Success_WithRememberMe_WithExistingRefreshToken() {
         // Given
-        loginReqVO.setRefreshToken("existing_refresh_token");
-        when(userService.getUserByUsername("testuser")).thenReturn(testUser);
-        when(userService.isPasswordMatch("password123", "hashedPassword")).thenReturn(true);
+        loginReqVO.setRemember(true);
+        loginReqVO.setRefreshToken("existing-refresh-token");
+
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("password123", "encodedPassword")).thenReturn(true);
         when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(roleService.getRole(1L)).thenReturn(roleRespVO1);
+        when(roleService.getRole(2L)).thenReturn(roleRespVO2);
 
-        try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
-            stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
-            stpUtilMock
-                    .when(StpUtil::getSession)
-                    .thenReturn(mock(cn.dev33.satoken.session.SaSession.class));
-            stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+        stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
+        stpUtilMock.when(StpUtil::getSession).thenReturn(saSession);
+        stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
 
-            // When
-            LoginRespVO result = authService.login(loginReqVO);
+        // When
+        LoginRespVO result = authService.login(loginReqVO);
 
-            // Then
-            assertNotNull(result);
-            assertEquals("existing_refresh_token", result.getRefreshToken());
-            verify(tokenService, never()).createRefreshToken(any(UserTokenDTO.class));
-        }
+        // Then
+        assertNotNull(result);
+        assertEquals("existing-refresh-token", result.getRefreshToken());
+        verify(tokenService, never()).createRefreshToken(any());
+        stpUtilMock.verify(() -> StpUtil.login(1L));
     }
+
+    @Test
+    void login_AuthenticationFailed_ThrowsException() {
+        // Given
+        when(userService.getUserByUsername("testuser")).thenReturn(null);
+
+        // When & Then
+        assertThrows(ServiceException.class, () -> authService.login(loginReqVO));
+
+        verify(userService).getUserByUsername("testuser");
+        stpUtilMock.verify(() -> StpUtil.login(anyLong()), never());
+    }
+
+    // ==================== logout 方法测试 ====================
 
     @Test
     void logout_Success() {
         // Given
-        String token = "test_token";
+        String token = "test-token";
+        stpUtilMock.when(StpUtil::logout).thenAnswer(invocation -> null);
 
-        try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
-            stpUtilMock.when(StpUtil::logout).thenAnswer(invocation -> null);
+        // When
+        authService.logout(token);
 
-            // When
-            authService.logout(token);
-
-            // Then
-            verify(tokenService).removeToken(token);
-            stpUtilMock.verify(StpUtil::logout);
-        }
+        // Then
+        verify(tokenService).removeToken(token);
+        stpUtilMock.verify(StpUtil::logout);
     }
 
+    // ==================== refresh 方法测试 ====================
+
     @Test
-    void refresh_UserLoggedIn_Success() {
+    void refresh_AlreadyLoggedIn_Success() {
         // Given
-        String refreshToken = "refresh_token_123";
+        String refreshToken = "valid-refresh-token";
+        stpUtilMock.when(StpUtil::isLogin).thenReturn(true);
+        stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+
         when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(roleService.getRole(1L)).thenReturn(roleRespVO1);
+        when(roleService.getRole(2L)).thenReturn(roleRespVO2);
 
-        try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
-            stpUtilMock.when(StpUtil::isLogin).thenReturn(true);
-            stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+        // When
+        LoginRespVO result = authService.refresh(refreshToken);
 
-            // When
-            LoginRespVO result = authService.refresh(refreshToken);
+        // Then
+        assertNotNull(result);
+        assertEquals(refreshToken, result.getRefreshToken());
+        assertEquals("testuser", result.getUser().getName());
 
-            // Then
-            assertNotNull(result);
-            assertEquals(refreshToken, result.getRefreshToken());
-            assertNotNull(result.getUser());
-            verify(userService).selectUserWithRole(1L);
-            verify(tokenService, never()).getUserIdFromRefreshToken(anyString());
-        }
+        verify(tokenService, never()).getUserIdFromRefreshToken(anyString());
+        stpUtilMock.verify(() -> StpUtil.login(anyLong()), never());
     }
 
     @Test
-    void refresh_UserNotLoggedIn_Success() {
+    void refresh_NotLoggedIn_ValidToken_Success() {
         // Given
-        String refreshToken = "refresh_token_123";
+        String refreshToken = "valid-refresh-token";
+        stpUtilMock.when(StpUtil::isLogin).thenReturn(false);
+        stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
+        stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+
         when(tokenService.getUserIdFromRefreshToken(refreshToken)).thenReturn(1L);
         when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(roleService.getRole(1L)).thenReturn(roleRespVO1);
+        when(roleService.getRole(2L)).thenReturn(roleRespVO2);
 
-        try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
-            stpUtilMock.when(StpUtil::isLogin).thenReturn(false);
-            stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
-            stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+        // When
+        LoginRespVO result = authService.refresh(refreshToken);
 
-            // When
-            LoginRespVO result = authService.refresh(refreshToken);
+        // Then
+        assertNotNull(result);
+        assertEquals(refreshToken, result.getRefreshToken());
+        assertEquals(1L, result.getUser().getId());
 
-            // Then
-            assertNotNull(result);
-            assertEquals(refreshToken, result.getRefreshToken());
-            verify(tokenService).getUserIdFromRefreshToken(refreshToken);
-            verify(userService).selectUserWithRole(1L);
-            stpUtilMock.verify(() -> StpUtil.login(1L));
-        }
+        verify(tokenService).getUserIdFromRefreshToken(refreshToken);
+        stpUtilMock.verify(() -> StpUtil.login(1L));
     }
 
     @Test
-    void refresh_InvalidRefreshToken_ThrowsException() {
+    void refresh_NotLoggedIn_InvalidToken_ThrowsException() {
         // Given
-        String invalidRefreshToken = "invalid_token";
-        when(tokenService.getUserIdFromRefreshToken(invalidRefreshToken)).thenReturn(null);
+        String refreshToken = "invalid-refresh-token";
+        stpUtilMock.when(StpUtil::isLogin).thenReturn(false);
 
-        try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
-            stpUtilMock.when(StpUtil::isLogin).thenReturn(false);
+        when(tokenService.getUserIdFromRefreshToken(refreshToken)).thenReturn(null);
 
-            // When & Then
-            assertThrows(
-                    RuntimeException.class,
-                    () -> {
-                        authService.refresh(invalidRefreshToken);
-                    });
-            verify(tokenService).getUserIdFromRefreshToken(invalidRefreshToken);
-        }
+        // When & Then
+        assertThrows(ServiceException.class, () -> authService.refresh(refreshToken));
+
+        verify(tokenService).getUserIdFromRefreshToken(refreshToken);
+        stpUtilMock.verify(() -> StpUtil.login(anyLong()), never());
     }
 
     @Test
-    void getInfo_UserNotFound_ThrowsException() {
+    void refresh_UserNotFound_ThrowsException() {
         // Given
-        String refreshToken = "refresh_token_123";
+        String refreshToken = "valid-refresh-token";
+        stpUtilMock.when(StpUtil::isLogin).thenReturn(true);
+        stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+
         when(userService.selectUserWithRole(1L)).thenReturn(null);
 
-        try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
-            stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+        // When & Then
+        assertThrows(ServiceException.class, () -> authService.refresh(refreshToken));
 
-            // When & Then
-            assertThrows(
-                    RuntimeException.class,
-                    () -> {
-                        authService.refresh(refreshToken);
-                    });
-            verify(userService).selectUserWithRole(1L);
-        }
+        verify(userService).selectUserWithRole(1L);
     }
 
+    // ==================== getInfo 方法测试（通过其他方法间接测试）====================
+
     @Test
-    void getInfo_MultipleRoles_Success() {
+    void getInfo_WithMultipleRoles_Success() {
         // Given
-        RoleDTO role1 = new RoleDTO();
-        role1.setRoleKey("admin");
-        RoleDTO role2 = new RoleDTO();
-        role2.setRoleKey("user");
-
-        userRoleDTO.setRoles(Arrays.asList(role1, role2));
-
-        String refreshToken = "refresh_token_123";
+        loginReqVO.setRemember(false);
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("password123", "encodedPassword")).thenReturn(true);
+        when(tokenService.createRefreshToken(any(UserTokenDTO.class))).thenReturn("refresh-token");
         when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(roleService.getRole(1L)).thenReturn(roleRespVO1);
+        when(roleService.getRole(2L)).thenReturn(roleRespVO2);
 
-        try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
-            stpUtilMock.when(StpUtil::isLogin).thenReturn(true);
-            stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+        stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
+        stpUtilMock.when(StpUtil::getSession).thenReturn(saSession);
+        stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
 
-            // When
-            LoginRespVO result = authService.refresh(refreshToken);
+        // When
+        LoginRespVO result = authService.login(loginReqVO);
 
-            // Then
-            assertNotNull(result);
-            assertTrue(result.getUser().getRole().contains("admin"));
-            assertTrue(result.getUser().getRole().contains("user"));
-        }
+        // Then
+        assertNotNull(result);
+        assertNotNull(result.getUser());
+        assertEquals("ADMIN" + DEFAULT_DELIMITER + "USER", result.getUser().getRole());
+        assertEquals(2, result.getRoles().size());
+        assertTrue(result.getRoles().stream().anyMatch(r -> "ADMIN".equals(r.getKey())));
+        assertTrue(result.getRoles().stream().anyMatch(r -> "USER".equals(r.getKey())));
     }
 
     @Test
-    void getInfo_NoRoles_Success() {
+    void getInfo_WithSingleRole_Success() {
+        // Given
+        userRoleDTO.setRoles(Collections.singletonList(roleDTO1));
+        loginReqVO.setRemember(false);
+
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("password123", "encodedPassword")).thenReturn(true);
+        when(tokenService.createRefreshToken(any(UserTokenDTO.class))).thenReturn("refresh-token");
+        when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(roleService.getRole(1L)).thenReturn(roleRespVO1);
+
+        stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
+        stpUtilMock.when(StpUtil::getSession).thenReturn(saSession);
+        stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+
+        // When
+        LoginRespVO result = authService.login(loginReqVO);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("ADMIN", result.getUser().getRole());
+        assertEquals(1, result.getRoles().size());
+    }
+
+    @Test
+    void getInfo_WithNullRole_FiltersOut() {
+        // Given
+        loginReqVO.setRemember(false);
+
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("password123", "encodedPassword")).thenReturn(true);
+        when(tokenService.createRefreshToken(any(UserTokenDTO.class))).thenReturn("refresh-token");
+        when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(roleService.getRole(1L)).thenReturn(roleRespVO1);
+        when(roleService.getRole(2L)).thenReturn(null); // 第二个角色返回null
+
+        stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
+        stpUtilMock.when(StpUtil::getSession).thenReturn(saSession);
+        stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+
+        // When
+        LoginRespVO result = authService.login(loginReqVO);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.getRoles().size()); // 只有一个非null的角色
+        assertEquals("ADMIN", result.getRoles().get(0).getKey());
+    }
+
+    @Test
+    void getInfo_WithEmptyRoles_Success() {
         // Given
         userRoleDTO.setRoles(Collections.emptyList());
+        loginReqVO.setRemember(false);
 
-        String refreshToken = "refresh_token_123";
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("password123", "encodedPassword")).thenReturn(true);
+        when(tokenService.createRefreshToken(any(UserTokenDTO.class))).thenReturn("refresh-token");
         when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
 
-        try (MockedStatic<StpUtil> stpUtilMock = mockStatic(StpUtil.class)) {
-            stpUtilMock.when(StpUtil::isLogin).thenReturn(true);
-            stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+        stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
+        stpUtilMock.when(StpUtil::getSession).thenReturn(saSession);
+        stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
 
-            // When
-            LoginRespVO result = authService.refresh(refreshToken);
+        // When
+        LoginRespVO result = authService.login(loginReqVO);
 
-            // Then
-            assertNotNull(result);
-            assertEquals("", result.getUser().getRole());
-        }
+        // Then
+        assertNotNull(result);
+        assertEquals("", result.getUser().getRole()); // 空字符串
+        assertEquals(0, result.getRoles().size());
+    }
+
+    // ==================== 边界情况测试 ====================
+
+    @Test
+    void authenticate_WithNullUsername_ThrowsException() {
+        // Given
+        when(userService.getUserByUsername(null)).thenReturn(null);
+
+        // When & Then
+        assertThrows(ServiceException.class, () -> authService.authenticate(null, "password123"));
+    }
+
+    @Test
+    void authenticate_WithEmptyPassword_ThrowsException() {
+        // Given
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("", "encodedPassword")).thenReturn(false);
+
+        // When & Then
+        assertThrows(ServiceException.class, () -> authService.authenticate("testuser", ""));
+    }
+
+    @Test
+    void login_WithNullRefreshToken_CreatesNewToken() {
+        // Given
+        loginReqVO.setRefreshToken(null);
+
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("password123", "encodedPassword")).thenReturn(true);
+        when(tokenService.createRefreshToken(any(UserTokenDTO.class))).thenReturn("new-token");
+        when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(roleService.getRole(1L)).thenReturn(roleRespVO1);
+        when(roleService.getRole(2L)).thenReturn(roleRespVO2);
+
+        stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
+        stpUtilMock.when(StpUtil::getSession).thenReturn(saSession);
+        stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+
+        // When
+        LoginRespVO result = authService.login(loginReqVO);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("new-token", result.getRefreshToken());
+        verify(tokenService).createRefreshToken(any(UserTokenDTO.class));
+    }
+
+    @Test
+    void login_WithEmptyRefreshToken_CreatesNewToken() {
+        // Given
+        loginReqVO.setRefreshToken("");
+
+        when(userService.getUserByUsername("testuser")).thenReturn(userDO);
+        when(userService.isPasswordMatch("password123", "encodedPassword")).thenReturn(true);
+        when(tokenService.createRefreshToken(any(UserTokenDTO.class))).thenReturn("new-token");
+        when(userService.selectUserWithRole(1L)).thenReturn(userRoleDTO);
+        when(roleService.getRole(1L)).thenReturn(roleRespVO1);
+        when(roleService.getRole(2L)).thenReturn(roleRespVO2);
+
+        stpUtilMock.when(() -> StpUtil.login(1L)).thenAnswer(invocation -> null);
+        stpUtilMock.when(StpUtil::getSession).thenReturn(saSession);
+        stpUtilMock.when(StpUtil::getLoginId).thenReturn(1L);
+
+        // When
+        LoginRespVO result = authService.login(loginReqVO);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("new-token", result.getRefreshToken());
+        verify(tokenService).createRefreshToken(any(UserTokenDTO.class));
     }
 }
