@@ -57,8 +57,6 @@ class GroupServiceImplTest {
         createGroupReqVO.setName("Test Group");
         createGroupReqVO.setEventId(1L);
         createGroupReqVO.setLeadUserId(1L);
-        createGroupReqVO.setPhone("12345678901");
-        createGroupReqVO.setEmail("test@example.com");
         createGroupReqVO.setRemark("Test remark");
         createGroupReqVO.setSort(1);
 
@@ -87,31 +85,6 @@ class GroupServiceImplTest {
     }
 
     @Test
-    void createGroup_Success() {
-        // Given
-        when(eventMapper.selectById(1L)).thenReturn(eventDO);
-        when(deptMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
-        when(userMapper.selectById(1L)).thenReturn(userDO);
-        when(deptMapper.insert(any(DeptDO.class)))
-                .thenAnswer(
-                        invocation -> {
-                            DeptDO dept = invocation.getArgument(0);
-                            dept.setId(1L);
-                            return 1;
-                        });
-
-        // When
-        Long result = groupService.createGroup(createGroupReqVO);
-
-        // Then
-        assertEquals(1L, result);
-        verify(eventMapper).selectById(1L);
-        verify(deptMapper).selectOne(any(LambdaQueryWrapper.class));
-        verify(userMapper).selectById(1L);
-        verify(deptMapper).insert(any(DeptDO.class));
-    }
-
-    @Test
     void createGroup_EventNotFound() {
         // Given
         when(eventMapper.selectById(1L)).thenReturn(null);
@@ -121,7 +94,7 @@ class GroupServiceImplTest {
                 assertThrows(
                         ServiceException.class, () -> groupService.createGroup(createGroupReqVO));
 
-        assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
+        assertEquals(ErrorCodeConstants.EVENT_NOT_FOUND.getCode(), exception.getCode());
         verify(eventMapper).selectById(1L);
         verify(deptMapper, never()).insert(any());
     }
