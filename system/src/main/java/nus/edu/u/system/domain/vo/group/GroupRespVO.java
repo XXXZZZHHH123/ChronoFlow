@@ -23,10 +23,6 @@ public class GroupRespVO {
 
     private String leadUserName;
 
-    private String phone;
-
-    private String email;
-
     private String remark;
 
     private Integer status;

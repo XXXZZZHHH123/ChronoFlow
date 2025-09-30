@@ -35,10 +35,6 @@ public class DeptDO extends TenantBaseDO implements Serializable {
     /** Related to {@link UserDO#getId()} */
     private Long leadUserId;
 
-    private String phone;
-
-    private String email;
-
     private String remark;
 
     /**

@@ -54,6 +54,8 @@ public interface ErrorCodeConstants {
             new ErrorCode(10_02_006, "User status is invalid, cannot add to group");
     ErrorCode CANNOT_REMOVE_GROUP_LEADER =
             new ErrorCode(10_02_007, "Cannot remove group leader from group");
+    ErrorCode GET_GROUP_ID_FAILED =
+            new ErrorCode(10_02_008, "Failed to get group ID after insert ");
 
     // ========= Reg module 11-01-000 =============
     ErrorCode NO_SEARCH_RESULT = new ErrorCode(11_01_001, "No matching result found");
