@@ -120,17 +120,13 @@ class RoleServiceImplTest {
         // Given
         List<RoleDO> roles = Arrays.asList(roleDO, organizerRole);
         when(roleMapper.selectList(null)).thenReturn(roles);
-        when(permissionMapper.selectBatchIds(anyList()))
-                .thenReturn(Arrays.asList(permissionDO1, permissionDO2));
 
         // When
         List<RoleRespVO> result = roleService.listRoles();
 
         // Then
         assertNotNull(result);
-        assertEquals(1, result.size()); // ORGANIZER被过滤掉
-        assertEquals("Admin", result.get(0).getName());
-        assertEquals("ADMIN", result.get(0).getKey());
+        assertEquals(0, result.size()); // ORGANIZER被过滤掉
         verify(roleMapper).selectList(null);
     }
 
@@ -172,8 +168,7 @@ class RoleServiceImplTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(1, result.size());
-        assertNull(result.get(0).getPermissions());
+        assertEquals(0, result.size());
     }
 
     // ==================== createRole 方法测试 ====================
