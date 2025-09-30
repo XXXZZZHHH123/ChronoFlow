@@ -17,10 +17,6 @@ public class CreateGroupReqVO {
 
     private Long leadUserId;
 
-    private String phone;
-
-    private String email;
-
     @Size(max = 255, message = "Remark cannot exceed 255 characters")
     private String remark;
 

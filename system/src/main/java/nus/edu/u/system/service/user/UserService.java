@@ -64,4 +64,6 @@ public interface UserService {
     boolean tryCreateOrFallbackToUpdate(String email, String remark, List<Long> roleIds);
 
     List<Long> getAliveRoleIdsByUserId(Long userId);
+
+    List<UserProfileRespVO> getEnabledUserProfiles();
 }

@@ -11,6 +11,7 @@ import jakarta.annotation.Resource;
 import java.util.*;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
+import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dataobject.user.UserRoleDO;
@@ -415,6 +416,44 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<Long> getAliveRoleIdsByUserId(Long userId) {
         return userRoleMapper.selectRoleIdsByUserId(userId);
+    }
+
+    @Override
+    public List<UserProfileRespVO> getEnabledUserProfiles() {
+        List<UserRoleDTO> list = userMapper.selectAllUsersWithRoles();
+        if (list.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return list.stream()
+                .filter(
+                        dto ->
+                                !Objects.equals(dto.getUserId(), StpUtil.getLoginIdAsLong())
+                                        && Objects.equals(
+                                                dto.getStatus(),
+                                                CommonStatusEnum.ENABLE.getStatus()))
+                .map(this::convertToUserProfileRespVO)
+                .toList();
+    }
+
+    // 提取的私有方法
+    private UserProfileRespVO convertToUserProfileRespVO(UserRoleDTO dto) {
+        UserProfileRespVO vo = new UserProfileRespVO();
+        vo.setId(dto.getUserId());
+        vo.setName(dto.getUsername());
+        vo.setEmail(dto.getEmail());
+        vo.setPhone(dto.getPhone());
+
+        List<Long> roleIds =
+                (dto.getRoles() == null)
+                        ? Collections.emptyList()
+                        : dto.getRoles().stream().map(RoleDTO::getId).toList();
+        vo.setRoles(roleIds);
+
+        boolean isRegistered = !Objects.equals(dto.getStatus(), UserStatusEnum.PENDING.getCode());
+        vo.setRegistered(isRegistered);
+
+        return vo;
     }
 
     private String normalizeEmail(String email) {
