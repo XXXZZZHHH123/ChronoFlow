@@ -2,8 +2,6 @@ package nus.edu.u.system.service.group;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.service.IService;
-import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
 import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
@@ -15,7 +13,7 @@ import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
  * @author Fan yazhuoting
  * @date 2025-09-09
  */
-public interface GroupService{
+public interface GroupService {
     /**
      * Create a new group for event organization
      *

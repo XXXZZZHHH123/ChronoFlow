@@ -8,8 +8,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
+
 import java.util.*;
 import java.util.regex.Pattern;
+
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.exception.ServiceException;
@@ -41,17 +43,23 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class UserServiceImpl implements UserService {
 
-    @Resource private UserMapper userMapper;
+    @Resource
+    private UserMapper userMapper;
 
-    @Resource private UserRoleMapper userRoleMapper;
+    @Resource
+    private UserRoleMapper userRoleMapper;
 
-    @Resource private RoleMapper roleMapper;
+    @Resource
+    private RoleMapper roleMapper;
 
-    @Resource private PasswordEncoder passwordEncoder;
+    @Resource
+    private PasswordEncoder passwordEncoder;
 
     // Self-injection proxy to avoid transaction enhancement failure caused by internal calls of
     // similar methods
-    @Resource @Lazy private UserService self;
+    @Resource
+    @Lazy
+    private UserService self;
 
     private static final Set<Long> FORBIDDEN_ROLE_IDS = Set.of(1L);
 
@@ -98,12 +106,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // 3) Create a user
-        UserDO user =
-                UserDO.builder()
-                        .email(email)
-                        .remark(dto.getRemark())
-                        .status(UserStatusEnum.PENDING.getCode())
-                        .build();
+        UserDO user = UserDO.builder().email(email).remark(dto.getRemark()).status(UserStatusEnum.PENDING.getCode()).build();
         if (userMapper.insert(user) <= 0) {
             throw exception(USER_INSERT_FAILURE);
         }
@@ -137,8 +140,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // Update user
-        LambdaUpdateWrapper<UserDO> uw =
-                Wrappers.<UserDO>lambdaUpdate().eq(UserDO::getId, dto.getId());
+        LambdaUpdateWrapper<UserDO> uw = Wrappers.<UserDO>lambdaUpdate().eq(UserDO::getId, dto.getId());
         if (dto.getEmail() != null) uw.set(UserDO::getEmail, dto.getEmail());
         if (dto.getRemark() != null) uw.set(UserDO::getRemark, dto.getRemark());
         if (userMapper.update(new UserDO(), uw) <= 0) {
@@ -148,8 +150,7 @@ public class UserServiceImpl implements UserService {
         // Synchronize roles (null does not change; empty collection = clear)
         if (dto.getRoleIds() != null) {
             // Check if the role exists
-            List<Long> targetList =
-                    dto.getRoleIds().stream().filter(Objects::nonNull).distinct().toList();
+            List<Long> targetList = dto.getRoleIds().stream().filter(Objects::nonNull).distinct().toList();
             if (targetList.stream().anyMatch(FORBIDDEN_ROLE_IDS::contains)) {
                 throw exception(ROLE_NOT_FOUND);
             }
@@ -172,13 +173,7 @@ public class UserServiceImpl implements UserService {
         if (Boolean.TRUE.equals(db.getDeleted())) {
             throw exception(USER_ALREADY_DELETED);
         }
-        int rows =
-                userMapper.update(
-                        new UserDO(),
-                        Wrappers.<UserDO>lambdaUpdate()
-                                .set(UserDO::getDeleted, true)
-                                .eq(UserDO::getId, id)
-                                .eq(UserDO::getDeleted, false));
+        int rows = userMapper.update(new UserDO(), Wrappers.<UserDO>lambdaUpdate().set(UserDO::getDeleted, true).eq(UserDO::getId, id).eq(UserDO::getDeleted, false));
         if (rows <= 0) throw exception(UPDATE_FAILURE);
         userRoleMapper.delete(new LambdaQueryWrapper<UserRoleDO>().eq(UserRoleDO::getUserId, id));
     }
@@ -197,12 +192,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // 2) Restore deleted=0
-        int rows =
-                userMapper.update(
-                        new UserDO(),
-                        new LambdaUpdateWrapper<UserDO>()
-                                .set(UserDO::getDeleted, 0)
-                                .eq(UserDO::getId, id));
+        int rows = userMapper.update(new UserDO(), new LambdaUpdateWrapper<UserDO>().set(UserDO::getDeleted, 0).eq(UserDO::getId, id));
         if (rows <= 0) {
             throw exception(UPDATE_FAILURE);
         }
@@ -220,12 +210,7 @@ public class UserServiceImpl implements UserService {
             throw exception(USER_ALREADY_DISABLED);
         }
 
-        int rows =
-                userMapper.update(
-                        new UserDO(),
-                        new LambdaUpdateWrapper<UserDO>()
-                                .set(UserDO::getStatus, UserStatusEnum.DISABLE.getCode())
-                                .eq(UserDO::getId, id));
+        int rows = userMapper.update(new UserDO(), new LambdaUpdateWrapper<UserDO>().set(UserDO::getStatus, UserStatusEnum.DISABLE.getCode()).eq(UserDO::getId, id));
         if (rows <= 0) {
             throw exception(USER_DISABLE_FAILURE);
         }
@@ -243,12 +228,7 @@ public class UserServiceImpl implements UserService {
             throw exception(USER_ALREADY_ENABLED);
         }
 
-        int rows =
-                userMapper.update(
-                        new UserDO(),
-                        new LambdaUpdateWrapper<UserDO>()
-                                .set(UserDO::getStatus, UserStatusEnum.ENABLE.getCode())
-                                .eq(UserDO::getId, id));
+        int rows = userMapper.update(new UserDO(), new LambdaUpdateWrapper<UserDO>().set(UserDO::getStatus, UserStatusEnum.ENABLE.getCode()).eq(UserDO::getId, id));
         if (rows <= 0) {
             throw exception(USER_ENABLE_FAILURE);
         }
@@ -262,41 +242,31 @@ public class UserServiceImpl implements UserService {
             return Collections.emptyList();
         }
 
-        return list.stream()
-                .filter(
-                        dto ->
-                                !Objects.equals(
-                                        dto.getUserId(),
-                                        StpUtil.getLoginIdAsLong())) // Exclude myself
-                .map(
-                        dto -> {
-                            UserProfileRespVO vo = new UserProfileRespVO();
-                            vo.setId(dto.getUserId());
-                            vo.setName(dto.getUsername());
-                            vo.setEmail(dto.getEmail());
-                            vo.setPhone(dto.getPhone());
+        return list.stream().filter(dto -> !Objects.equals(dto.getUserId(), StpUtil.getLoginIdAsLong())) // Exclude myself
+                .map(dto -> {
+                    UserProfileRespVO vo = new UserProfileRespVO();
+                    vo.setId(dto.getUserId());
+                    vo.setName(dto.getUsername());
+                    vo.setEmail(dto.getEmail());
+                    vo.setPhone(dto.getPhone());
 
-                            // (RoleDTO → id)
-                            List<Long> roleIds =
-                                    (dto.getRoles() == null)
-                                            ? Collections.emptyList()
-                                            : dto.getRoles().stream().map(RoleDTO::getId).toList();
-                            vo.setRoles(roleIds);
+                    // (RoleDTO → id)
+                    List<Long> roleIds = (dto.getRoles() == null) ? Collections.emptyList() : dto.getRoles().stream().map(RoleDTO::getId).toList();
+                    vo.setRoles(roleIds);
 
-                            // Registration status: status=2(PENDING) → Not registered; otherwise it
-                            // is considered
-                            // registered
-                            boolean isRegistered =
-                                    !Objects.equals(
-                                            dto.getStatus(), UserStatusEnum.PENDING.getCode());
-                            vo.setRegistered(isRegistered);
+                    // Registration status: status=2(PENDING) → Not registered; otherwise it
+                    // is considered
+                    // registered
+                    boolean isRegistered = !Objects.equals(dto.getStatus(), UserStatusEnum.PENDING.getCode());
+                    vo.setRegistered(isRegistered);
 
-                            return vo;
-                        })
-                .toList();
+                    return vo;
+                }).toList();
     }
 
-    /** Core: add only/delete only/revive */
+    /**
+     * Core: add only/delete only/revive
+     */
     private void syncUserRoles(Long userId, List<Long> targetList) {
         Set<Long> current = new HashSet<>(userRoleMapper.selectAliveRoleIdsByUser(userId));
         Set<Long> target = new HashSet<>(Optional.ofNullable(targetList).orElseGet(List::of));
@@ -323,13 +293,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public BulkUpsertUsersRespVO bulkUpsertUsers(List<CreateUserDTO> rawRows) {
         if (rawRows == null || rawRows.isEmpty()) {
-            return BulkUpsertUsersRespVO.builder()
-                    .totalRows(0)
-                    .createdCount(0)
-                    .updatedCount(0)
-                    .failedCount(0)
-                    .failures(Collections.emptyList())
-                    .build();
+            return BulkUpsertUsersRespVO.builder().totalRows(0).createdCount(0).updatedCount(0).failedCount(0).failures(Collections.emptyList()).build();
         }
 
         int created = 0, updated = 0;
@@ -351,29 +315,13 @@ public class UserServiceImpl implements UserService {
                 else updated++;
 
             } catch (ServiceException e) {
-                failures.add(
-                        BulkUpsertUsersRespVO.RowFailure.builder()
-                                .rowIndex(rowIndex)
-                                .email(rawEmail)
-                                .reason(e.getMessage())
-                                .build());
+                failures.add(BulkUpsertUsersRespVO.RowFailure.builder().rowIndex(rowIndex).email(rawEmail).reason(e.getMessage()).build());
             } catch (Exception e) {
-                failures.add(
-                        BulkUpsertUsersRespVO.RowFailure.builder()
-                                .rowIndex(rowIndex)
-                                .email(rawEmail)
-                                .reason("INTERNAL_ERROR: " + e.getClass().getSimpleName())
-                                .build());
+                failures.add(BulkUpsertUsersRespVO.RowFailure.builder().rowIndex(rowIndex).email(rawEmail).reason("INTERNAL_ERROR: " + e.getClass().getSimpleName()).build());
             }
         }
 
-        return BulkUpsertUsersRespVO.builder()
-                .totalRows(rawRows.size())
-                .createdCount(created)
-                .updatedCount(updated)
-                .failedCount(failures.size())
-                .failures(failures)
-                .build();
+        return BulkUpsertUsersRespVO.builder().totalRows(rawRows.size()).createdCount(created).updatedCount(updated).failedCount(failures.size()).failures(failures).build();
     }
 
     @Override
@@ -381,8 +329,7 @@ public class UserServiceImpl implements UserService {
     public boolean tryCreateOrFallbackToUpdate(String email, String remark, List<Long> roleIds) {
         try {
             // A) 先尝试创建
-            CreateUserDTO dto =
-                    CreateUserDTO.builder().email(email).remark(remark).roleIds(roleIds).build();
+            CreateUserDTO dto = CreateUserDTO.builder().email(email).remark(remark).roleIds(roleIds).build();
             createUserWithRoleIds(dto);
             return true;
 
@@ -395,13 +342,7 @@ public class UserServiceImpl implements UserService {
 
                 validateUpdateArgs(roleIds);
 
-                UpdateUserDTO u =
-                        UpdateUserDTO.builder()
-                                .id(userId)
-                                .email(null)
-                                .remark(remark)
-                                .roleIds(roleIds)
-                                .build();
+                UpdateUserDTO u = UpdateUserDTO.builder().id(userId).email(null).remark(remark).roleIds(roleIds).build();
 
                 updateUserWithRoleIds(u);
                 return false;
@@ -425,13 +366,7 @@ public class UserServiceImpl implements UserService {
             return Collections.emptyList();
         }
 
-        return list.stream()
-                .filter(dto ->
-                        !Objects.equals(dto.getUserId(), StpUtil.getLoginIdAsLong())
-                                && Objects.equals(dto.getStatus(), CommonStatusEnum.ENABLE.getStatus())
-                )
-                .map(this::convertToUserProfileRespVO)
-                .toList();
+        return list.stream().filter(dto -> !Objects.equals(dto.getUserId(), StpUtil.getLoginIdAsLong()) && Objects.equals(dto.getStatus(), CommonStatusEnum.ENABLE.getStatus())).map(this::convertToUserProfileRespVO).toList();
     }
 
     // 提取的私有方法
@@ -442,14 +377,10 @@ public class UserServiceImpl implements UserService {
         vo.setEmail(dto.getEmail());
         vo.setPhone(dto.getPhone());
 
-        List<Long> roleIds =
-                (dto.getRoles() == null)
-                        ? Collections.emptyList()
-                        : dto.getRoles().stream().map(RoleDTO::getId).toList();
+        List<Long> roleIds = (dto.getRoles() == null) ? Collections.emptyList() : dto.getRoles().stream().map(RoleDTO::getId).toList();
         vo.setRoles(roleIds);
 
-        boolean isRegistered =
-                !Objects.equals(dto.getStatus(), UserStatusEnum.PENDING.getCode());
+        boolean isRegistered = !Objects.equals(dto.getStatus(), UserStatusEnum.PENDING.getCode());
         vo.setRegistered(isRegistered);
 
         return vo;
@@ -459,8 +390,7 @@ public class UserServiceImpl implements UserService {
         return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$", Pattern.CASE_INSENSITIVE);
 
     private boolean isValidEmail(String email) {
         return email != null && EMAIL_PATTERN.matcher(email).matches();
