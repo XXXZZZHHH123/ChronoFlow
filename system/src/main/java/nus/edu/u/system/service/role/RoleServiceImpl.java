@@ -59,7 +59,10 @@ public class RoleServiceImpl implements RoleService {
         List<RoleDO> roleList = roleMapper.selectList(null);
         roleList =
                 roleList.stream()
-                        .filter(role -> !(ORGANIZER_ROLE_KEY.equals(role.getRoleKey()) || ADMIN_ROLE_KEY.equals(role.getRoleKey())))
+                        .filter(
+                                role ->
+                                        !(ORGANIZER_ROLE_KEY.equals(role.getRoleKey())
+                                                || ADMIN_ROLE_KEY.equals(role.getRoleKey())))
                         .toList();
         List<RoleRespVO> roleRespVOList = new ArrayList<>();
         if (CollectionUtil.isNotEmpty(roleList)) {
