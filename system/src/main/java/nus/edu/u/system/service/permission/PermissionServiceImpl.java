@@ -32,7 +32,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Resource private RolePermissionMapper rolePermissionMapper;
 
-    public static final String USER_PERMISSION_PREFIX = "user";
+    public static final String USER_PERMISSION_PREFIX = "system";
 
     @Override
     public List<PermissionRespVO> listPermissions() {
