@@ -114,7 +114,7 @@ sa-token:
   # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结
   # Minimum active frequency (unit: seconds). If the token does not access the system within this time,
   # it will be frozen. The default value of -1 means no limit and never freeze.
-  active-timeout: 1800
+  active-timeout: -1
   # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
   # Whether to allow multiple logins from the same account at the same time
   # (if true, multiple logins are allowed; if false, new logins will replace old logins)
