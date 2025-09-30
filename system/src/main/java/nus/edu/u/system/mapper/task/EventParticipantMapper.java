@@ -6,8 +6,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
- @Mapper
- public interface EventParticipantMapper extends BaseMapper<EventParticipantDO> {
+@Mapper
+public interface EventParticipantMapper extends BaseMapper<EventParticipantDO> {
     @Update(
             """
         UPDATE event_participant
@@ -15,5 +15,4 @@ import org.apache.ibatis.annotations.Update;
         WHERE event_id = #{eventId} AND deleted = 1
     """)
     int restoreByEventId(@Param("eventId") Long eventId);
- }
-
+}
