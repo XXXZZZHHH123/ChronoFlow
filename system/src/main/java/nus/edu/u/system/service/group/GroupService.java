@@ -1,7 +1,6 @@
 package nus.edu.u.system.service.group;
 
 import java.util.List;
-
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
 import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;

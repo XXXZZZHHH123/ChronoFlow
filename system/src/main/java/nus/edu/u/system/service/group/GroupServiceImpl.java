@@ -10,12 +10,10 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.annotation.Resource;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
@@ -43,17 +41,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Slf4j
 public class GroupServiceImpl implements GroupService {
-    @Resource
-    private DeptMapper deptMapper;
+    @Resource private DeptMapper deptMapper;
 
-    @Resource
-    private UserMapper userMapper;
+    @Resource private UserMapper userMapper;
 
-    @Resource
-    private EventMapper eventMapper;
+    @Resource private EventMapper eventMapper;
 
-    @Resource
-    private UserService userService;
+    @Resource private UserService userService;
 
     @Override
     @Transactional
@@ -65,7 +59,11 @@ public class GroupServiceImpl implements GroupService {
         }
 
         // 2. Check if group name already exists in this event
-        LambdaQueryWrapper<DeptDO> queryWrapper = new LambdaQueryWrapper<DeptDO>().eq(DeptDO::getName, reqVO.getName()).eq(DeptDO::getTenantId, event.getTenantId()).eq(DeptDO::getStatus, CommonStatusEnum.ENABLE.getStatus());
+        LambdaQueryWrapper<DeptDO> queryWrapper =
+                new LambdaQueryWrapper<DeptDO>()
+                        .eq(DeptDO::getName, reqVO.getName())
+                        .eq(DeptDO::getTenantId, event.getTenantId())
+                        .eq(DeptDO::getStatus, CommonStatusEnum.ENABLE.getStatus());
 
         DeptDO existingGroup = deptMapper.selectOne(queryWrapper);
         if (ObjectUtil.isNotNull(existingGroup)) {
@@ -81,9 +79,17 @@ public class GroupServiceImpl implements GroupService {
         }
 
         // 4. Create group
-        DeptDO deptDO = DeptDO.builder().name(reqVO.getName()).sort(reqVO.getSort()).leadUserId(reqVO.getLeadUserId()).eventId(reqVO.getEventId()).remark(reqVO.getRemark()).status(CommonStatusEnum.ENABLE.getStatus()).build();
+        DeptDO deptDO =
+                DeptDO.builder()
+                        .name(reqVO.getName())
+                        .sort(reqVO.getSort())
+                        .leadUserId(reqVO.getLeadUserId())
+                        .eventId(reqVO.getEventId())
+                        .remark(reqVO.getRemark())
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
 
-//        deptMapper.insert(deptDO);
+        //        deptMapper.insert(deptDO);
         deptMapper.insert(deptDO);
         Long groupId = deptDO.getId();
 
@@ -138,7 +144,11 @@ public class GroupServiceImpl implements GroupService {
 
         if (!ObjectUtil.isEmpty(groupMembers)) {
             Long leaderId = existingGroup.getLeadUserId();
-            List<Long> normalMemberIds = groupMembers.stream().map(GroupRespVO.MemberInfo::getUserId).filter(userId -> !ObjectUtil.equal(userId, leaderId)).collect(Collectors.toList());
+            List<Long> normalMemberIds =
+                    groupMembers.stream()
+                            .map(GroupRespVO.MemberInfo::getUserId)
+                            .filter(userId -> !ObjectUtil.equal(userId, leaderId))
+                            .collect(Collectors.toList());
 
             if (!ObjectUtil.isEmpty(normalMemberIds)) {
                 GroupService proxy = (GroupService) AopContext.currentProxy();
@@ -148,7 +158,8 @@ public class GroupServiceImpl implements GroupService {
             if (ObjectUtil.isNotNull(leaderId)) {
                 // Update user to remove them from the group
                 UpdateWrapper<UserDO> userUpdateWrapper = new UpdateWrapper<>();
-                userUpdateWrapper.set("dept_id", null) // Use actual database column name
+                userUpdateWrapper
+                        .set("dept_id", null) // Use actual database column name
                         .eq("id", leaderId);
 
                 userMapper.update(null, userUpdateWrapper);
@@ -190,7 +201,10 @@ public class GroupServiceImpl implements GroupService {
         }
 
         // 5. Update user's department
-        LambdaUpdateWrapper<UserDO> updateWrapper = new LambdaUpdateWrapper<UserDO>().eq(UserDO::getId, userId).set(UserDO::getDeptId, groupId);
+        LambdaUpdateWrapper<UserDO> updateWrapper =
+                new LambdaUpdateWrapper<UserDO>()
+                        .eq(UserDO::getId, userId)
+                        .set(UserDO::getDeptId, groupId);
 
         userMapper.update(null, updateWrapper);
         log.info("Added user {} to group {}", userId, groupId);
@@ -212,7 +226,10 @@ public class GroupServiceImpl implements GroupService {
         }
 
         // 3. Remove user from group by setting deptId to null
-        LambdaUpdateWrapper<UserDO> updateWrapper = new LambdaUpdateWrapper<UserDO>().eq(UserDO::getId, userId).set(UserDO::getDeptId, null);
+        LambdaUpdateWrapper<UserDO> updateWrapper =
+                new LambdaUpdateWrapper<UserDO>()
+                        .eq(UserDO::getId, userId)
+                        .set(UserDO::getDeptId, null);
 
         userMapper.update(null, updateWrapper);
         log.info("Removed user {} from group {}", userId, groupId);
@@ -220,11 +237,23 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public List<GroupRespVO.MemberInfo> getGroupMembers(Long groupId) {
-        LambdaQueryWrapper<UserDO> queryWrapper = new LambdaQueryWrapper<UserDO>().eq(UserDO::getDeptId, groupId).eq(UserDO::getStatus, CommonStatusEnum.ENABLE.getStatus());
+        LambdaQueryWrapper<UserDO> queryWrapper =
+                new LambdaQueryWrapper<UserDO>()
+                        .eq(UserDO::getDeptId, groupId)
+                        .eq(UserDO::getStatus, CommonStatusEnum.ENABLE.getStatus());
 
         List<UserDO> members = userMapper.selectList(queryWrapper);
 
-        return members.stream().map(user -> GroupRespVO.MemberInfo.builder().userId(user.getId()).username(user.getUsername()).email(user.getEmail()).phone(user.getPhone()).build()).collect(Collectors.toList());
+        return members.stream()
+                .map(
+                        user ->
+                                GroupRespVO.MemberInfo.builder()
+                                        .userId(user.getId())
+                                        .username(user.getUsername())
+                                        .email(user.getEmail())
+                                        .phone(user.getPhone())
+                                        .build())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -251,7 +280,11 @@ public class GroupServiceImpl implements GroupService {
             }
         }
 
-        log.info("success add members to group: groupId={}, success={}, failed={}", groupId, successIds.size(), failedIds.size());
+        log.info(
+                "success add members to group: groupId={}, success={}, failed={}",
+                groupId,
+                successIds.size(),
+                failedIds.size());
 
         if (!failedIds.isEmpty()) {
             log.warn("failed to add members to group: failedUserIds={}", failedIds);
@@ -284,7 +317,11 @@ public class GroupServiceImpl implements GroupService {
             }
         }
 
-        log.info("success to remove members from group: groupId={}, success={}, failed={}", groupId, successIds.size(), failedIds.size());
+        log.info(
+                "success to remove members from group: groupId={}, success={}, failed={}",
+                groupId,
+                successIds.size(),
+                failedIds.size());
 
         if (!failedIds.isEmpty()) {
             log.warn("failed to remove members from group: failedUserIds={}", failedIds);
@@ -301,7 +338,12 @@ public class GroupServiceImpl implements GroupService {
             throw exception(EVENT_NOT_FOUND);
         }
 
-        LambdaQueryWrapper<DeptDO> queryWrapper = new LambdaQueryWrapper<DeptDO>().eq(DeptDO::getEventId, eventId).eq(DeptDO::getDeleted, false).orderByAsc(DeptDO::getSort).orderByDesc(DeptDO::getCreateTime);
+        LambdaQueryWrapper<DeptDO> queryWrapper =
+                new LambdaQueryWrapper<DeptDO>()
+                        .eq(DeptDO::getEventId, eventId)
+                        .eq(DeptDO::getDeleted, false)
+                        .orderByAsc(DeptDO::getSort)
+                        .orderByDesc(DeptDO::getCreateTime);
 
         List<DeptDO> deptList = deptMapper.selectList(queryWrapper);
 
@@ -312,24 +354,48 @@ public class GroupServiceImpl implements GroupService {
 
         log.info("Found {} groups for event ID: {}", deptList.size(), eventId);
 
-        return deptList.stream().map(dept -> {
-            int memberCount = Math.toIntExact(userMapper.selectCount(new LambdaQueryWrapper<UserDO>().eq(UserDO::getDeptId, dept.getId()).eq(UserDO::getStatus, CommonStatusEnum.ENABLE.getStatus())));
+        return deptList.stream()
+                .map(
+                        dept -> {
+                            int memberCount =
+                                    Math.toIntExact(
+                                            userMapper.selectCount(
+                                                    new LambdaQueryWrapper<UserDO>()
+                                                            .eq(UserDO::getDeptId, dept.getId())
+                                                            .eq(
+                                                                    UserDO::getStatus,
+                                                                    CommonStatusEnum.ENABLE
+                                                                            .getStatus())));
 
-            String leadUserName = null;
-            if (ObjectUtil.isNotNull(dept.getLeadUserId())) {
-                UserDO leader = userMapper.selectById(dept.getLeadUserId());
-                if (ObjectUtil.isNotNull(leader)) {
-                    leadUserName = leader.getUsername();
-                }
-            }
+                            String leadUserName = null;
+                            if (ObjectUtil.isNotNull(dept.getLeadUserId())) {
+                                UserDO leader = userMapper.selectById(dept.getLeadUserId());
+                                if (ObjectUtil.isNotNull(leader)) {
+                                    leadUserName = leader.getUsername();
+                                }
+                            }
 
-            return GroupRespVO.builder().id(dept.getId()).name(dept.getName()).sort(dept.getSort()).leadUserId(dept.getLeadUserId()).leadUserName(leadUserName).remark(dept.getRemark()).status(dept.getStatus()).statusName(dept.getStatus() == 0 ? "Active" : "Inactive").eventId(dept.getEventId()).eventName(event.getName()).memberCount(memberCount).createTime(dept.getCreateTime()).updateTime(dept.getUpdateTime()).build();
-        }).collect(Collectors.toList());
+                            return GroupRespVO.builder()
+                                    .id(dept.getId())
+                                    .name(dept.getName())
+                                    .sort(dept.getSort())
+                                    .leadUserId(dept.getLeadUserId())
+                                    .leadUserName(leadUserName)
+                                    .remark(dept.getRemark())
+                                    .status(dept.getStatus())
+                                    .statusName(dept.getStatus() == 0 ? "Active" : "Inactive")
+                                    .eventId(dept.getEventId())
+                                    .eventName(event.getName())
+                                    .memberCount(memberCount)
+                                    .createTime(dept.getCreateTime())
+                                    .updateTime(dept.getUpdateTime())
+                                    .build();
+                        })
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<UserProfileRespVO> getAllUserProfiles() {
         return userService.getEnabledUserProfiles();
     }
-
 }

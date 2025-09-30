@@ -1,9 +1,8 @@
 package nus.edu.u.system.domain.vo.group;
 
 import jakarta.validation.constraints.NotEmpty;
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class AddMembersReqVO {

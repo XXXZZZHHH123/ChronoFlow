@@ -4,9 +4,7 @@ import static nus.edu.u.common.core.domain.CommonResult.success;
 
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
-
 import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.system.domain.vo.group.AddMembersReqVO;
@@ -30,8 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class GroupController {
 
-    @Resource
-    private GroupService groupService;
+    @Resource private GroupService groupService;
 
     /**
      * Create a new group
@@ -76,11 +73,12 @@ public class GroupController {
      * Add member to group
      *
      * @param groupId Group ID
-     * @param userId  User ID
+     * @param userId User ID
      * @return Success indicator
      */
     @PostMapping("/{groupId}/members/{userId}")
-    public CommonResult<Boolean> addMember(@PathVariable("groupId") Long groupId, @PathVariable("userId") Long userId) {
+    public CommonResult<Boolean> addMember(
+            @PathVariable("groupId") Long groupId, @PathVariable("userId") Long userId) {
         log.info("Adding user {} to group {}", userId, groupId);
         groupService.addMemberToGroup(groupId, userId);
         return success(true);
@@ -90,11 +88,12 @@ public class GroupController {
      * Remove member from group
      *
      * @param groupId Group ID
-     * @param userId  User ID
+     * @param userId User ID
      * @return Success indicator
      */
     @DeleteMapping("/{groupId}/members/{userId}")
-    public CommonResult<Boolean> removeMember(@PathVariable("groupId") Long groupId, @PathVariable("userId") Long userId) {
+    public CommonResult<Boolean> removeMember(
+            @PathVariable("groupId") Long groupId, @PathVariable("userId") Long userId) {
         log.info("Removing user {} from group {}", userId, groupId);
         groupService.removeMemberFromGroup(groupId, userId);
         return success(true);
@@ -107,7 +106,8 @@ public class GroupController {
      * @return List of group members
      */
     @GetMapping("/{groupId}/members")
-    public CommonResult<List<GroupRespVO.MemberInfo>> getGroupMembers(@PathVariable("groupId") Long groupId) {
+    public CommonResult<List<GroupRespVO.MemberInfo>> getGroupMembers(
+            @PathVariable("groupId") Long groupId) {
         List<GroupRespVO.MemberInfo> members = groupService.getGroupMembers(groupId);
         return success(members);
     }
@@ -116,11 +116,12 @@ public class GroupController {
      * Add multiple members to a group
      *
      * @param groupId Group ID
-     * @param reqVO   List of user IDs
+     * @param reqVO List of user IDs
      * @return Success indicator
      */
     @PostMapping("{groupId}/members/batch")
-    public CommonResult<Boolean> addMembers(@PathVariable("groupId") Long groupId, @RequestBody @Valid AddMembersReqVO reqVO) {
+    public CommonResult<Boolean> addMembers(
+            @PathVariable("groupId") Long groupId, @RequestBody @Valid AddMembersReqVO reqVO) {
         log.info("Adding users {} to group {}", reqVO.getUserIds(), groupId);
         groupService.addMembersToGroup(groupId, reqVO.getUserIds());
         return success(true);
@@ -134,7 +135,8 @@ public class GroupController {
      * @return Success indicator
      */
     @DeleteMapping("{groupId}/members/batch")
-    public CommonResult<Boolean> deleteMembers(@PathVariable("groupId") Long groupId, @RequestBody List<Long> userIds) {
+    public CommonResult<Boolean> deleteMembers(
+            @PathVariable("groupId") Long groupId, @RequestBody List<Long> userIds) {
         log.info("Deleting users {} from group {}", userIds, groupId);
         groupService.removeMembersToGroup(groupId, userIds);
         return success(true);
@@ -157,6 +159,4 @@ public class GroupController {
     public CommonResult<List<UserProfileRespVO>> getAllUserProfiles() {
         return CommonResult.success(groupService.getAllUserProfiles());
     }
-
-
 }

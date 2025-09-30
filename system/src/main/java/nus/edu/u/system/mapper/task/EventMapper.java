@@ -16,11 +16,11 @@ public interface EventMapper extends BaseMapper<EventDO> {
     @Select("SELECT * FROM event WHERE id = #{id}")
     EventDO selectRawById(@Param("id") Long id);
 
-    @Update(
-            """
-        UPDATE event
-        SET deleted = 0, update_time = NOW()
-        WHERE id = #{id} AND deleted = 1
-    """)
-    int restoreById(@Param("id") Long id);
+        @Update(
+                """
+            UPDATE event
+            SET deleted = 0, update_time = NOW()
+            WHERE id = #{id} AND deleted = 1
+        """)
+        int restoreById(@Param("id") Long id);
 }
