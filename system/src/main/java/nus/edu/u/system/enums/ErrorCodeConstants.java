@@ -89,6 +89,9 @@ public interface ErrorCodeConstants {
     ErrorCode TASK_NOT_FOUND = new ErrorCode(13_02_005, "Task does not exist");
     ErrorCode TASK_TIME_OUTSIDE_EVENT =
             new ErrorCode(13_02_006, "The task timeframe must fall within the event timeframe");
+    ErrorCode TASK_CREATE_FAILED = new ErrorCode(13_02_007, "Task creation failed");
+    ErrorCode TASK_UPDATE_FAILED = new ErrorCode(13_02_008, "Task update failed");
+    ErrorCode TASK_DELETE_FAILED = new ErrorCode(13_02_009, "Task delete failed");
 
     // ========= RolePermission module 14-01-000 ============
     ErrorCode CREATE_ROLE_FAILED = new ErrorCode(14_01_001, "Create role failed");
@@ -98,7 +101,7 @@ public interface ErrorCodeConstants {
             new ErrorCode(
                     14_01_004, "Role cannot be deleted because it has been assigned to user(s)");
     ErrorCode ASSIGN_ROLE_FAILED = new ErrorCode(14_01_004, "Assign role failed");
-    ErrorCode DEFAULT_ROLE = new ErrorCode(14_01_006, "Default roles. Can't be deleted");
+    ErrorCode DEFAULT_ROLE = new ErrorCode(14_01_006, "Default roles. Can't be modified");
 
     ErrorCode CANNOT_FIND_PERMISSION = new ErrorCode(14_02_001, "Permission not fount");
     ErrorCode UPDATE_PERMISSION_FAILED = new ErrorCode(14_02_002, "Update permission failed");
