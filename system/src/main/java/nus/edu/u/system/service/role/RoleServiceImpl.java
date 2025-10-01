@@ -74,9 +74,10 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional
     public RoleRespVO createRole(RoleReqVO roleReqVO) {
-        List<RoleDO> existRole = roleMapper.selectList(
-                new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getRoleKey, roleReqVO.getKey())
-        );
+        List<RoleDO> existRole =
+                roleMapper.selectList(
+                        new LambdaQueryWrapper<RoleDO>()
+                                .eq(RoleDO::getRoleKey, roleReqVO.getKey()));
         if (!existRole.isEmpty()) {
             throw exception(EXISTING_ROLE_FAILED);
         }
