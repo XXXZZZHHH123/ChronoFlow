@@ -107,7 +107,7 @@ class RegServiceImplTest {
     void search_Success() {
         // Given
         when(tenantMapper.selectById(1L)).thenReturn(tenantDO);
-        when(userMapper.selectById(1L)).thenReturn(userDO);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(userDO);
 
         // When
         RegSearchRespVO result = regService.search(regSearchReqVO);
@@ -117,7 +117,7 @@ class RegServiceImplTest {
         assertEquals("Test Organization", result.getOrganizationName());
         assertEquals("test@example.com", result.getEmail());
         verify(tenantMapper).selectById(1L);
-        verify(userMapper).selectById(1L);
+        verify(userMapper).selectByIdWithoutTenant(1L);
     }
 
     @Test
@@ -135,12 +135,12 @@ class RegServiceImplTest {
     void search_UserNotFound_ThrowsException() {
         // Given
         when(tenantMapper.selectById(1L)).thenReturn(tenantDO);
-        when(userMapper.selectById(1L)).thenReturn(null);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(null);
 
         // When & Then
         assertThrows(ServiceException.class, () -> regService.search(regSearchReqVO));
         verify(tenantMapper).selectById(1L);
-        verify(userMapper).selectById(1L);
+        verify(userMapper).selectByIdWithoutTenant(1L);
     }
 
     @Test
@@ -148,7 +148,7 @@ class RegServiceImplTest {
         // Given
         userDO.setTenantId(2L); // 不同的租户ID
         when(tenantMapper.selectById(1L)).thenReturn(tenantDO);
-        when(userMapper.selectById(1L)).thenReturn(userDO);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(userDO);
 
         // When & Then
         assertThrows(ServiceException.class, () -> regService.search(regSearchReqVO));
@@ -159,7 +159,7 @@ class RegServiceImplTest {
         // Given
         userDO.setStatus(UserStatusEnum.ENABLE.getCode());
         when(tenantMapper.selectById(1L)).thenReturn(tenantDO);
-        when(userMapper.selectById(1L)).thenReturn(userDO);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(userDO);
 
         // When & Then
         assertThrows(ServiceException.class, () -> regService.search(regSearchReqVO));
@@ -170,19 +170,19 @@ class RegServiceImplTest {
     @Test
     void registerAsMember_Success() {
         // Given
-        when(userMapper.selectById(1L)).thenReturn(userDO);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(userDO);
         when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
-        when(userMapper.updateById(any(UserDO.class))).thenReturn(1);
+        when(userMapper.updateByIdWithoutTenant(any(UserDO.class))).thenReturn(1);
 
         // When
         boolean result = regService.registerAsMember(regMemberReqVO);
 
         // Then
         assertTrue(result);
-        verify(userMapper).selectById(1L);
+        verify(userMapper).selectByIdWithoutTenant(1L);
         verify(passwordEncoder).encode("password123");
         verify(userMapper)
-                .updateById(
+                .updateByIdWithoutTenant(
                         argThat(
                                 user ->
                                         user.getId().equals(1L)
@@ -196,24 +196,24 @@ class RegServiceImplTest {
     @Test
     void registerAsMember_UserNotFound_ThrowsException() {
         // Given
-        when(userMapper.selectById(1L)).thenReturn(null);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(null);
 
         // When & Then
         assertThrows(ServiceException.class, () -> regService.registerAsMember(regMemberReqVO));
-        verify(userMapper).selectById(1L);
-        verify(userMapper, never()).updateById(any());
+        verify(userMapper).selectByIdWithoutTenant(1L);
+        verify(userMapper, never()).updateByIdWithoutTenant(any());
     }
 
     @Test
     void registerAsMember_UserNotPending_ThrowsException() {
         // Given
         userDO.setStatus(UserStatusEnum.ENABLE.getCode());
-        when(userMapper.selectById(1L)).thenReturn(userDO);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(userDO);
 
         // When & Then
         assertThrows(ServiceException.class, () -> regService.registerAsMember(regMemberReqVO));
-        verify(userMapper).selectById(1L);
-        verify(userMapper, never()).updateById(any());
+        verify(userMapper).selectByIdWithoutTenant(1L);
+        verify(userMapper, never()).updateByIdWithoutTenant(any());
     }
 
     // ==================== registerAsOrganizer 方法测试 ====================

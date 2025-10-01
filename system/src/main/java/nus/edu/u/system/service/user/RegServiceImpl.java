@@ -74,7 +74,7 @@ public class RegServiceImpl implements RegService {
             throw exception(NO_SEARCH_RESULT);
         }
         // Select user
-        UserDO user = userMapper.selectById(regSearchReqVO.getUserId());
+        UserDO user = userMapper.selectByIdWithoutTenant(regSearchReqVO.getUserId());
         if (ObjUtil.isNull(user)) {
             throw exception(NO_SEARCH_RESULT);
         }
@@ -98,22 +98,19 @@ public class RegServiceImpl implements RegService {
 
     @Override
     public boolean registerAsMember(RegMemberReqVO regMemberReqVO) {
-        UserDO user = userMapper.selectById(regMemberReqVO.getUserId());
+        UserDO user = userMapper.selectByIdWithoutTenant(regMemberReqVO.getUserId());
         if (ObjUtil.isNull(user)) {
             throw exception(REG_FAIL);
         }
         if (!ObjUtil.equals(user.getStatus(), UserStatusEnum.PENDING.getCode())) {
             throw exception(ACCOUNT_EXIST);
         }
-        user =
-                UserDO.builder()
-                        .id(regMemberReqVO.getUserId())
-                        .username(regMemberReqVO.getUsername())
-                        .phone(regMemberReqVO.getPhone())
-                        .password(passwordEncoder.encode(regMemberReqVO.getPassword()))
-                        .status(UserStatusEnum.ENABLE.getCode())
-                        .build();
-        return userMapper.updateById(user) > 0;
+        user.setUsername(regMemberReqVO.getUsername());
+        user.setPassword(passwordEncoder.encode(regMemberReqVO.getPassword()));
+        user.setPhone(regMemberReqVO.getPhone());
+        user.setStatus(UserStatusEnum.ENABLE.getCode());
+
+        return userMapper.updateByIdWithoutTenant(user) > 0;
     }
 
     @Override
