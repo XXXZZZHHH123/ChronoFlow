@@ -26,6 +26,24 @@
         <result property="status"    column="status"/>
     </resultMap>
 
+    <update id="updateByIdWithoutTenant" parameterType="nus.edu.u.system.domain.dataobject.user.UserDO">
+        UPDATE ChronoFlow.sys_user
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="loginTime != null">login_time = #{loginTime},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            <if test="postList != null">post_list = #{postList},</if>
+            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+        </set>
+        WHERE id = #{id}
+        AND deleted = 0
+    </update>
+
     <select id="selectRawById" resultMap="UserDOMap">
         SELECT *
         FROM sys_user
@@ -137,6 +155,23 @@
             tenant_id
         FROM ChronoFlow.sys_user
         WHERE username = #{username}
+          AND deleted = 0
+    </select>
+    <select id="selectByIdWithoutTenant" resultType="nus.edu.u.system.domain.dataobject.user.UserDO">
+        SELECT
+            id,
+            username,
+            password,
+            remark,
+            email,
+            phone,
+            status,
+            login_time,
+            dept_id,
+            post_list,
+            tenant_id
+        FROM ChronoFlow.sys_user
+        WHERE id = #{id}
           AND deleted = 0
     </select>
 </mapper>

@@ -91,4 +91,10 @@ public interface UserMapper extends BaseMapper<UserDO> {
 
     @InterceptorIgnore(tenantLine = "true")
     List<UserPermissionDTO> selectUserWithPermission(Long userId);
+
+    @InterceptorIgnore(tenantLine = "true")
+    UserDO selectByIdWithoutTenant(@Param("id") Long id);
+
+    @InterceptorIgnore(tenantLine = "true")
+    Integer updateByIdWithoutTenant(UserDO userDO);
 }
