@@ -74,6 +74,12 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional
     public RoleRespVO createRole(RoleReqVO roleReqVO) {
+        List<RoleDO> existRole = roleMapper.selectList(
+                new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getRoleKey, roleReqVO.getKey())
+        );
+        if (!existRole.isEmpty()) {
+            throw exception(EXISTING_ROLE_FAILED);
+        }
         RoleDO role =
                 RoleDO.builder()
                         .name(roleReqVO.getName())
@@ -279,6 +285,7 @@ public class RoleServiceImpl implements RoleService {
                 RoleRespVO.builder()
                         .id(role.getId())
                         .name(role.getName())
+                        .isDefault(MEMBER_ROLE_KEY.equals(role.getRoleKey()))
                         .key(role.getRoleKey())
                         .build();
         if (CollectionUtil.isEmpty(role.getPermissionList())) {
