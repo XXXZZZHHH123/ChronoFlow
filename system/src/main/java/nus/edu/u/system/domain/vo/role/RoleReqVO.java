@@ -1,9 +1,7 @@
 package nus.edu.u.system.domain.vo.role;
 
-import java.util.List;
-
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.Data;
 
 /**

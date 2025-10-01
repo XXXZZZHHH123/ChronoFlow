@@ -163,12 +163,22 @@ public class RoleServiceImpl implements RoleService {
         if (ORGANIZER_ROLE_KEY.equals(role.getRoleKey())) {
             throw exception(DEFAULT_ROLE);
         }
-        if (MEMBER_ROLE_KEY.equals(role.getRoleKey()) && (!role.getName().equals(roleReqVO.getName()) || !role.getRoleKey().equals(roleReqVO.getKey()))) {
+        if (MEMBER_ROLE_KEY.equals(role.getRoleKey())
+                && (!role.getName().equals(roleReqVO.getName())
+                        || !role.getRoleKey().equals(roleReqVO.getKey()))) {
             throw exception(DEFAULT_ROLE);
         }
 
-        Set<Long> existPermissionIds = new HashSet<>(CollectionUtil.isEmpty(role.getPermissionList()) ? Collections.emptySet() : role.getPermissionList());
-        Set<Long> currentPermissionIds = new HashSet<>(CollectionUtil.isEmpty(roleReqVO.getPermissions()) ? Collections.emptySet() : roleReqVO.getPermissions());
+        Set<Long> existPermissionIds =
+                new HashSet<>(
+                        CollectionUtil.isEmpty(role.getPermissionList())
+                                ? Collections.emptySet()
+                                : role.getPermissionList());
+        Set<Long> currentPermissionIds =
+                new HashSet<>(
+                        CollectionUtil.isEmpty(roleReqVO.getPermissions())
+                                ? Collections.emptySet()
+                                : roleReqVO.getPermissions());
 
         role.setName(roleReqVO.getName());
         role.setRoleKey(roleReqVO.getKey());
