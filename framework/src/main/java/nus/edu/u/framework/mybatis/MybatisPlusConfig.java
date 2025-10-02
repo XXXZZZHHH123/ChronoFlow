@@ -1,6 +1,8 @@
 package nus.edu.u.framework.mybatis;
 
 import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
+import static nus.edu.u.common.exception.enums.GlobalErrorCodeConstants.UNAUTHORIZED;
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -67,7 +69,8 @@ public class MybatisPlusConfig {
             if (ObjectUtil.isNotNull(tenantId)) {
                 return tenantId;
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            throw exception(UNAUTHORIZED);
         }
         return 1L;
     }

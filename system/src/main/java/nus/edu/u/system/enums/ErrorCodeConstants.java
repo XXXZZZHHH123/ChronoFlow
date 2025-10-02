@@ -54,6 +54,8 @@ public interface ErrorCodeConstants {
             new ErrorCode(10_02_006, "User status is invalid, cannot add to group");
     ErrorCode CANNOT_REMOVE_GROUP_LEADER =
             new ErrorCode(10_02_007, "Cannot remove group leader from group");
+    ErrorCode GET_GROUP_ID_FAILED =
+            new ErrorCode(10_02_008, "Failed to get group ID after insert ");
 
     // ========= Reg module 11-01-000 =============
     ErrorCode NO_SEARCH_RESULT = new ErrorCode(11_01_001, "No matching result found");
@@ -76,4 +78,37 @@ public interface ErrorCodeConstants {
     ErrorCode EVENT_DELETE_FAILED = new ErrorCode(13_01_005, "Event deletion failed");
     ErrorCode EVENT_NOT_DELETED = new ErrorCode(13_01_006, "Event not deleted");
     ErrorCode EVENT_RESTORE_FAILED = new ErrorCode(13_01_006, "Event restore failed");
+
+    // ========= Task module 13-02-000 ============
+    ErrorCode TASK_STATUS_INVALID = new ErrorCode(13_02_001, "Illegal task status");
+    ErrorCode TASK_ASSIGNEE_NOT_FOUND = new ErrorCode(13_02_002, "Assigned user does not exist");
+    ErrorCode TASK_TIME_RANGE_INVALID =
+            new ErrorCode(13_02_003, "The task start time must be earlier than the end time");
+    ErrorCode TASK_ASSIGNEE_TENANT_MISMATCH =
+            new ErrorCode(13_02_004, "The assigned user does not belong to this event");
+    ErrorCode TASK_NOT_FOUND = new ErrorCode(13_02_005, "Task does not exist");
+    ErrorCode TASK_TIME_OUTSIDE_EVENT =
+            new ErrorCode(13_02_006, "The task timeframe must fall within the event timeframe");
+    ErrorCode TASK_CREATE_FAILED = new ErrorCode(13_02_007, "Task creation failed");
+    ErrorCode TASK_UPDATE_FAILED = new ErrorCode(13_02_008, "Task update failed");
+    ErrorCode TASK_DELETE_FAILED = new ErrorCode(13_02_009, "Task delete failed");
+
+    // ========= RolePermission module 14-01-000 ============
+    ErrorCode CREATE_ROLE_FAILED = new ErrorCode(14_01_001, "Create role failed");
+    ErrorCode CANNOT_FIND_ROLE = new ErrorCode(14_01_002, "Role not found");
+    ErrorCode UPDATE_ROLE_FAILED = new ErrorCode(14_01_003, "Update role failed");
+    ErrorCode CANNOT_DELETE_ROLE =
+            new ErrorCode(
+                    14_01_004, "Role cannot be deleted because it has been assigned to user(s)");
+    ErrorCode ASSIGN_ROLE_FAILED = new ErrorCode(14_01_004, "Assign role failed");
+    ErrorCode EXISTING_ROLE_FAILED = new ErrorCode(14_01_005, "Role already exists");
+    ErrorCode DEFAULT_ROLE = new ErrorCode(14_01_006, "Default roles. Can't be modified");
+
+    ErrorCode CANNOT_FIND_PERMISSION = new ErrorCode(14_02_001, "Permission not fount");
+    ErrorCode UPDATE_PERMISSION_FAILED = new ErrorCode(14_02_002, "Update permission failed");
+    ErrorCode CANNOT_DELETE_PERMISSION =
+            new ErrorCode(
+                    14_02_003,
+                    "Permission cannot be deleted because it has been assigned to role(s)");
+    ErrorCode CREATE_PERMISSION_FAILED = new ErrorCode(14_02_004, "Create permission failed");
 }

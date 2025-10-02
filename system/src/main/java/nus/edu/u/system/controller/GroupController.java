@@ -7,9 +7,11 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
+import nus.edu.u.system.domain.vo.group.AddMembersReqVO;
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
 import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
+import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 import nus.edu.u.system.service.group.GroupService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -114,14 +116,14 @@ public class GroupController {
      * Add multiple members to a group
      *
      * @param groupId Group ID
-     * @param userIds List of user IDs
+     * @param reqVO List of user IDs
      * @return Success indicator
      */
     @PostMapping("{groupId}/members/batch")
     public CommonResult<Boolean> addMembers(
-            @PathVariable("groupId") Long groupId, @RequestBody List<Long> userIds) {
-        log.info("Adding users {} to group {}", userIds, groupId);
-        groupService.addMembersToGroup(groupId, userIds);
+            @PathVariable("groupId") Long groupId, @RequestBody @Valid AddMembersReqVO reqVO) {
+        log.info("Adding users {} to group {}", reqVO.getUserIds(), groupId);
+        groupService.addMembersToGroup(groupId, reqVO.getUserIds());
         return success(true);
     }
 
@@ -138,5 +140,23 @@ public class GroupController {
         log.info("Deleting users {} from group {}", userIds, groupId);
         groupService.removeMembersToGroup(groupId, userIds);
         return success(true);
+    }
+
+    /**
+     * Get all groups by event ID
+     *
+     * @param eventId Event ID
+     * @return List of groups
+     */
+    @GetMapping("/list")
+    public CommonResult<List<GroupRespVO>> getGroupsByEvent(@RequestParam("eventId") Long eventId) {
+        log.info("Getting groups for event ID: {}", eventId);
+        List<GroupRespVO> groups = groupService.getGroupsByEvent(eventId);
+        return success(groups);
+    }
+
+    @GetMapping("/users")
+    public CommonResult<List<UserProfileRespVO>> getAllUserProfiles() {
+        return CommonResult.success(groupService.getAllUserProfiles());
     }
 }

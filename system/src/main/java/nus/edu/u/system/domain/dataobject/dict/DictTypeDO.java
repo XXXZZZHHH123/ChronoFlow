@@ -2,6 +2,7 @@ package nus.edu.u.system.domain.dataobject.dict;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import java.io.Serial;
 import java.io.Serializable;
 import lombok.*;
 import nus.edu.u.common.core.domain.base.BaseDO;
@@ -22,7 +23,7 @@ import nus.edu.u.common.enums.CommonStatusEnum;
 @AllArgsConstructor
 public class DictTypeDO extends BaseDO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     @TableId private Long id;
 
