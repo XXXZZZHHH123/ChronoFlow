@@ -28,7 +28,12 @@ public class MybatisMetaObjectHandler implements MetaObjectHandler {
         this.strictInsertFill(metaObject, "creator", String.class, currentUser);
         this.strictInsertFill(metaObject, "updater", String.class, currentUser);
 
-        this.strictInsertFill(metaObject, "tenant_id", Long.class, getCurrentTenantId());
+        if (metaObject.hasSetter("tenantId")) {
+            Object tenantId = metaObject.getValue("tenantId");
+            if (ObjectUtil.isNull(tenantId)) {
+                this.strictInsertFill(metaObject, "tenant_id", Long.class, getCurrentTenantId());
+            }
+        }
         this.strictInsertFill(metaObject, "deleted", Boolean.class, false);
     }
 

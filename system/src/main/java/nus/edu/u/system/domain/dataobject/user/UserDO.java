@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,7 +27,7 @@ import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 @NoArgsConstructor
 public class UserDO extends TenantBaseDO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     @TableId private Long id;
 
@@ -50,7 +51,7 @@ public class UserDO extends TenantBaseDO implements Serializable {
     private LocalDateTime loginTime;
 
     /** Related to {@link DeptDO#getId()} */
-    private Long DeptId;
+    private Long deptId;
 
     @TableField(typeHandler = JacksonTypeHandler.class, value = "post_list")
     private List<Integer> postList;

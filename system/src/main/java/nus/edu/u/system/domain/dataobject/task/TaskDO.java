@@ -2,6 +2,7 @@ package nus.edu.u.system.domain.dataobject.task;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -23,7 +24,7 @@ import nus.edu.u.system.enums.task.TaskStatusEnum;
 @NoArgsConstructor
 public class TaskDO extends TenantBaseDO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     @TableId private Long id;
 
@@ -38,11 +39,11 @@ public class TaskDO extends TenantBaseDO implements Serializable {
     private String description;
 
     /** Related to {@link TaskStatusEnum} */
-    private String status;
+    private Integer status;
 
     private String remark;
 
     private LocalDateTime startTime;
 
-    private LocalDateTime endDTime;
+    private LocalDateTime endTime;
 }
