@@ -101,6 +101,7 @@ public interface ErrorCodeConstants {
             new ErrorCode(
                     14_01_004, "Role cannot be deleted because it has been assigned to user(s)");
     ErrorCode ASSIGN_ROLE_FAILED = new ErrorCode(14_01_004, "Assign role failed");
+    ErrorCode EXISTING_ROLE_FAILED = new ErrorCode(14_01_005, "Role already exists");
     ErrorCode DEFAULT_ROLE = new ErrorCode(14_01_006, "Default roles. Can't be modified");
 
     ErrorCode CANNOT_FIND_PERMISSION = new ErrorCode(14_02_001, "Permission not fount");
