@@ -41,13 +41,11 @@ public class EventController {
         return CommonResult.success(resp);
     }
 
-    @SaCheckPermission(QUERY_EVENT)
     @GetMapping("/{id}")
     public CommonResult<EventRespVO> getByEventId(@PathVariable("id") @NotNull Long id) {
         return CommonResult.success(eventService.getByEventId(id));
     }
 
-    @SaCheckPermission(QUERY_EVENT)
     @GetMapping()
     public CommonResult<List<EventRespVO>> getByOrganizerId() {
         Long organizerId = StpUtil.getLoginIdAsLong();
@@ -65,7 +63,6 @@ public class EventController {
         return result;
     }
 
-    @SaCheckPermission(QUERY_TASK)
     @GetMapping("/{eventId}/tasks")
     public CommonResult<List<TaskRespVO>> listTasksByEvent(
             @PathVariable("eventId") @NotNull Long eventId) {
@@ -75,7 +72,6 @@ public class EventController {
         return result;
     }
 
-    @SaCheckPermission(QUERY_TASK)
     @GetMapping("/{eventId}/tasks/{taskId}")
     public CommonResult<TaskRespVO> getTask(
             @PathVariable("eventId") @NotNull Long eventId,

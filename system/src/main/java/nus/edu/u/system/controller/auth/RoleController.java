@@ -40,7 +40,6 @@ public class RoleController {
         return CommonResult.success(roleService.createRole(roleReqVO));
     }
 
-    @SaCheckPermission(QUERY_ROLE)
     @GetMapping("/{roleId}")
     public CommonResult<RoleRespVO> getRole(@PathVariable("roleId") Long roleId) {
         return CommonResult.success(roleService.getRole(roleId));
