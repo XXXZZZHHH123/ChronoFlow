@@ -252,6 +252,7 @@ jobs:
           fi
           echo "Running ZAP full scan against $TARGET"
           docker pull ghcr.io/zaproxy/zaproxy:stable -q
+          set +e
           docker run --rm \
             -v "$PWD":/zap/wrk/:rw \
             --network host \
@@ -263,6 +264,14 @@ jobs:
               -r zap-report.html \
               -P 1001 \
               -m 5
+          ZAP_EXIT=$?
+          set -e
+          if [ "$ZAP_EXIT" -eq 2 ]; then
+            echo "ZAP reported warnings only (exit code 2). Continuing pipeline."
+          elif [ "$ZAP_EXIT" -ne 0 ]; then
+            echo "ZAP scan failed with exit code $ZAP_EXIT" >&2
+            exit "$ZAP_EXIT"
+          fi
 
       - name: Upload ZAP reports
         uses: actions/upload-artifact@v4
