@@ -37,7 +37,7 @@ public class TaskLogDO extends TenantBaseDO implements Serializable {
 
     private BigDecimal moneyCost;
 
-    private BigDecimal laborCost;
+    private BigDecimal laborHour;
 
     private String remark;
 }
