@@ -245,7 +245,7 @@ jobs:
         with:
           target: ${{ vars.TEST_BASE_URL }}
           allow_issue_writing: false
-          artifact_name: zap-scan
+          artifact_name: zapscan
           token: ${{ secrets.GITHUB_TOKEN }}
           cmd_options: >
             -j zap-report.json
