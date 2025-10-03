@@ -66,29 +66,37 @@ jobs:
           output-file: sbom.cdx.json
 
       - name: SCA via Anchore (Grype) on SBOM
+        id: sca
         uses: anchore/scan-action@v6
         with:
           sbom: sbom.cdx.json
           fail-build: true
-          severity-cutoff: high 
+          severity-cutoff: high
           only-fixed: true
           output-format: sarif
           output-file: grype-report.sarif
+
+      - name: Render human-readable table
+        if: always()
+        run: |
+          grype -o table sbom:sbom.cdx.json > grype-report.txt || true
 
       - name: Upload SCA SARIF to code scanning
         if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: grype-report.sarif
-          category: grype-sbom 
+          category: grype-sbom
 
       - name: Upload SBOM & SCA reports as artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: sbom-and-sca-reports
           path: |
             sbom.cdx.json
             grype-report.sarif
+            grype-report.txt
 
   sonarjobs:
     name: Sonar Jobs
