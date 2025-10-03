@@ -7,6 +7,12 @@ on:
       - test
   pull_request:
     types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
 jobs:
   build:
     name: Build & JUnit & Lint
@@ -34,6 +40,63 @@ jobs:
 
       - name: Build & Run tests
         run: mvn -B clean verify
+
+  sca_sbom:
+    name: SCA & SBOM (CycloneDX + Grype)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: zulu
+
+      - name: Build (skip tests)
+        run: mvn -B clean package -DskipTests
+
+      - name: Generate SBOM (CycloneDX JSON)
+        uses: anchore/sbom-action@v0
+        with:
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+
+      - name: SCA via Anchore (Grype) on SBOM
+        id: sca
+        uses: anchore/scan-action@v6
+        with:
+          sbom: sbom.cdx.json
+          fail-build: false
+          severity-cutoff: high
+          only-fixed: true
+          output-format: sarif
+          output-file: grype-report.sarif
+
+      - name: Render human-readable table
+        if: always()
+        run: |
+          grype -o table sbom:sbom.cdx.json > grype-report.txt || true
+
+      - name: Upload SCA SARIF to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: grype-report.sarif
+          category: grype-sbom
+
+      - name: Upload SBOM & SCA reports as artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-and-sca-reports
+          path: |
+            sbom.cdx.json
+            grype-report.sarif
+            grype-report.txt
 
   sonarjobs:
     name: Sonar Jobs
@@ -78,7 +141,7 @@ jobs:
   docker_image:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, sca_sbom]
     if: ${{ github.ref == 'refs/heads/test' || github.ref == 'refs/heads/dev' }}
     permissions:
       contents: read
@@ -137,3 +200,48 @@ jobs:
     steps:
       - name: Redeploy service (non-interactive)
         run: railway redeploy --service ${{ secrets.RAILWAY_SERVICE_ID }} --yes
+
+      - name: Wait for healthy service
+        if: ${{ github.ref == 'refs/heads/test' }}
+        run: |
+          URL="${{ vars.TEST_BASE_URL }}"
+          echo "Probing $URL ..."
+          for i in {1..60}; do
+            if curl -fsSL "$URL/actuator/health" | grep -qi '"status":"UP"'; then
+              echo "Service healthy."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Service not healthy in time."
+          exit 1
+  
+  dast_zap:
+    name: DAST (ZAP full-scan)
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: ${{ github.ref == 'refs/heads/test' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.7.0
+        with:
+          target: ${{ vars.TEST_BASE_URL }}
+          allow_issue_writing: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          cmd_options: >
+            -j zap-report.json
+            -x zap-report.xml
+            -r zap-report.html
+            -P 1001
+            -m 5
+
+      - name: Upload ZAP reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-dast-reports
+          path: |
+            zap-report.json
+            zap-report.xml
+            zap-report.html
