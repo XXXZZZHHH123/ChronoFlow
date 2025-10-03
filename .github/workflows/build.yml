@@ -241,18 +241,28 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: ZAP Full Scan
-        uses: zaproxy/action-full-scan@v0.7.0
-        with:
-          target: ${{ vars.TEST_BASE_URL }}
-          allow_issue_writing: false
-          artifact_name: zapscan
-          token: ${{ secrets.GITHUB_TOKEN }}
-          cmd_options: >
-            -j zap-report.json
-            -x zap-report.xml
-            -r zap-report.html
-            -P 1001
-            -m 5
+        env:
+          TARGET_URL: ${{ vars.TEST_BASE_URL }}
+        run: |
+          set -euo pipefail
+          TARGET="${TARGET_URL%/}"
+          if [ -z "$TARGET" ]; then
+            echo "TEST_BASE_URL is not configured." >&2
+            exit 1
+          fi
+          echo "Running ZAP full scan against $TARGET"
+          docker pull ghcr.io/zaproxy/zaproxy:stable -q
+          docker run --rm \
+            -v "$PWD":/zap/wrk/:rw \
+            --network host \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-full-scan.py \
+              -t "$TARGET" \
+              -j zap-report.json \
+              -x zap-report.xml \
+              -r zap-report.html \
+              -P 1001 \
+              -m 5
 
       - name: Upload ZAP reports
         uses: actions/upload-artifact@v4
