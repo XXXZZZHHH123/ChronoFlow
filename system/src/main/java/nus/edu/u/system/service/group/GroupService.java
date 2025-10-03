@@ -4,6 +4,7 @@ import java.util.List;
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
 import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
+import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 
 /**
  * Group service interface Handles all group-related business logic for event management
@@ -33,4 +34,8 @@ public interface GroupService {
     void addMembersToGroup(Long groupId, List<Long> userIds);
 
     void removeMembersToGroup(Long groupId, List<Long> userIds);
+
+    List<GroupRespVO> getGroupsByEvent(Long eventId);
+
+    List<UserProfileRespVO> getAllUserProfiles();
 }

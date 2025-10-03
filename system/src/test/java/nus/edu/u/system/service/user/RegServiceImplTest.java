@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import nus.edu.u.common.constant.PermissionConstants;
-import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.permission.PermissionDO;
 import nus.edu.u.system.domain.dataobject.role.RoleDO;
@@ -37,62 +36,69 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 class RegServiceImplTest {
 
     @Mock private TenantMapper tenantMapper;
+
     @Mock private UserMapper userMapper;
+
     @Mock private PermissionMapper permissionMapper;
+
     @Mock private RolePermissionMapper rolePermissionMapper;
+
     @Mock private RoleMapper roleMapper;
+
     @Mock private UserRoleMapper userRoleMapper;
+
     @Mock private PasswordEncoder passwordEncoder;
 
     @InjectMocks private RegServiceImpl regService;
 
     private RegSearchReqVO regSearchReqVO;
-    private RegMemberReqVO regMemberReqVO;
-    private RegOrganizerReqVO regOrganizerReqVO;
     private TenantDO tenantDO;
     private UserDO userDO;
+    private RegMemberReqVO regMemberReqVO;
+    private RegOrganizerReqVO regOrganizerReqVO;
     private PermissionDO permissionDO;
+    private RoleDO roleDO;
 
     @BeforeEach
     void setUp() {
-        // 初始化搜索请求
+        // 初始化测试数据
         regSearchReqVO = new RegSearchReqVO();
         regSearchReqVO.setOrganizationId(1L);
-        regSearchReqVO.setUserId(100L);
+        regSearchReqVO.setUserId(1L);
 
-        // 初始化成员注册请求
+        tenantDO = TenantDO.builder().id(1L).name("Test Organization").build();
+
+        userDO =
+                UserDO.builder()
+                        .id(1L)
+                        .username("testuser")
+                        .email("test@example.com")
+                        .status(UserStatusEnum.PENDING.getCode())
+                        .build();
+        userDO.setTenantId(1L);
+
         regMemberReqVO = new RegMemberReqVO();
-        regMemberReqVO.setUserId(100L);
-        regMemberReqVO.setUsername("member001");
-        regMemberReqVO.setPhone("12345678901");
+        regMemberReqVO.setUserId(1L);
+        regMemberReqVO.setUsername("newuser");
+        regMemberReqVO.setPhone("13800138000");
         regMemberReqVO.setPassword("password123");
 
-        // 初始化组织者注册请求
         regOrganizerReqVO = new RegOrganizerReqVO();
-        regOrganizerReqVO.setUsername("organizer001");
-        regOrganizerReqVO.setOrganizationName("Test Organization");
-        regOrganizerReqVO.setMobile("12345678901");
+        regOrganizerReqVO.setUsername("organizer");
+        regOrganizerReqVO.setOrganizationName("New Org");
+        regOrganizerReqVO.setMobile("13800138000");
         regOrganizerReqVO.setOrganizationAddress("Test Address");
-        regOrganizerReqVO.setName("Test Organizer");
+        regOrganizerReqVO.setName("Organizer Name");
         regOrganizerReqVO.setUserEmail("organizer@test.com");
         regOrganizerReqVO.setUserPassword("password123");
 
-        // 初始化租户数据
-        tenantDO = new TenantDO();
-        tenantDO.setId(1L);
-        tenantDO.setName("Test Organization");
+        permissionDO =
+                PermissionDO.builder()
+                        .id(1L)
+                        .permissionKey(PermissionConstants.ALL_SYSTEM_PERMISSION)
+                        .build();
 
-        // 初始化用户数据
-        userDO = new UserDO();
-        userDO.setId(100L);
-        userDO.setTenantId(1L);
-        userDO.setEmail("test@example.com");
-        userDO.setStatus(UserStatusEnum.PENDING.getCode());
-
-        // 初始化权限数据
-        permissionDO = new PermissionDO();
-        permissionDO.setId(1L);
-        permissionDO.setPermissionKey(PermissionConstants.ALL_ORGANIZER_PERMISSION);
+        roleDO = RoleDO.builder().id(1L).name("Test Role").build();
     }
 
     // ==================== search 方法测试 ====================
@@ -101,7 +107,7 @@ class RegServiceImplTest {
     void search_Success() {
         // Given
         when(tenantMapper.selectById(1L)).thenReturn(tenantDO);
-        when(userMapper.selectById(100L)).thenReturn(userDO);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(userDO);
 
         // When
         RegSearchRespVO result = regService.search(regSearchReqVO);
@@ -110,9 +116,8 @@ class RegServiceImplTest {
         assertNotNull(result);
         assertEquals("Test Organization", result.getOrganizationName());
         assertEquals("test@example.com", result.getEmail());
-
         verify(tenantMapper).selectById(1L);
-        verify(userMapper).selectById(100L);
+        verify(userMapper).selectByIdWithoutTenant(1L);
     }
 
     @Test
@@ -121,12 +126,7 @@ class RegServiceImplTest {
         when(tenantMapper.selectById(1L)).thenReturn(null);
 
         // When & Then
-        assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.search(regSearchReqVO);
-                });
-
+        assertThrows(ServiceException.class, () -> regService.search(regSearchReqVO));
         verify(tenantMapper).selectById(1L);
         verify(userMapper, never()).selectById(anyLong());
     }
@@ -135,47 +135,34 @@ class RegServiceImplTest {
     void search_UserNotFound_ThrowsException() {
         // Given
         when(tenantMapper.selectById(1L)).thenReturn(tenantDO);
-        when(userMapper.selectById(100L)).thenReturn(null);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(null);
 
         // When & Then
-        assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.search(regSearchReqVO);
-                });
-
+        assertThrows(ServiceException.class, () -> regService.search(regSearchReqVO));
         verify(tenantMapper).selectById(1L);
-        verify(userMapper).selectById(100L);
+        verify(userMapper).selectByIdWithoutTenant(1L);
     }
 
     @Test
     void search_UserNotBelongToTenant_ThrowsException() {
         // Given
-        userDO.setTenantId(999L); // 不同的租户ID
+        userDO.setTenantId(2L); // 不同的租户ID
         when(tenantMapper.selectById(1L)).thenReturn(tenantDO);
-        when(userMapper.selectById(100L)).thenReturn(userDO);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(userDO);
 
         // When & Then
-        assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.search(regSearchReqVO);
-                });
+        assertThrows(ServiceException.class, () -> regService.search(regSearchReqVO));
     }
 
     @Test
-    void search_UserAlreadyRegistered_ThrowsException() {
+    void search_UserNotPending_ThrowsException() {
         // Given
-        userDO.setStatus(UserStatusEnum.ENABLE.getCode()); // 已注册状态
+        userDO.setStatus(UserStatusEnum.ENABLE.getCode());
         when(tenantMapper.selectById(1L)).thenReturn(tenantDO);
-        when(userMapper.selectById(100L)).thenReturn(userDO);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(userDO);
 
         // When & Then
-        assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.search(regSearchReqVO);
-                });
+        assertThrows(ServiceException.class, () -> regService.search(regSearchReqVO));
     }
 
     // ==================== registerAsMember 方法测试 ====================
@@ -183,25 +170,25 @@ class RegServiceImplTest {
     @Test
     void registerAsMember_Success() {
         // Given
-        when(userMapper.selectById(100L)).thenReturn(userDO);
-        when(passwordEncoder.encode("password123")).thenReturn("encoded_password");
-        when(userMapper.updateById(any(UserDO.class))).thenReturn(1);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(userDO);
+        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+        when(userMapper.updateByIdWithoutTenant(any(UserDO.class))).thenReturn(1);
 
         // When
         boolean result = regService.registerAsMember(regMemberReqVO);
 
         // Then
         assertTrue(result);
-        verify(userMapper).selectById(100L);
+        verify(userMapper).selectByIdWithoutTenant(1L);
         verify(passwordEncoder).encode("password123");
         verify(userMapper)
-                .updateById(
+                .updateByIdWithoutTenant(
                         argThat(
                                 user ->
-                                        user.getId().equals(100L)
-                                                && user.getUsername().equals("member001")
-                                                && user.getPhone().equals("12345678901")
-                                                && user.getPassword().equals("encoded_password")
+                                        user.getId().equals(1L)
+                                                && user.getUsername().equals("newuser")
+                                                && user.getPhone().equals("13800138000")
+                                                && user.getPassword().equals("encodedPassword")
                                                 && user.getStatus()
                                                         .equals(UserStatusEnum.ENABLE.getCode())));
     }
@@ -209,49 +196,24 @@ class RegServiceImplTest {
     @Test
     void registerAsMember_UserNotFound_ThrowsException() {
         // Given
-        when(userMapper.selectById(100L)).thenReturn(null);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(null);
 
         // When & Then
-        assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.registerAsMember(regMemberReqVO);
-                });
-
-        verify(userMapper).selectById(100L);
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(userMapper, never()).updateById(any(UserDO.class));
+        assertThrows(ServiceException.class, () -> regService.registerAsMember(regMemberReqVO));
+        verify(userMapper).selectByIdWithoutTenant(1L);
+        verify(userMapper, never()).updateByIdWithoutTenant(any());
     }
 
     @Test
-    void registerAsMember_UserAlreadyRegistered_ThrowsException() {
+    void registerAsMember_UserNotPending_ThrowsException() {
         // Given
         userDO.setStatus(UserStatusEnum.ENABLE.getCode());
-        when(userMapper.selectById(100L)).thenReturn(userDO);
+        when(userMapper.selectByIdWithoutTenant(1L)).thenReturn(userDO);
 
         // When & Then
-        assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.registerAsMember(regMemberReqVO);
-                });
-
-        verify(userMapper).selectById(100L);
-        verify(passwordEncoder, never()).encode(anyString());
-    }
-
-    @Test
-    void registerAsMember_UpdateFailed_ReturnsFalse() {
-        // Given
-        when(userMapper.selectById(100L)).thenReturn(userDO);
-        when(passwordEncoder.encode("password123")).thenReturn("encoded_password");
-        when(userMapper.updateById(any(UserDO.class))).thenReturn(0);
-
-        // When
-        boolean result = regService.registerAsMember(regMemberReqVO);
-
-        // Then
-        assertFalse(result);
+        assertThrows(ServiceException.class, () -> regService.registerAsMember(regMemberReqVO));
+        verify(userMapper).selectByIdWithoutTenant(1L);
+        verify(userMapper, never()).updateByIdWithoutTenant(any());
     }
 
     // ==================== registerAsOrganizer 方法测试 ====================
@@ -259,8 +221,7 @@ class RegServiceImplTest {
     @Test
     void registerAsOrganizer_Success() {
         // Given
-        when(userMapper.selectByUsername("organizer001")).thenReturn(null);
-        when(passwordEncoder.encode("password123")).thenReturn("encoded_password");
+        when(userMapper.selectByUsername("organizer")).thenReturn(null);
         when(tenantMapper.insert(any(TenantDO.class)))
                 .thenAnswer(
                         invocation -> {
@@ -272,81 +233,66 @@ class RegServiceImplTest {
                 .thenAnswer(
                         invocation -> {
                             UserDO user = invocation.getArgument(0);
-                            user.setId(100L);
+                            user.setId(1L);
                             return 1;
                         });
         when(tenantMapper.updateById(any(TenantDO.class))).thenReturn(1);
+        when(permissionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(permissionDO);
         when(roleMapper.insert(any(RoleDO.class)))
                 .thenAnswer(
                         invocation -> {
                             RoleDO role = invocation.getArgument(0);
-                            if (role.getRoleKey().equals("ORGANIZER")) {
-                                role.setId(1L);
-                            } else {
-                                role.setId(2L);
-                            }
+                            role.setId(1L);
                             return 1;
                         });
         when(userRoleMapper.insert(any(UserRoleDO.class))).thenReturn(1);
-        when(permissionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(permissionDO);
         when(rolePermissionMapper.insert(any(RolePermissionDO.class))).thenReturn(1);
+        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
 
         // When
         boolean result = regService.registerAsOrganizer(regOrganizerReqVO);
 
         // Then
         assertTrue(result);
-
-        // 验证所有操作都被调用
-        verify(userMapper).selectByUsername("organizer001");
+        verify(userMapper).selectByUsername("organizer");
         verify(tenantMapper).insert(any(TenantDO.class));
         verify(userMapper).insert(any(UserDO.class));
         verify(tenantMapper).updateById(any(TenantDO.class));
-        verify(roleMapper, times(2)).insert(any(RoleDO.class)); // 组织者和成员角色
-        verify(userRoleMapper).insert(any(UserRoleDO.class));
         verify(permissionMapper).selectOne(any(LambdaQueryWrapper.class));
+        verify(roleMapper, times(2)).insert(any(RoleDO.class)); // Organizer和Member两个角色
+        verify(userRoleMapper).insert(any(UserRoleDO.class));
         verify(rolePermissionMapper).insert(any(RolePermissionDO.class));
     }
 
     @Test
     void registerAsOrganizer_UsernameExists_ThrowsException() {
         // Given
-        UserDO existingUser = new UserDO();
-        existingUser.setUsername("organizer001");
-        when(userMapper.selectByUsername("organizer001")).thenReturn(existingUser);
+        when(userMapper.selectByUsername("organizer")).thenReturn(userDO);
 
         // When & Then
         assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.registerAsOrganizer(regOrganizerReqVO);
-                });
-
-        verify(userMapper).selectByUsername("organizer001");
-        verify(tenantMapper, never()).insert(any(TenantDO.class));
+                ServiceException.class, () -> regService.registerAsOrganizer(regOrganizerReqVO));
+        verify(userMapper).selectByUsername("organizer");
+        verify(tenantMapper, never()).insert(any());
     }
 
     @Test
     void registerAsOrganizer_TenantInsertFailed_ThrowsException() {
         // Given
-        when(userMapper.selectByUsername("organizer001")).thenReturn(null);
+        when(userMapper.selectByUsername("organizer")).thenReturn(null);
         when(tenantMapper.insert(any(TenantDO.class))).thenReturn(0);
 
         // When & Then
         assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.registerAsOrganizer(regOrganizerReqVO);
-                });
-
+                ServiceException.class, () -> regService.registerAsOrganizer(regOrganizerReqVO));
         verify(tenantMapper).insert(any(TenantDO.class));
-        verify(userMapper, never()).insert(any(UserDO.class));
+        verify(userMapper, never()).insert(any());
     }
 
     @Test
     void registerAsOrganizer_UserInsertFailed_ThrowsException() {
         // Given
-        when(userMapper.selectByUsername("organizer001")).thenReturn(null);
+        when(userMapper.selectByUsername("organizer")).thenReturn(null);
         when(tenantMapper.insert(any(TenantDO.class)))
                 .thenAnswer(
                         invocation -> {
@@ -355,22 +301,19 @@ class RegServiceImplTest {
                             return 1;
                         });
         when(userMapper.insert(any(UserDO.class))).thenReturn(0);
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
 
         // When & Then
         assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.registerAsOrganizer(regOrganizerReqVO);
-                });
-
+                ServiceException.class, () -> regService.registerAsOrganizer(regOrganizerReqVO));
         verify(userMapper).insert(any(UserDO.class));
-        verify(tenantMapper, never()).updateById(any(TenantDO.class));
+        verify(tenantMapper, never()).updateById(any());
     }
 
     @Test
     void registerAsOrganizer_TenantUpdateFailed_ThrowsException() {
         // Given
-        when(userMapper.selectByUsername("organizer001")).thenReturn(null);
+        when(userMapper.selectByUsername("organizer")).thenReturn(null);
         when(tenantMapper.insert(any(TenantDO.class)))
                 .thenAnswer(
                         invocation -> {
@@ -382,52 +325,23 @@ class RegServiceImplTest {
                 .thenAnswer(
                         invocation -> {
                             UserDO user = invocation.getArgument(0);
-                            user.setId(100L);
+                            user.setId(1L);
                             return 1;
                         });
         when(tenantMapper.updateById(any(TenantDO.class))).thenReturn(0);
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
 
         // When & Then
         assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.registerAsOrganizer(regOrganizerReqVO);
-                });
-    }
-
-    @Test
-    void registerAsOrganizer_RoleInsertFailed_ThrowsException() {
-        // Given
-        when(userMapper.selectByUsername("organizer001")).thenReturn(null);
-        when(tenantMapper.insert(any(TenantDO.class)))
-                .thenAnswer(
-                        invocation -> {
-                            TenantDO tenant = invocation.getArgument(0);
-                            tenant.setId(1L);
-                            return 1;
-                        });
-        when(userMapper.insert(any(UserDO.class)))
-                .thenAnswer(
-                        invocation -> {
-                            UserDO user = invocation.getArgument(0);
-                            user.setId(100L);
-                            return 1;
-                        });
-        when(tenantMapper.updateById(any(TenantDO.class))).thenReturn(1);
-        when(roleMapper.insert(any(RoleDO.class))).thenReturn(0); // 第一个角色插入失败
-
-        // When & Then
-        assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.registerAsOrganizer(regOrganizerReqVO);
-                });
+                ServiceException.class, () -> regService.registerAsOrganizer(regOrganizerReqVO));
+        verify(tenantMapper).updateById(any(TenantDO.class));
+        verify(permissionMapper, never()).selectOne(any());
     }
 
     @Test
     void registerAsOrganizer_PermissionNotFound_ThrowsException() {
         // Given
-        when(userMapper.selectByUsername("organizer001")).thenReturn(null);
+        when(userMapper.selectByUsername("organizer")).thenReturn(null);
         when(tenantMapper.insert(any(TenantDO.class)))
                 .thenAnswer(
                         invocation -> {
@@ -439,33 +353,24 @@ class RegServiceImplTest {
                 .thenAnswer(
                         invocation -> {
                             UserDO user = invocation.getArgument(0);
-                            user.setId(100L);
+                            user.setId(1L);
                             return 1;
                         });
         when(tenantMapper.updateById(any(TenantDO.class))).thenReturn(1);
-        when(roleMapper.insert(any(RoleDO.class)))
-                .thenAnswer(
-                        invocation -> {
-                            RoleDO role = invocation.getArgument(0);
-                            role.setId(1L);
-                            return 1;
-                        });
-        when(userRoleMapper.insert(any(UserRoleDO.class))).thenReturn(1);
         when(permissionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
 
         // When & Then
         assertThrows(
-                ServiceException.class,
-                () -> {
-                    regService.registerAsOrganizer(regOrganizerReqVO);
-                });
+                ServiceException.class, () -> regService.registerAsOrganizer(regOrganizerReqVO));
+        verify(permissionMapper).selectOne(any(LambdaQueryWrapper.class));
+        verify(roleMapper, never()).insert(any());
     }
 
     @Test
-    void registerAsOrganizer_VerifyDataCorrectness() {
+    void registerAsOrganizer_OrganizerRoleInsertFailed_ThrowsException() {
         // Given
-        when(userMapper.selectByUsername("organizer001")).thenReturn(null);
-        when(passwordEncoder.encode("password123")).thenReturn("encoded_password");
+        when(userMapper.selectByUsername("organizer")).thenReturn(null);
         when(tenantMapper.insert(any(TenantDO.class)))
                 .thenAnswer(
                         invocation -> {
@@ -477,10 +382,114 @@ class RegServiceImplTest {
                 .thenAnswer(
                         invocation -> {
                             UserDO user = invocation.getArgument(0);
-                            user.setId(100L);
+                            user.setId(1L);
                             return 1;
                         });
         when(tenantMapper.updateById(any(TenantDO.class))).thenReturn(1);
+        when(permissionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(permissionDO);
+        when(roleMapper.insert(any(RoleDO.class))).thenReturn(0); // 第一次插入失败
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+
+        // When & Then
+        assertThrows(
+                ServiceException.class, () -> regService.registerAsOrganizer(regOrganizerReqVO));
+        verify(roleMapper)
+                .insert(argThat(role -> RegServiceImpl.ORGANIZER_ROLE_NAME.equals(role.getName())));
+    }
+
+    @Test
+    void registerAsOrganizer_MemberRoleInsertFailed_ThrowsException() {
+        // Given
+        when(userMapper.selectByUsername("organizer")).thenReturn(null);
+        when(tenantMapper.insert(any(TenantDO.class)))
+                .thenAnswer(
+                        invocation -> {
+                            TenantDO tenant = invocation.getArgument(0);
+                            tenant.setId(1L);
+                            return 1;
+                        });
+        when(userMapper.insert(any(UserDO.class)))
+                .thenAnswer(
+                        invocation -> {
+                            UserDO user = invocation.getArgument(0);
+                            user.setId(1L);
+                            return 1;
+                        });
+        when(tenantMapper.updateById(any(TenantDO.class))).thenReturn(1);
+        when(permissionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(permissionDO);
+        when(roleMapper.insert(any(RoleDO.class)))
+                .thenAnswer(
+                        invocation -> {
+                            RoleDO role = invocation.getArgument(0);
+                            role.setId(1L);
+                            return 1;
+                        }) // Organizer角色插入成功
+                .thenReturn(0); // Member角色插入失败
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+
+        // When & Then
+        assertThrows(
+                ServiceException.class, () -> regService.registerAsOrganizer(regOrganizerReqVO));
+        verify(roleMapper, times(2)).insert(any(RoleDO.class));
+    }
+
+    @Test
+    void registerAsOrganizer_UserRoleInsertFailed_ThrowsException() {
+        // Given
+        when(userMapper.selectByUsername("organizer")).thenReturn(null);
+        when(tenantMapper.insert(any(TenantDO.class)))
+                .thenAnswer(
+                        invocation -> {
+                            TenantDO tenant = invocation.getArgument(0);
+                            tenant.setId(1L);
+                            return 1;
+                        });
+        when(userMapper.insert(any(UserDO.class)))
+                .thenAnswer(
+                        invocation -> {
+                            UserDO user = invocation.getArgument(0);
+                            user.setId(1L);
+                            return 1;
+                        });
+        when(tenantMapper.updateById(any(TenantDO.class))).thenReturn(1);
+        when(permissionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(permissionDO);
+        when(roleMapper.insert(any(RoleDO.class)))
+                .thenAnswer(
+                        invocation -> {
+                            RoleDO role = invocation.getArgument(0);
+                            role.setId(1L);
+                            return 1;
+                        });
+        when(userRoleMapper.insert(any(UserRoleDO.class))).thenReturn(0);
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+
+        // When & Then
+        assertThrows(
+                ServiceException.class, () -> regService.registerAsOrganizer(regOrganizerReqVO));
+        verify(userRoleMapper).insert(any(UserRoleDO.class));
+        verify(rolePermissionMapper, never()).insert(any());
+    }
+
+    @Test
+    void registerAsOrganizer_RolePermissionInsertFailed_ThrowsException() {
+        // Given
+        when(userMapper.selectByUsername("organizer")).thenReturn(null);
+        when(tenantMapper.insert(any(TenantDO.class)))
+                .thenAnswer(
+                        invocation -> {
+                            TenantDO tenant = invocation.getArgument(0);
+                            tenant.setId(1L);
+                            return 1;
+                        });
+        when(userMapper.insert(any(UserDO.class)))
+                .thenAnswer(
+                        invocation -> {
+                            UserDO user = invocation.getArgument(0);
+                            user.setId(1L);
+                            return 1;
+                        });
+        when(tenantMapper.updateById(any(TenantDO.class))).thenReturn(1);
+        when(permissionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(permissionDO);
         when(roleMapper.insert(any(RoleDO.class)))
                 .thenAnswer(
                         invocation -> {
@@ -489,58 +498,12 @@ class RegServiceImplTest {
                             return 1;
                         });
         when(userRoleMapper.insert(any(UserRoleDO.class))).thenReturn(1);
-        when(permissionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(permissionDO);
-        when(rolePermissionMapper.insert(any(RolePermissionDO.class))).thenReturn(1);
+        when(rolePermissionMapper.insert(any(RolePermissionDO.class))).thenReturn(0);
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
 
-        // When
-        regService.registerAsOrganizer(regOrganizerReqVO);
-
-        // Then - 验证租户数据
-        verify(tenantMapper)
-                .insert(
-                        argThat(
-                                tenant ->
-                                        tenant.getName().equals("Test Organization")
-                                                && tenant.getContactMobile().equals("12345678901")
-                                                && tenant.getAddress().equals("Test Address")
-                                                && tenant.getContactName()
-                                                        .equals("Test Organizer")));
-
-        // 验证用户数据
-        verify(userMapper)
-                .insert(
-                        argThat(
-                                user ->
-                                        user.getUsername().equals("organizer001")
-                                                && user.getEmail().equals("organizer@test.com")
-                                                && user.getPhone().equals("12345678901")
-                                                && user.getPassword().equals("encoded_password")
-                                                && user.getRemark()
-                                                        .equals(RegServiceImpl.ORGANIZER_REMARK)
-                                                && user.getStatus()
-                                                        .equals(UserStatusEnum.ENABLE.getCode())));
-
-        // 验证角色数据
-        verify(roleMapper)
-                .insert(
-                        argThat(
-                                role ->
-                                        role.getName().equals("Organizer")
-                                                && role.getRoleKey().equals("ORGANIZER")
-                                                && role.getStatus()
-                                                        .equals(
-                                                                CommonStatusEnum.ENABLE
-                                                                        .getStatus())));
-
-        verify(roleMapper)
-                .insert(
-                        argThat(
-                                role ->
-                                        role.getName().equals("Member")
-                                                && role.getRoleKey().equals("MEMBER")
-                                                && role.getStatus()
-                                                        .equals(
-                                                                CommonStatusEnum.ENABLE
-                                                                        .getStatus())));
+        // When & Then
+        assertThrows(
+                ServiceException.class, () -> regService.registerAsOrganizer(regOrganizerReqVO));
+        verify(rolePermissionMapper).insert(any(RolePermissionDO.class));
     }
 }

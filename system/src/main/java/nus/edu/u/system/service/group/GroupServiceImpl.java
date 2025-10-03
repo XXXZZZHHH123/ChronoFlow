@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +22,11 @@ import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
 import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
+import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
+import nus.edu.u.system.service.user.UserService;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -44,13 +47,15 @@ public class GroupServiceImpl implements GroupService {
 
     @Resource private EventMapper eventMapper;
 
+    @Resource private UserService userService;
+
     @Override
     @Transactional
     public Long createGroup(CreateGroupReqVO reqVO) {
         // 1. Validate event exists
         EventDO event = eventMapper.selectById(reqVO.getEventId());
         if (ObjectUtil.isNull(event)) {
-            throw exception(GROUP_NOT_FOUND);
+            throw exception(EVENT_NOT_FOUND);
         }
 
         // 2. Check if group name already exists in this event
@@ -73,26 +78,30 @@ public class GroupServiceImpl implements GroupService {
             }
         }
 
-        //        // 4. Validate if event is existed
-        //        EventDO eventDO = eventMapper.selectById(reqVO.getEventId());
-        //        if (ObjectUtil.isNull(eventDO)) {
-        //            throw exception(EVENT_NOT_FOUND);
-        //        }
-
-        // 5. Create group
+        // 4. Create group
         DeptDO deptDO =
                 DeptDO.builder()
                         .name(reqVO.getName())
                         .sort(reqVO.getSort())
                         .leadUserId(reqVO.getLeadUserId())
-                        .phone(reqVO.getPhone())
-                        .email(reqVO.getEmail())
                         .eventId(reqVO.getEventId())
                         .remark(reqVO.getRemark())
                         .status(CommonStatusEnum.ENABLE.getStatus())
                         .build();
 
+        //        deptMapper.insert(deptDO);
         deptMapper.insert(deptDO);
+        Long groupId = deptDO.getId();
+
+        if (groupId == null) {
+            log.error("Failed to get group ID after insert");
+            throw exception(GET_GROUP_ID_FAILED);
+        }
+
+        // 5. Automatically add leader as a member if leadUserId is provided
+        if (ObjectUtil.isNotNull(reqVO.getLeadUserId())) {
+            addMemberToGroup(deptDO.getId(), reqVO.getLeadUserId());
+        }
 
         log.info("Created group: {} with ID: {}", reqVO.getName(), deptDO.getId());
         return deptDO.getId();
@@ -317,5 +326,76 @@ public class GroupServiceImpl implements GroupService {
         if (!failedIds.isEmpty()) {
             log.warn("failed to remove members from group: failedUserIds={}", failedIds);
         }
+    }
+
+    @Override
+    public List<GroupRespVO> getGroupsByEvent(Long eventId) {
+        log.info("Service: Getting groups for event ID: {}", eventId);
+
+        EventDO event = eventMapper.selectById(eventId);
+        if (ObjectUtil.isNull(event)) {
+            log.error("Event not found: {}", eventId);
+            throw exception(EVENT_NOT_FOUND);
+        }
+
+        LambdaQueryWrapper<DeptDO> queryWrapper =
+                new LambdaQueryWrapper<DeptDO>()
+                        .eq(DeptDO::getEventId, eventId)
+                        .eq(DeptDO::getDeleted, false)
+                        .orderByAsc(DeptDO::getSort)
+                        .orderByDesc(DeptDO::getCreateTime);
+
+        List<DeptDO> deptList = deptMapper.selectList(queryWrapper);
+
+        if (ObjectUtil.isEmpty(deptList)) {
+            log.info("No groups found for event ID: {}", eventId);
+            return Collections.emptyList();
+        }
+
+        log.info("Found {} groups for event ID: {}", deptList.size(), eventId);
+
+        return deptList.stream()
+                .map(
+                        dept -> {
+                            int memberCount =
+                                    Math.toIntExact(
+                                            userMapper.selectCount(
+                                                    new LambdaQueryWrapper<UserDO>()
+                                                            .eq(UserDO::getDeptId, dept.getId())
+                                                            .eq(
+                                                                    UserDO::getStatus,
+                                                                    CommonStatusEnum.ENABLE
+                                                                            .getStatus())));
+
+                            String leadUserName = null;
+                            if (ObjectUtil.isNotNull(dept.getLeadUserId())) {
+                                UserDO leader = userMapper.selectById(dept.getLeadUserId());
+                                if (ObjectUtil.isNotNull(leader)) {
+                                    leadUserName = leader.getUsername();
+                                }
+                            }
+
+                            return GroupRespVO.builder()
+                                    .id(dept.getId())
+                                    .name(dept.getName())
+                                    .sort(dept.getSort())
+                                    .leadUserId(dept.getLeadUserId())
+                                    .leadUserName(leadUserName)
+                                    .remark(dept.getRemark())
+                                    .status(dept.getStatus())
+                                    .statusName(dept.getStatus() == 0 ? "Active" : "Inactive")
+                                    .eventId(dept.getEventId())
+                                    .eventName(event.getName())
+                                    .memberCount(memberCount)
+                                    .createTime(dept.getCreateTime())
+                                    .updateTime(dept.getUpdateTime())
+                                    .build();
+                        })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserProfileRespVO> getAllUserProfiles() {
+        return userService.getEnabledUserProfiles();
     }
 }

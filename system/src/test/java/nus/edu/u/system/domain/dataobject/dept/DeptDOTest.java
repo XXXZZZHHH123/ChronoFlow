@@ -18,8 +18,6 @@ class DeptDOTest {
                         .name("Test Department")
                         .sort(1)
                         .leadUserId(2L)
-                        .phone("12345678901")
-                        .email("dept@example.com")
                         .remark("Test remark")
                         .status(CommonStatusEnum.ENABLE.getStatus())
                         .eventId(1L)
@@ -38,8 +36,6 @@ class DeptDOTest {
         assertEquals("Test Department", deptDO.getName());
         assertEquals(1, deptDO.getSort());
         assertEquals(2L, deptDO.getLeadUserId());
-        assertEquals("12345678901", deptDO.getPhone());
-        assertEquals("dept@example.com", deptDO.getEmail());
         assertEquals("Test remark", deptDO.getRemark());
         assertEquals(CommonStatusEnum.ENABLE.getStatus(), deptDO.getStatus());
         assertEquals(1L, deptDO.getEventId());
@@ -60,8 +56,6 @@ class DeptDOTest {
                         .name("Test Department")
                         .sort(1)
                         .leadUserId(2L)
-                        .phone("12345678901")
-                        .email("dept@example.com")
                         .remark("Test remark")
                         .status(CommonStatusEnum.ENABLE.getStatus())
                         .eventId(1L)
@@ -73,8 +67,6 @@ class DeptDOTest {
         assertEquals("Test Department", deptDO.getName());
         assertEquals(1, deptDO.getSort());
         assertEquals(2L, deptDO.getLeadUserId());
-        assertEquals("12345678901", deptDO.getPhone());
-        assertEquals("dept@example.com", deptDO.getEmail());
         assertEquals("Test remark", deptDO.getRemark());
         assertEquals(CommonStatusEnum.ENABLE.getStatus(), deptDO.getStatus());
         assertEquals(1L, deptDO.getEventId());
@@ -91,8 +83,6 @@ class DeptDOTest {
         assertNull(deptDO.getName());
         assertNull(deptDO.getSort());
         assertNull(deptDO.getLeadUserId());
-        assertNull(deptDO.getPhone());
-        assertNull(deptDO.getEmail());
         assertNull(deptDO.getRemark());
         assertNull(deptDO.getStatus());
         assertNull(deptDO.getEventId());
@@ -107,8 +97,6 @@ class DeptDOTest {
                         "Test Department", // name
                         1, // sort
                         2L, // leadUserId
-                        "12345678901", // phone
-                        "dept@example.com", // email
                         "Test remark", // remark
                         CommonStatusEnum.ENABLE.getStatus(), // status
                         1L // eventId
@@ -120,8 +108,6 @@ class DeptDOTest {
         assertEquals("Test Department", deptDO.getName());
         assertEquals(1, deptDO.getSort());
         assertEquals(2L, deptDO.getLeadUserId());
-        assertEquals("12345678901", deptDO.getPhone());
-        assertEquals("dept@example.com", deptDO.getEmail());
         assertEquals("Test remark", deptDO.getRemark());
         assertEquals(CommonStatusEnum.ENABLE.getStatus(), deptDO.getStatus());
         assertEquals(1L, deptDO.getEventId());
@@ -137,8 +123,6 @@ class DeptDOTest {
         deptDO.setName("Test Department");
         deptDO.setSort(1);
         deptDO.setLeadUserId(2L);
-        deptDO.setPhone("12345678901");
-        deptDO.setEmail("dept@example.com");
         deptDO.setRemark("Test remark");
         deptDO.setStatus(CommonStatusEnum.ENABLE.getStatus());
         deptDO.setEventId(1L);
@@ -148,8 +132,6 @@ class DeptDOTest {
         assertEquals("Test Department", deptDO.getName());
         assertEquals(1, deptDO.getSort());
         assertEquals(2L, deptDO.getLeadUserId());
-        assertEquals("12345678901", deptDO.getPhone());
-        assertEquals("dept@example.com", deptDO.getEmail());
         assertEquals("Test remark", deptDO.getRemark());
         assertEquals(CommonStatusEnum.ENABLE.getStatus(), deptDO.getStatus());
         assertEquals(1L, deptDO.getEventId());
@@ -166,8 +148,6 @@ class DeptDOTest {
                         .name("Test Department")
                         .sort(1)
                         .leadUserId(2L)
-                        .phone("12345678901")
-                        .email("dept@example.com")
                         .remark("Test remark")
                         .status(CommonStatusEnum.ENABLE.getStatus())
                         .eventId(1L)
@@ -185,8 +165,6 @@ class DeptDOTest {
                         .name("Test Department")
                         .sort(1)
                         .leadUserId(2L)
-                        .phone("12345678901")
-                        .email("dept@example.com")
                         .remark("Test remark")
                         .status(CommonStatusEnum.ENABLE.getStatus())
                         .eventId(1L)
@@ -224,8 +202,6 @@ class DeptDOTest {
                         .name("Test Department")
                         .sort(1)
                         .leadUserId(2L)
-                        .phone("12345678901")
-                        .email("dept@example.com")
                         .remark("Test remark")
                         .status(CommonStatusEnum.ENABLE.getStatus())
                         .eventId(1L)
@@ -240,8 +216,6 @@ class DeptDOTest {
         assertTrue(toString.contains("name=Test Department"));
         assertTrue(toString.contains("sort=1"));
         assertTrue(toString.contains("leadUserId=2"));
-        assertTrue(toString.contains("phone=12345678901"));
-        assertTrue(toString.contains("email=dept@example.com"));
         assertTrue(toString.contains("remark=Test remark"));
         assertTrue(toString.contains("status=0")); // ENABLE status value is 0
         assertTrue(toString.contains("eventId=1"));

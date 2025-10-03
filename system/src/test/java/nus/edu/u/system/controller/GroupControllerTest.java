@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
+import nus.edu.u.system.domain.vo.group.AddMembersReqVO;
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
 import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
@@ -45,8 +46,6 @@ class GroupControllerTest {
         reqVO.setName("Test Group");
         reqVO.setEventId(1L);
         reqVO.setLeadUserId(1L);
-        reqVO.setPhone("12345678901");
-        reqVO.setEmail("test@example.com");
         reqVO.setRemark("Test remark");
         reqVO.setSort(1);
 
@@ -89,8 +88,6 @@ class GroupControllerTest {
         reqVO.setId(1L);
         reqVO.setName("Updated Group");
         reqVO.setLeadUserId(2L);
-        reqVO.setPhone("12345678902");
-        reqVO.setEmail("updated@example.com");
         reqVO.setRemark("Updated remark");
         reqVO.setSort(2);
         reqVO.setStatus(1);
@@ -200,13 +197,17 @@ class GroupControllerTest {
         // Given
         Long groupId = 1L;
         List<Long> userIds = Arrays.asList(1L, 2L, 3L);
+
+        AddMembersReqVO reqVO = new AddMembersReqVO();
+        reqVO.setUserIds(userIds);
+
         doNothing().when(groupService).addMembersToGroup(groupId, userIds);
 
         // When & Then
         mockMvc.perform(
                         post("/system/group/{groupId}/members/batch", groupId)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(userIds)))
+                                .content(objectMapper.writeValueAsString(reqVO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data").value(true));

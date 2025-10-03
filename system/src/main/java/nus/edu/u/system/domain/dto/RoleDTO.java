@@ -1,6 +1,7 @@
 package nus.edu.u.system.domain.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nus.edu.u.common.enums.CommonStatusEnum;
@@ -12,6 +13,7 @@ import nus.edu.u.common.enums.CommonStatusEnum;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class RoleDTO {
 
     private Long id;

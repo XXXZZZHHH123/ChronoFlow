@@ -31,8 +31,6 @@ class GroupVOTest {
         vo.setName("Test Group");
         vo.setEventId(1L);
         vo.setLeadUserId(1L);
-        vo.setPhone("12345678901");
-        vo.setEmail("test@example.com");
         vo.setRemark("Test remark");
         vo.setSort(1);
 
@@ -154,8 +152,6 @@ class GroupVOTest {
         vo.setId(1L);
         vo.setName("Updated Group");
         vo.setLeadUserId(2L);
-        vo.setPhone("12345678902");
-        vo.setEmail("updated@example.com");
         vo.setRemark("Updated remark");
         vo.setSort(2);
         vo.setStatus(1);
@@ -292,8 +288,6 @@ class GroupVOTest {
                         .sort(1)
                         .leadUserId(2L)
                         .leadUserName("Leader User")
-                        .phone("12345678900")
-                        .email("group@example.com")
                         .remark("Test remark")
                         .status(1)
                         .statusName("Active")
@@ -311,8 +305,6 @@ class GroupVOTest {
         assertEquals(1, vo.getSort());
         assertEquals(2L, vo.getLeadUserId());
         assertEquals("Leader User", vo.getLeadUserName());
-        assertEquals("12345678900", vo.getPhone());
-        assertEquals("group@example.com", vo.getEmail());
         assertEquals("Test remark", vo.getRemark());
         assertEquals(1, vo.getStatus());
         assertEquals("Active", vo.getStatusName());
