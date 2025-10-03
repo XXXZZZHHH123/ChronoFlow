@@ -131,3 +131,13 @@ sa-token:
   token-style: uuid
   cookie:
     http-only: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info    # 只暴露 health/info（安全）
+      base-path: /actuator      # 默认就是 /actuator，可省略
+  endpoint:
+    health:
+      show-details: never       # 生产环境建议 never；开发可用 always
