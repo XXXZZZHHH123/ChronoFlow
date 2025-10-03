@@ -10,10 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
-import nus.edu.u.system.domain.vo.event.EventCreateReqVO;
-import nus.edu.u.system.domain.vo.event.EventRespVO;
-import nus.edu.u.system.domain.vo.event.EventUpdateReqVO;
-import nus.edu.u.system.domain.vo.event.UpdateEventRespVO;
+import nus.edu.u.system.domain.vo.event.*;
 import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
 import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
@@ -41,13 +38,11 @@ public class EventController {
         return CommonResult.success(resp);
     }
 
-    @SaCheckPermission(QUERY_EVENT)
     @GetMapping("/{id}")
     public CommonResult<EventRespVO> getByEventId(@PathVariable("id") @NotNull Long id) {
         return CommonResult.success(eventService.getByEventId(id));
     }
 
-    @SaCheckPermission(QUERY_EVENT)
     @GetMapping()
     public CommonResult<List<EventRespVO>> getByOrganizerId() {
         Long organizerId = StpUtil.getLoginIdAsLong();
@@ -61,11 +56,10 @@ public class EventController {
             @Valid @RequestBody TaskCreateReqVO reqVO) {
         TaskRespVO resp = taskService.createTask(eventId, reqVO);
         CommonResult<TaskRespVO> result = CommonResult.success(resp);
-        result.setMsg("Task created successfully");
+        result.setMsg("task created successfully");
         return result;
     }
 
-    @SaCheckPermission(QUERY_TASK)
     @GetMapping("/{eventId}/tasks")
     public CommonResult<List<TaskRespVO>> listTasksByEvent(
             @PathVariable("eventId") @NotNull Long eventId) {
@@ -75,14 +69,13 @@ public class EventController {
         return result;
     }
 
-    @SaCheckPermission(QUERY_TASK)
     @GetMapping("/{eventId}/tasks/{taskId}")
     public CommonResult<TaskRespVO> getTask(
             @PathVariable("eventId") @NotNull Long eventId,
             @PathVariable("taskId") @NotNull Long taskId) {
         TaskRespVO resp = taskService.getTask(eventId, taskId);
         CommonResult<TaskRespVO> result = CommonResult.success(resp);
-        result.setMsg("Task retrieved successfully");
+        result.setMsg("task retrieved successfully");
         return result;
     }
 
@@ -92,9 +85,9 @@ public class EventController {
             @PathVariable("eventId") @NotNull Long eventId,
             @PathVariable("taskId") @NotNull Long taskId,
             @Valid @RequestBody TaskUpdateReqVO reqVO) {
-        TaskRespVO resp = taskService.updateTask(eventId, taskId, reqVO);
+        TaskRespVO resp = taskService.updateTask(eventId, taskId, reqVO, reqVO.getType());
         CommonResult<TaskRespVO> result = CommonResult.success(resp);
-        result.setMsg("Task updated successfully");
+        result.setMsg("task updated successfully");
         return result;
     }
 
@@ -105,7 +98,7 @@ public class EventController {
             @PathVariable("taskId") @NotNull Long taskId) {
         taskService.deleteTask(eventId, taskId);
         CommonResult<Void> result = CommonResult.success(null);
-        result.setMsg("Task deleted successfully");
+        result.setMsg("task deleted successfully");
         return result;
     }
 
@@ -127,5 +120,12 @@ public class EventController {
     @PatchMapping("/restore/{id}")
     public CommonResult<Boolean> restoreEvent(@PathVariable("id") Long id) {
         return CommonResult.success(eventService.restoreEvent(id));
+    }
+
+    @SaCheckPermission(ASSIGN_TASK)
+    @GetMapping("/{eventId}/assignable-member")
+    public CommonResult<List<EventGroupRespVO>> assignableMember(
+            @PathVariable("eventId") Long eventId) {
+        return CommonResult.success(eventService.assignableMember(eventId));
     }
 }

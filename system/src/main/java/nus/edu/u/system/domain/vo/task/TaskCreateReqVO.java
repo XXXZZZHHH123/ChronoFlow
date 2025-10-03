@@ -5,8 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.Data;
-import nus.edu.u.common.annotation.InEnum;
-import nus.edu.u.system.enums.task.TaskStatusEnum;
 
 @Data
 public class TaskCreateReqVO {
@@ -15,15 +13,12 @@ public class TaskCreateReqVO {
 
     private String description;
 
-    @InEnum(value = TaskStatusEnum.class, message = "Illegal task status")
-    private Integer status;
-
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
     private LocalDateTime startTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
     private LocalDateTime endTime;
 
-    @NotNull(message = "assignedUserId cannot be null")
-    private Long assignedUserId;
+    @NotNull(message = "You should assign task to a member")
+    private Long targetUserId;
 }

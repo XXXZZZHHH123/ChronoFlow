@@ -10,7 +10,7 @@ import nus.edu.u.common.core.domain.base.TenantBaseDO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
 
 /**
- * Task log data object for table task_log
+ * task log data object for table task_log
  *
  * @author Lu Shuwen
  * @date 2025-08-28
@@ -32,6 +32,8 @@ public class TaskLogDO extends TenantBaseDO implements Serializable {
 
     /** Related to {@link TaskActionEnum} */
     private Integer action;
+
+    private Long targetUserId;
 
     private BigDecimal moneyCost;
 

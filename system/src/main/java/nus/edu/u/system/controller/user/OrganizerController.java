@@ -83,7 +83,6 @@ public class OrganizerController {
         return CommonResult.success(true);
     }
 
-    @SaCheckPermission(QUERY_MEMBER)
     @GetMapping("/users")
     public CommonResult<List<UserProfileRespVO>> getAllUserProfiles() {
         return CommonResult.success(userService.getAllUserProfiles());
