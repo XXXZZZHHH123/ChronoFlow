@@ -69,7 +69,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'sbom'
-          input: 'sbom.cdx.json'
+          scan-ref: 'sbom.cdx.json'
           format: 'sarif'
           output: 'trivy-sbom.sarif'
           severity: 'HIGH,CRITICAL'
