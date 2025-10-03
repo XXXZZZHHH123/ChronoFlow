@@ -1,19 +1,14 @@
 package nus.edu.u.system.controller.user;
 
 import static nus.edu.u.common.core.domain.CommonResult.success;
-import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.USER_NOTFOUND;
 
 import cn.dev33.satoken.stp.StpUtil;
 import jakarta.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
-import nus.edu.u.system.domain.dto.RoleDTO;
-import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.vo.member.MemberProfileRespVO;
 import nus.edu.u.system.service.user.UserService;
 import org.springframework.validation.annotation.Validated;
@@ -42,38 +37,8 @@ public class MemberDashboardController {
         Long userId = StpUtil.getLoginIdAsLong();
         log.info("Fetching member profile for userId={}", userId);
 
-        UserRoleDTO userRoleDTO = userService.selectUserWithRole(userId);
-        if (userRoleDTO == null) {
-            throw exception(USER_NOTFOUND);
-        }
-
-        MemberProfileRespVO respVO = new MemberProfileRespVO();
-        respVO.setId(userRoleDTO.getUserId());
-        respVO.setUsername(userRoleDTO.getUsername());
-        respVO.setEmail(userRoleDTO.getEmail());
-        respVO.setPhone(userRoleDTO.getPhone());
-        respVO.setStatus(userRoleDTO.getStatus());
-        respVO.setTenantId(userRoleDTO.getTenantId());
-
-        List<RoleDTO> roles = userRoleDTO.getRoles();
-        if (roles != null && !roles.isEmpty()) {
-            respVO.setRoles(
-                    roles.stream()
-                            .map(
-                                    role -> {
-                                        MemberProfileRespVO.RoleVO roleVO =
-                                                new MemberProfileRespVO.RoleVO();
-                                        roleVO.setId(role.getId());
-                                        roleVO.setName(role.getName());
-                                        roleVO.setKey(role.getRoleKey());
-                                        return roleVO;
-                                    })
-                            .collect(Collectors.toList()));
-        } else {
-            respVO.setRoles(Collections.emptyList());
-        }
-
-        return success(respVO);
+        MemberProfileRespVO memberProfile = userService.getMemberProfile(userId);
+        return success(memberProfile);
     }
 
     /**
