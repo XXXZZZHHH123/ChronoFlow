@@ -71,14 +71,16 @@ jobs:
           sbom: sbom.cdx.json
           fail-build: true
           severity-cutoff: high 
-          only-fixed: false
+          only-fixed: true
           output-format: sarif
           output-file: grype-report.sarif
 
       - name: Upload SCA SARIF to code scanning
+        if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: grype-report.sarif
+          category: grype-sbom 
 
       - name: Upload SBOM & SCA reports as artifacts
         uses: actions/upload-artifact@v4
