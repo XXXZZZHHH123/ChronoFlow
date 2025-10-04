@@ -50,7 +50,9 @@ public class UserDO extends TenantBaseDO implements Serializable {
 
     private LocalDateTime loginTime;
 
+
     /** Related to {@link DeptDO#getId()} */
+    @Deprecated
     private Long deptId;
 
     @TableField(typeHandler = JacksonTypeHandler.class, value = "post_list")
