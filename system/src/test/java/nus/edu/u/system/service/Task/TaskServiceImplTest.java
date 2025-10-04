@@ -17,6 +17,7 @@ import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
+import nus.edu.u.system.domain.vo.task.TaskDashboardRespVO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
 import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
@@ -85,6 +86,8 @@ class TaskServiceImplTest {
         assertThat(resp.getStatus()).isEqualTo(TaskStatusEnum.DOING.getStatus());
         assertThat(resp.getAssignedUser()).isNotNull();
         assertThat(resp.getAssignedUser().getName()).isEqualTo("Alice");
+        assertThat(resp.getAssignedUser().getEmail()).isEqualTo(assignee.getEmail());
+        assertThat(resp.getAssignedUser().getPhone()).isEqualTo(assignee.getPhone());
         assertThat(resp.getAssignedUser().getGroups())
                 .singleElement()
                 .satisfies(
@@ -92,6 +95,8 @@ class TaskServiceImplTest {
                             assertThat(group.getId()).isEqualTo(55L);
                             assertThat(group.getName()).isEqualTo("Tech");
                         });
+        assertThat(resp.getEvent()).isNotNull();
+        assertThat(resp.getEvent().getId()).isEqualTo(eventId);
     }
 
     @Test
@@ -339,6 +344,8 @@ class TaskServiceImplTest {
         assertThat(resp.getAssignedUser()).isNotNull();
         assertThat(resp.getAssignedUser().getName()).isEqualTo("Bob");
         assertThat(resp.getAssignedUser().getGroups()).hasSize(1);
+        assertThat(resp.getEvent()).isNotNull();
+        assertThat(resp.getEvent().getId()).isEqualTo(eventId);
     }
 
     @Test
@@ -417,6 +424,8 @@ class TaskServiceImplTest {
         assertThat(resp.getAssignedUser().getGroups())
                 .singleElement()
                 .satisfies(group -> assertThat(group.getName()).isEqualTo("HR"));
+        assertThat(resp.getEvent()).isNotNull();
+        assertThat(resp.getEvent().getId()).isEqualTo(eventId);
     }
 
     @Test
@@ -506,18 +515,21 @@ class TaskServiceImplTest {
         Map<Long, TaskRespVO> byId = resp.stream().collect(toMap(TaskRespVO::getId, v -> v));
 
         TaskRespVO first = byId.get(101L);
+        assertThat(first.getEvent()).isNotNull();
         assertThat(first.getAssignedUser().getName()).isEqualTo("Alex");
         assertThat(first.getAssignedUser().getGroups())
                 .extracting(TaskRespVO.AssignedUserVO.GroupVO::getName)
                 .containsExactly("Dept-501");
 
         TaskRespVO second = byId.get(102L);
+        assertThat(second.getEvent()).isNotNull();
         assertThat(second.getAssignedUser().getName()).isEqualTo("Bea");
         assertThat(second.getAssignedUser().getGroups())
                 .extracting(TaskRespVO.AssignedUserVO.GroupVO::getName)
                 .containsExactly("Dept-502");
 
         TaskRespVO third = byId.get(103L);
+        assertThat(third.getEvent()).isNotNull();
         assertThat(third.getAssignedUser()).isNull();
     }
 
@@ -546,10 +558,118 @@ class TaskServiceImplTest {
                 .singleElement()
                 .satisfies(
                         vo -> {
+                            assertThat(vo.getEvent()).isNotNull();
                             assertThat(vo.getAssignedUser().getGroups()).isEmpty();
                         });
 
         verify(deptMapper, never()).selectBatchIds(anyList());
+    }
+
+    @Test
+    void listTasksByMember_userNotFound_throws() {
+        when(userMapper.selectById(88L)).thenReturn(null);
+
+        assertThrowsCode(() -> service.listTasksByMember(88L), USER_NOT_FOUND);
+    }
+
+    @Test
+    void listTasksByMember_returnsEnrichedTasks() {
+        long memberId = 9L;
+        long tenantId = 44L;
+        long deptId = 501L;
+
+        UserDO member = user(memberId, tenantId, deptId);
+        member.setUsername("Member");
+        when(userMapper.selectById(memberId)).thenReturn(member);
+
+        TaskDO firstTask =
+                TaskDO.builder().id(301L).eventId(1001L).userId(memberId).name("First").build();
+        TaskDO secondTask =
+                TaskDO.builder().id(302L).eventId(1002L).userId(memberId).name("Second").build();
+        when(taskMapper.selectList(any())).thenReturn(List.of(firstTask, secondTask));
+
+        DeptDO dept = dept(deptId, tenantId, "Dev Team");
+        dept.setEventId(1001L);
+        when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
+
+        EventDO eventOne = event(1001L, tenantId);
+        eventOne.setName("Hackathon");
+        EventDO eventTwo = event(1002L, tenantId);
+        eventTwo.setName("Workshop");
+        when(eventMapper.selectBatchIds(anyCollection())).thenReturn(List.of(eventOne, eventTwo));
+
+        List<TaskRespVO> resp = service.listTasksByMember(memberId);
+
+        assertThat(resp).extracting(TaskRespVO::getId).containsExactlyInAnyOrder(301L, 302L);
+        assertThat(resp)
+                .allSatisfy(
+                        vo -> {
+                            assertThat(vo.getAssignedUser()).isNotNull();
+                            assertThat(vo.getAssignedUser().getId()).isEqualTo(memberId);
+                            assertThat(vo.getAssignedUser().getGroups())
+                                    .extracting(TaskRespVO.AssignedUserVO.GroupVO::getName)
+                                    .containsExactly("Dev Team");
+                            assertThat(vo.getEvent()).isNotNull();
+                        });
+
+        Map<Long, TaskRespVO> byId =
+                resp.stream().collect(toMap(TaskRespVO::getId, value -> value));
+        assertThat(byId.get(301L).getEvent().getName()).isEqualTo("Hackathon");
+        assertThat(byId.get(302L).getEvent().getName()).isEqualTo("Workshop");
+    }
+
+    @Test
+    void getByMemberId_userNotFound_throws() {
+        when(userMapper.selectById(77L)).thenReturn(null);
+
+        assertThrowsCode(() -> service.getByMemberId(77L), USER_NOT_FOUND);
+    }
+
+    @Test
+    void getByMemberId_returnsDashboard() {
+        long memberId = 10L;
+        long tenantId = 55L;
+        long deptId = 888L;
+
+        UserDO member = user(memberId, tenantId, deptId);
+        member.setUsername("DashboardUser");
+        when(userMapper.selectById(memberId)).thenReturn(member);
+
+        DeptDO dept = dept(deptId, tenantId, "Analytics");
+        dept.setEventId(2001L);
+        dept.setSort(3);
+        dept.setRemark("Important group");
+        when(deptMapper.selectById(deptId)).thenReturn(dept);
+
+        EventDO linkedEvent = event(2001L, tenantId);
+        linkedEvent.setName("Conference");
+        when(eventMapper.selectById(2001L)).thenReturn(linkedEvent);
+
+        TaskDO task =
+                TaskDO.builder().id(400L).eventId(2001L).userId(memberId).name("Prep").build();
+        when(taskMapper.selectList(any())).thenReturn(List.of(task));
+        when(eventMapper.selectBatchIds(anyCollection())).thenReturn(List.of(linkedEvent));
+        when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
+
+        TaskDashboardRespVO dashboard = service.getByMemberId(memberId);
+
+        assertThat(dashboard.getMember()).isNotNull();
+        assertThat(dashboard.getMember().getId()).isEqualTo(memberId);
+        assertThat(dashboard.getMember().getUsername()).isEqualTo("DashboardUser");
+
+        assertThat(dashboard.getGroups())
+                .singleElement()
+                .satisfies(
+                        group -> {
+                            assertThat(group.getName()).isEqualTo("Analytics");
+                            assertThat(group.getEvent()).isNotNull();
+                            assertThat(group.getEvent().getName()).isEqualTo("Conference");
+                        });
+
+        assertThat(dashboard.getTasks()).hasSize(1);
+        TaskRespVO taskResp = dashboard.getTasks().get(0);
+        assertThat(taskResp.getId()).isEqualTo(400L);
+        assertThat(taskResp.getEvent()).isNotNull();
     }
 
     private TaskCreateReqVO baseCreateReq() {
@@ -581,6 +701,8 @@ class TaskServiceImplTest {
     private UserDO user(Long id, Long tenantId, Long deptId) {
         UserDO user = UserDO.builder().id(id).deptId(deptId).username("user" + id).build();
         user.setTenantId(tenantId);
+        user.setEmail("user" + id + "@example.com");
+        user.setPhone("+65" + String.format("%08d", id));
         return user;
     }
 
