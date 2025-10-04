@@ -4,9 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Data;
 
-/**
- * Task dashboard response aggregating member profile, group detail, and assigned tasks.
- */
+/** Task dashboard response aggregating member profile, group detail, and assigned tasks. */
 @Data
 public class TaskDashboardRespVO {
     private MemberVO member;

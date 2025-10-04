@@ -70,7 +70,6 @@ public class UserServiceImpl implements UserService {
         return userMapper.selectUserWithRole(userId);
     }
 
-
     @Override
     public UserDO selectUserById(Long userId) {
         return userMapper.selectById(userId);

@@ -583,19 +583,9 @@ class TaskServiceImplTest {
         when(userMapper.selectById(memberId)).thenReturn(member);
 
         TaskDO firstTask =
-                TaskDO.builder()
-                        .id(301L)
-                        .eventId(1001L)
-                        .userId(memberId)
-                        .name("First")
-                        .build();
+                TaskDO.builder().id(301L).eventId(1001L).userId(memberId).name("First").build();
         TaskDO secondTask =
-                TaskDO.builder()
-                        .id(302L)
-                        .eventId(1002L)
-                        .userId(memberId)
-                        .name("Second")
-                        .build();
+                TaskDO.builder().id(302L).eventId(1002L).userId(memberId).name("Second").build();
         when(taskMapper.selectList(any())).thenReturn(List.of(firstTask, secondTask));
 
         DeptDO dept = dept(deptId, tenantId, "Dev Team");
@@ -606,14 +596,11 @@ class TaskServiceImplTest {
         eventOne.setName("Hackathon");
         EventDO eventTwo = event(1002L, tenantId);
         eventTwo.setName("Workshop");
-        when(eventMapper.selectBatchIds(anyCollection()))
-                .thenReturn(List.of(eventOne, eventTwo));
+        when(eventMapper.selectBatchIds(anyCollection())).thenReturn(List.of(eventOne, eventTwo));
 
         List<TaskRespVO> resp = service.listTasksByMember(memberId);
 
-        assertThat(resp)
-                .extracting(TaskRespVO::getId)
-                .containsExactlyInAnyOrder(301L, 302L);
+        assertThat(resp).extracting(TaskRespVO::getId).containsExactlyInAnyOrder(301L, 302L);
         assertThat(resp)
                 .allSatisfy(
                         vo -> {
@@ -658,7 +645,8 @@ class TaskServiceImplTest {
         linkedEvent.setName("Conference");
         when(eventMapper.selectById(2001L)).thenReturn(linkedEvent);
 
-        TaskDO task = TaskDO.builder().id(400L).eventId(2001L).userId(memberId).name("Prep").build();
+        TaskDO task =
+                TaskDO.builder().id(400L).eventId(2001L).userId(memberId).name("Prep").build();
         when(taskMapper.selectList(any())).thenReturn(List.of(task));
         when(eventMapper.selectBatchIds(anyCollection())).thenReturn(List.of(linkedEvent));
         when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
