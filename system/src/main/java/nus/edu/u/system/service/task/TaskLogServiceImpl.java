@@ -54,8 +54,9 @@ public class TaskLogServiceImpl implements TaskLogService {
         return taskLogList.stream()
                 .map(taskLog -> {
                     UserDO targetUser = userMap.get(taskLog.getTargetUserId());
-                    UserVO targetUserVO = new UserVO();
+                    UserVO targetUserVO = null;
                     if (ObjectUtil.isNotNull(targetUser)) {
+                        targetUserVO = new UserVO();
                         targetUserVO.setId(targetUser.getId());
                         targetUserVO.setName(targetUser.getUsername());
                         targetUserVO.setEmail(targetUser.getEmail());
