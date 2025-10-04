@@ -250,23 +250,14 @@ class GroupServiceImplTest {
         Long groupId = 1L;
         Long userId = 2L;
         UserDO user =
-                UserDO.builder()
-                        .id(userId)
-                        .status(CommonStatusEnum.ENABLE.getStatus())
-                        .build();
+                UserDO.builder().id(userId).status(CommonStatusEnum.ENABLE.getStatus()).build();
 
         UserGroupDO existingRelation =
-                UserGroupDO.builder()
-                        .id(1L)
-                        .userId(userId)
-                        .deptId(groupId)
-                        .eventId(1L)
-                        .build();
+                UserGroupDO.builder().id(1L).userId(userId).deptId(groupId).eventId(1L).build();
 
         when(deptMapper.selectById(groupId)).thenReturn(deptDO);
         when(userMapper.selectById(userId)).thenReturn(user);
-        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class)))
-                .thenReturn(existingRelation);
+        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(existingRelation);
 
         // When & Then
         ServiceException exception =
@@ -283,10 +274,7 @@ class GroupServiceImplTest {
         Long groupId = 1L;
         Long userId = 2L;
         UserDO user =
-                UserDO.builder()
-                        .id(userId)
-                        .status(CommonStatusEnum.ENABLE.getStatus())
-                        .build();
+                UserDO.builder().id(userId).status(CommonStatusEnum.ENABLE.getStatus()).build();
 
         UserGroupDO existingRelation =
                 UserGroupDO.builder()
@@ -298,8 +286,7 @@ class GroupServiceImplTest {
 
         when(deptMapper.selectById(groupId)).thenReturn(deptDO);
         when(userMapper.selectById(userId)).thenReturn(user);
-        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class)))
-                .thenReturn(existingRelation);
+        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(existingRelation);
 
         // When & Then
         ServiceException exception =
@@ -338,12 +325,7 @@ class GroupServiceImplTest {
         Long groupId = 1L;
         Long userId = 2L;
         UserGroupDO userGroup =
-                UserGroupDO.builder()
-                        .id(10L)
-                        .userId(userId)
-                        .deptId(groupId)
-                        .eventId(1L)
-                        .build();
+                UserGroupDO.builder().id(10L).userId(userId).deptId(groupId).eventId(1L).build();
         DeptDO group =
                 DeptDO.builder()
                         .id(groupId)
@@ -386,12 +368,7 @@ class GroupServiceImplTest {
         Long groupId = 1L;
         Long userId = 2L;
         UserGroupDO userGroup =
-                UserGroupDO.builder()
-                        .id(10L)
-                        .userId(userId)
-                        .deptId(groupId)
-                        .eventId(1L)
-                        .build();
+                UserGroupDO.builder().id(10L).userId(userId).deptId(groupId).eventId(1L).build();
         DeptDO group =
                 DeptDO.builder()
                         .id(groupId)
