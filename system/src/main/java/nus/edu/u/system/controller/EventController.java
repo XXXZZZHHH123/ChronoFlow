@@ -15,6 +15,7 @@ import nus.edu.u.system.domain.vo.event.EventRespVO;
 import nus.edu.u.system.domain.vo.event.EventUpdateReqVO;
 import nus.edu.u.system.domain.vo.event.UpdateEventRespVO;
 import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
+import nus.edu.u.system.domain.vo.task.TaskDashboardRespVO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
 import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
 import nus.edu.u.system.service.event.EventService;
@@ -70,6 +71,13 @@ public class EventController {
         CommonResult<List<TaskRespVO>> result = CommonResult.success(resp);
         result.setMsg("Tasks retrieved successfully");
         return result;
+    }
+
+    @GetMapping("/tasks/dashboard")
+    public CommonResult<TaskDashboardRespVO> getByMemberId() {
+        Long memberId = StpUtil.getLoginIdAsLong();
+        TaskDashboardRespVO resp = taskService.getByMemberId(memberId);
+        return CommonResult.success(resp);
     }
 
     @GetMapping("/{eventId}/tasks/{taskId}")

@@ -5,7 +5,6 @@ import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.CreateUserDTO;
 import nus.edu.u.system.domain.dto.UpdateUserDTO;
 import nus.edu.u.system.domain.dto.UserRoleDTO;
-import nus.edu.u.system.domain.vo.member.MemberProfileRespVO;
 import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
 import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 
@@ -40,14 +39,6 @@ public interface UserService {
      * @return UserRoleDTO
      */
     UserRoleDTO selectUserWithRole(Long userId);
-
-    /**
-     * Build a member profile response view object for the given user.
-     *
-     * @param userId user id
-     * @return MemberProfileRespVO
-     */
-    MemberProfileRespVO getMemberProfile(Long userId);
 
     UserDO selectUserById(Long userId);
 

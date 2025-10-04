@@ -19,7 +19,6 @@ import nus.edu.u.system.domain.dto.CreateUserDTO;
 import nus.edu.u.system.domain.dto.RoleDTO;
 import nus.edu.u.system.domain.dto.UpdateUserDTO;
 import nus.edu.u.system.domain.dto.UserRoleDTO;
-import nus.edu.u.system.domain.vo.member.MemberProfileRespVO;
 import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
 import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 import nus.edu.u.system.enums.user.UserStatusEnum;
@@ -71,40 +70,6 @@ public class UserServiceImpl implements UserService {
         return userMapper.selectUserWithRole(userId);
     }
 
-    @Override
-    public MemberProfileRespVO getMemberProfile(Long userId) {
-        UserRoleDTO userRoleDTO = selectUserWithRole(userId);
-        if (userRoleDTO == null) {
-            throw exception(USER_NOTFOUND);
-        }
-
-        MemberProfileRespVO respVO = new MemberProfileRespVO();
-        respVO.setId(userRoleDTO.getUserId());
-        respVO.setUsername(userRoleDTO.getUsername());
-        respVO.setEmail(userRoleDTO.getEmail());
-        respVO.setPhone(userRoleDTO.getPhone());
-        respVO.setStatus(userRoleDTO.getStatus());
-        respVO.setTenantId(userRoleDTO.getTenantId());
-
-        List<RoleDTO> roles = userRoleDTO.getRoles();
-        if (roles == null || roles.isEmpty()) {
-            respVO.setRoles(Collections.emptyList());
-        } else {
-            respVO.setRoles(
-                    roles.stream()
-                            .map(
-                                    role -> {
-                                        MemberProfileRespVO.RoleVO roleVO =
-                                                new MemberProfileRespVO.RoleVO();
-                                        roleVO.setId(role.getId());
-                                        roleVO.setName(role.getName());
-                                        roleVO.setKey(role.getRoleKey());
-                                        return roleVO;
-                                    })
-                            .toList());
-        }
-        return respVO;
-    }
 
     @Override
     public UserDO selectUserById(Long userId) {
