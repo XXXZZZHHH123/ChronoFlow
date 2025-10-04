@@ -6,11 +6,8 @@ import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.annotation.Resource;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -203,9 +200,10 @@ public class GroupServiceImpl implements GroupService {
 
         // 4. check if this user already in other group in this Event
         Long eventId = group.getEventId();
-        LambdaQueryWrapper<UserGroupDO> checkWrapper = new LambdaQueryWrapper<UserGroupDO>()
-                .eq(UserGroupDO::getUserId, userId)
-                .eq(UserGroupDO::getEventId, eventId);
+        LambdaQueryWrapper<UserGroupDO> checkWrapper =
+                new LambdaQueryWrapper<UserGroupDO>()
+                        .eq(UserGroupDO::getUserId, userId)
+                        .eq(UserGroupDO::getEventId, eventId);
 
         UserGroupDO existingRelation = userGroupMapper.selectOne(checkWrapper);
 
@@ -219,12 +217,13 @@ public class GroupServiceImpl implements GroupService {
         }
 
         // 5. create user-group relation
-        UserGroupDO userGroup = UserGroupDO.builder()
-                .userId(userId)
-                .deptId(groupId)
-                .eventId(eventId)
-                .joinTime(LocalDateTime.now())
-                .build();
+        UserGroupDO userGroup =
+                UserGroupDO.builder()
+                        .userId(userId)
+                        .deptId(groupId)
+                        .eventId(eventId)
+                        .joinTime(LocalDateTime.now())
+                        .build();
 
         userGroupMapper.insert(userGroup);
         log.info("Added user {} to group {} in event {}", userId, groupId, eventId);
@@ -234,9 +233,10 @@ public class GroupServiceImpl implements GroupService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void removeMemberFromGroup(Long groupId, Long userId) {
         // 1. 验证关联关系存在
-        LambdaQueryWrapper<UserGroupDO> queryWrapper = new LambdaQueryWrapper<UserGroupDO>()
-                .eq(UserGroupDO::getUserId, userId)
-                .eq(UserGroupDO::getDeptId, groupId);
+        LambdaQueryWrapper<UserGroupDO> queryWrapper =
+                new LambdaQueryWrapper<UserGroupDO>()
+                        .eq(UserGroupDO::getUserId, userId)
+                        .eq(UserGroupDO::getDeptId, groupId);
 
         UserGroupDO userGroup = userGroupMapper.selectOne(queryWrapper);
         if (ObjectUtil.isNull(userGroup)) {
@@ -257,8 +257,8 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public List<GroupRespVO.MemberInfo> getGroupMembers(Long groupId) {
         // 通过关联表查询
-        LambdaQueryWrapper<UserGroupDO> queryWrapper = new LambdaQueryWrapper<UserGroupDO>()
-                .eq(UserGroupDO::getDeptId, groupId);
+        LambdaQueryWrapper<UserGroupDO> queryWrapper =
+                new LambdaQueryWrapper<UserGroupDO>().eq(UserGroupDO::getDeptId, groupId);
 
         List<UserGroupDO> userGroups = userGroupMapper.selectList(queryWrapper);
 
@@ -266,9 +266,8 @@ public class GroupServiceImpl implements GroupService {
             return Collections.emptyList();
         }
 
-        List<Long> userIds = userGroups.stream()
-                .map(UserGroupDO::getUserId)
-                .collect(Collectors.toList());
+        List<Long> userIds =
+                userGroups.stream().map(UserGroupDO::getUserId).collect(Collectors.toList());
 
         // 批量查询用户信息
         List<UserDO> users = userMapper.selectBatchIds(userIds);
@@ -276,20 +275,22 @@ public class GroupServiceImpl implements GroupService {
         // 只返回启用状态的用户
         return users.stream()
                 .filter(user -> CommonStatusEnum.isEnable(user.getStatus()))
-                .map(user -> {
-                    UserGroupDO userGroup = userGroups.stream()
-                            .filter(ug -> ug.getUserId().equals(user.getId()))
-                            .findFirst()
-                            .orElse(null);
+                .map(
+                        user -> {
+                            UserGroupDO userGroup =
+                                    userGroups.stream()
+                                            .filter(ug -> ug.getUserId().equals(user.getId()))
+                                            .findFirst()
+                                            .orElse(null);
 
-                    return GroupRespVO.MemberInfo.builder()
-                            .userId(user.getId())
-                            .username(user.getUsername())
-                            .email(user.getEmail())
-                            .phone(user.getPhone())
-                            .joinTime(userGroup != null ? userGroup.getJoinTime() : null)
-                            .build();
-                })
+                            return GroupRespVO.MemberInfo.builder()
+                                    .userId(user.getId())
+                                    .username(user.getUsername())
+                                    .email(user.getEmail())
+                                    .phone(user.getPhone())
+                                    .joinTime(userGroup != null ? userGroup.getJoinTime() : null)
+                                    .build();
+                        })
                 .collect(Collectors.toList());
     }
 
@@ -393,39 +394,41 @@ public class GroupServiceImpl implements GroupService {
         log.info("Found {} groups for event ID: {}", deptList.size(), eventId);
 
         return deptList.stream()
-                .map(dept -> {
-                    // 修改：使用 UserGroupDO 表统计成员数量
-                    int memberCount = Math.toIntExact(
-                            userGroupMapper.selectCount(
-                                    new LambdaQueryWrapper<UserGroupDO>()
-                                            .eq(UserGroupDO::getDeptId, dept.getId())
-                            )
-                    );
+                .map(
+                        dept -> {
+                            // 修改：使用 UserGroupDO 表统计成员数量
+                            int memberCount =
+                                    Math.toIntExact(
+                                            userGroupMapper.selectCount(
+                                                    new LambdaQueryWrapper<UserGroupDO>()
+                                                            .eq(
+                                                                    UserGroupDO::getDeptId,
+                                                                    dept.getId())));
 
-                    String leadUserName = null;
-                    if (ObjectUtil.isNotNull(dept.getLeadUserId())) {
-                        UserDO leader = userMapper.selectById(dept.getLeadUserId());
-                        if (ObjectUtil.isNotNull(leader)) {
-                            leadUserName = leader.getUsername();
-                        }
-                    }
+                            String leadUserName = null;
+                            if (ObjectUtil.isNotNull(dept.getLeadUserId())) {
+                                UserDO leader = userMapper.selectById(dept.getLeadUserId());
+                                if (ObjectUtil.isNotNull(leader)) {
+                                    leadUserName = leader.getUsername();
+                                }
+                            }
 
-                    return GroupRespVO.builder()
-                            .id(dept.getId())
-                            .name(dept.getName())
-                            .sort(dept.getSort())
-                            .leadUserId(dept.getLeadUserId())
-                            .leadUserName(leadUserName)
-                            .remark(dept.getRemark())
-                            .status(dept.getStatus())
-                            .statusName(dept.getStatus() == 0 ? "Active" : "Inactive")
-                            .eventId(dept.getEventId())
-                            .eventName(event.getName())
-                            .memberCount(memberCount)
-                            .createTime(dept.getCreateTime())
-                            .updateTime(dept.getUpdateTime())
-                            .build();
-                })
+                            return GroupRespVO.builder()
+                                    .id(dept.getId())
+                                    .name(dept.getName())
+                                    .sort(dept.getSort())
+                                    .leadUserId(dept.getLeadUserId())
+                                    .leadUserName(leadUserName)
+                                    .remark(dept.getRemark())
+                                    .status(dept.getStatus())
+                                    .statusName(dept.getStatus() == 0 ? "Active" : "Inactive")
+                                    .eventId(dept.getEventId())
+                                    .eventName(event.getName())
+                                    .memberCount(memberCount)
+                                    .createTime(dept.getCreateTime())
+                                    .updateTime(dept.getUpdateTime())
+                                    .build();
+                        })
                 .collect(Collectors.toList());
     }
 

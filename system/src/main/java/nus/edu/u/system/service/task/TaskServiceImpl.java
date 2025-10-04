@@ -187,7 +187,7 @@ public class TaskServiceImpl implements TaskService {
                 userIds.isEmpty()
                         ? Map.of()
                         : userMapper.selectBatchIds(userIds).stream()
-                        .collect(Collectors.toMap(UserDO::getId, Function.identity()));
+                                .collect(Collectors.toMap(UserDO::getId, Function.identity()));
 
         Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> groupsByDeptId =
                 buildGroupsByDept(usersById);

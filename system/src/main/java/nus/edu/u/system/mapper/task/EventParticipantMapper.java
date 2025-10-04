@@ -10,9 +10,8 @@ import org.apache.ibatis.annotations.Update;
 public interface EventParticipantMapper extends BaseMapper<EventParticipantDO> {
 
     /**
-     * Restore deleted participants for an event
-     * Note: This will restore all participants but their group assignments (deptId)
-     * will remain null and need to be reassigned
+     * Restore deleted participants for an event Note: This will restore all participants but their
+     * group assignments (deptId) will remain null and need to be reassigned
      */
     @Update(
             "UPDATE event_participant "
