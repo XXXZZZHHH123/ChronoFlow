@@ -56,6 +56,11 @@ public interface ErrorCodeConstants {
             new ErrorCode(10_02_007, "Cannot remove group leader from group");
     ErrorCode GET_GROUP_ID_FAILED =
             new ErrorCode(10_02_008, "Failed to get group ID after insert ");
+    ErrorCode USER_ALREADY_IN_OTHER_GROUP_OF_EVENT =
+            new ErrorCode(1_002_015_000, "User already in other group at this event");
+    ErrorCode USER_NOT_IN_GROUP = new ErrorCode(1_002_015_001, "user not in this group");
+    ErrorCode ADD_MEMBERS_FAILED =
+            new ErrorCode(1_002_015_004, "Add failed: A user can only be in one group per event");
 
     // ========= Reg module 11-01-000 =============
     ErrorCode NO_SEARCH_RESULT = new ErrorCode(11_01_001, "No matching result found");
@@ -102,6 +107,7 @@ public interface ErrorCodeConstants {
             new ErrorCode(
                     14_01_004, "Role cannot be deleted because it has been assigned to user(s)");
     ErrorCode ASSIGN_ROLE_FAILED = new ErrorCode(14_01_004, "Assign role failed");
+    ErrorCode EXISTING_ROLE_FAILED = new ErrorCode(14_01_005, "Role already exists");
     ErrorCode DEFAULT_ROLE = new ErrorCode(14_01_006, "Default roles. Can't be modified");
 
     ErrorCode CANNOT_FIND_PERMISSION = new ErrorCode(14_02_001, "Permission not fount");

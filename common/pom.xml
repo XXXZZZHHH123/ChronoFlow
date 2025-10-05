@@ -15,6 +15,10 @@
         Common module
     </description>
 
+    <properties>
+        <spring-boot.run.skip>true</spring-boot.run.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.aspectj</groupId>

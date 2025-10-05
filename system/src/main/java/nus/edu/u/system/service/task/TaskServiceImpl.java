@@ -19,6 +19,7 @@ import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
+import nus.edu.u.system.domain.vo.task.TaskDashboardRespVO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
 import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
@@ -79,7 +80,7 @@ public class TaskServiceImpl implements TaskService {
             throw exception(TASK_CREATE_FAILED);
         }
 
-        return buildTaskResponse(task, assignee);
+        return buildTaskResponse(task, event, assignee);
     }
 
     @Override
@@ -136,7 +137,7 @@ public class TaskServiceImpl implements TaskService {
             throw exception(UPDATE_FAILURE);
         }
 
-        return buildTaskResponse(task, assignee);
+        return buildTaskResponse(task, event, assignee);
     }
 
     @Override
@@ -171,7 +172,7 @@ public class TaskServiceImpl implements TaskService {
             throw exception(TASK_NOT_FOUND);
         }
 
-        return buildTaskResponse(task, null);
+        return buildTaskResponse(task, event, null);
     }
 
     @Override
@@ -207,20 +208,78 @@ public class TaskServiceImpl implements TaskService {
                         task -> {
                             Long userId = task.getUserId();
                             UserDO user = userId != null ? usersById.get(userId) : null;
-                            return buildTaskResponse(task, user, groupsByDeptId);
+                            return buildTaskResponse(task, event, user, groupsByDeptId);
                         })
                 .toList();
     }
 
-    private TaskRespVO buildTaskResponse(TaskDO task, UserDO assignee) {
-        return buildTaskResponse(task, assignee, null);
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskRespVO> listTasksByMember(Long memberId) {
+        UserDO member = userMapper.selectById(memberId);
+        if (member == null) {
+            throw exception(USER_NOT_FOUND);
+        }
+
+        List<TaskDO> tasks =
+                taskMapper.selectList(
+                        Wrappers.<TaskDO>lambdaQuery().eq(TaskDO::getUserId, memberId));
+
+        if (tasks.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, UserDO> usersById = Map.of(memberId, member);
+        Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> groupsByDeptId =
+                buildGroupsByDept(usersById);
+
+        List<Long> eventIds =
+                tasks.stream().map(TaskDO::getEventId).filter(Objects::nonNull).distinct().toList();
+
+        Map<Long, EventDO> eventsById =
+                eventIds.isEmpty()
+                        ? Map.of()
+                        : eventMapper.selectBatchIds(eventIds).stream()
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toMap(EventDO::getId, Function.identity()));
+
+        return tasks.stream()
+                .map(
+                        task ->
+                                buildTaskResponse(
+                                        task,
+                                        eventsById.get(task.getEventId()),
+                                        member,
+                                        groupsByDeptId))
+                .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TaskDashboardRespVO getByMemberId(Long memberId) {
+        UserDO member = userMapper.selectById(memberId);
+        if (member == null) {
+            throw exception(USER_NOT_FOUND);
+        }
+
+        TaskDashboardRespVO dashboard = new TaskDashboardRespVO();
+        dashboard.setMember(toMemberVO(member));
+        dashboard.setGroups(resolveMemberGroups(member));
+        dashboard.setTasks(listTasksByMember(memberId));
+        return dashboard;
+    }
+
+    private TaskRespVO buildTaskResponse(TaskDO task, EventDO event, UserDO assignee) {
+        return buildTaskResponse(task, event, assignee, null);
 
     private TaskRespVO buildTaskResponse(
             TaskDO task,
+            EventDO event,
             UserDO assignee,
             Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> groupsByDeptId) {
         TaskRespVO resp = TaskConvert.INSTANCE.toRespVO(task);
+        EventDO eventData = event != null ? event : fetchEvent(task.getEventId());
+        resp.setEvent(toEventSummary(eventData));
         UserDO user = assignee;
 
         if (user == null && task.getUserId() != null) {
@@ -231,6 +290,8 @@ public class TaskServiceImpl implements TaskService {
             TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
             assignedUserVO.setId(user.getId());
             assignedUserVO.setName(user.getUsername());
+            assignedUserVO.setEmail(user.getEmail());
+            assignedUserVO.setPhone(user.getPhone());
             assignedUserVO.setGroups(resolveGroups(user.getDeptId(), groupsByDeptId));
             resp.setAssignedUser(assignedUserVO);
         } else {
@@ -238,6 +299,31 @@ public class TaskServiceImpl implements TaskService {
         }
 
         return resp;
+    }
+
+    private EventDO fetchEvent(Long eventId) {
+        if (eventId == null) {
+            return null;
+        }
+        return eventMapper.selectById(eventId);
+    }
+
+    private TaskRespVO.EventSummaryVO toEventSummary(EventDO event) {
+        if (event == null) {
+            return null;
+        }
+
+        TaskRespVO.EventSummaryVO eventVO = new TaskRespVO.EventSummaryVO();
+        eventVO.setId(event.getId());
+        eventVO.setName(event.getName());
+        eventVO.setDescription(event.getDescription());
+        eventVO.setOrganizerId(event.getUserId());
+        eventVO.setLocation(event.getLocation());
+        eventVO.setStatus(event.getStatus());
+        eventVO.setStartTime(event.getStartTime());
+        eventVO.setEndTime(event.getEndTime());
+        eventVO.setRemark(event.getRemark());
+        return eventVO;
     }
 
     private List<TaskRespVO.AssignedUserVO.GroupVO> resolveGroups(
@@ -284,6 +370,65 @@ public class TaskServiceImpl implements TaskService {
         TaskRespVO.AssignedUserVO.GroupVO groupVO = new TaskRespVO.AssignedUserVO.GroupVO();
         groupVO.setId(dept.getId());
         groupVO.setName(dept.getName());
+        groupVO.setEventId(dept.getEventId());
+        groupVO.setLeadUserId(dept.getLeadUserId());
+        groupVO.setRemark(dept.getRemark());
         return groupVO;
+    }
+
+    private TaskDashboardRespVO.MemberVO toMemberVO(UserDO member) {
+        TaskDashboardRespVO.MemberVO memberVO = new TaskDashboardRespVO.MemberVO();
+        memberVO.setId(member.getId());
+        memberVO.setUsername(member.getUsername());
+        memberVO.setEmail(member.getEmail());
+        memberVO.setPhone(member.getPhone());
+        memberVO.setStatus(member.getStatus());
+        memberVO.setCreateTime(member.getCreateTime());
+        memberVO.setUpdateTime(member.getUpdateTime());
+        return memberVO;
+    }
+
+    private List<TaskDashboardRespVO.GroupVO> resolveMemberGroups(UserDO member) {
+        Long deptId = member.getDeptId();
+        if (deptId == null) {
+            return List.of();
+        }
+
+        DeptDO dept = deptMapper.selectById(deptId);
+        if (dept == null) {
+            return List.of();
+        }
+
+        TaskDashboardRespVO.GroupVO groupVO = new TaskDashboardRespVO.GroupVO();
+        groupVO.setId(dept.getId());
+        groupVO.setName(dept.getName());
+        groupVO.setSort(dept.getSort());
+        groupVO.setLeadUserId(dept.getLeadUserId());
+        groupVO.setRemark(dept.getRemark());
+        groupVO.setStatus(dept.getStatus());
+        groupVO.setEvent(toGroupEvent(dept.getEventId()));
+        return List.of(groupVO);
+    }
+
+    private TaskDashboardRespVO.GroupVO.EventVO toGroupEvent(Long eventId) {
+        if (eventId == null) {
+            return null;
+        }
+
+        EventDO event = eventMapper.selectById(eventId);
+        if (event == null) {
+            return null;
+        }
+
+        TaskDashboardRespVO.GroupVO.EventVO eventVO = new TaskDashboardRespVO.GroupVO.EventVO();
+        eventVO.setId(event.getId());
+        eventVO.setName(event.getName());
+        eventVO.setDescription(event.getDescription());
+        eventVO.setLocation(event.getLocation());
+        eventVO.setStatus(event.getStatus());
+        eventVO.setStartTime(event.getStartTime());
+        eventVO.setEndTime(event.getEndTime());
+        eventVO.setRemark(event.getRemark());
+        return eventVO;
     }
 }
