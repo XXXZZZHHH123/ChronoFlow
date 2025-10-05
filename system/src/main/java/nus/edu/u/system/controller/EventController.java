@@ -11,12 +11,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.system.domain.vo.event.*;
-import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
-import nus.edu.u.system.domain.vo.task.TaskDashboardRespVO;
-import nus.edu.u.system.domain.vo.task.TaskRespVO;
-import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
 import nus.edu.u.system.service.event.EventService;
-import nus.edu.u.system.service.task.TaskService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,13 +41,6 @@ public class EventController {
     public CommonResult<List<EventRespVO>> getByOrganizerId() {
         Long organizerId = StpUtil.getLoginIdAsLong();
         return CommonResult.success(eventService.getByOrganizerId(organizerId));
-    }
-
-    @GetMapping("/tasks/dashboard")
-    public CommonResult<TaskDashboardRespVO> getByMemberId() {
-        Long memberId = StpUtil.getLoginIdAsLong();
-        TaskDashboardRespVO resp = taskService.getByMemberId(memberId);
-        return CommonResult.success(resp);
     }
 
     @SaCheckPermission(UPDATE_EVENT)

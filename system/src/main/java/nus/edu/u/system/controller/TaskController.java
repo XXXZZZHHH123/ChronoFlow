@@ -1,30 +1,27 @@
 package nus.edu.u.system.controller;
 
+import static nus.edu.u.common.constant.PermissionConstants.*;
+
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.stp.StpUtil;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
-import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
-import nus.edu.u.system.domain.vo.task.TaskLogRespVO;
-import nus.edu.u.system.domain.vo.task.TaskRespVO;
-import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
+import nus.edu.u.system.domain.vo.task.*;
 import nus.edu.u.system.service.task.TaskLogService;
 import nus.edu.u.system.service.task.TaskService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-import static nus.edu.u.common.constant.PermissionConstants.*;
 
 /**
  * @author Lu Shuwen
  * @date 2025-10-03
  */
 @RestController
-@RequestMapping("/system/task/{eventId}")
+@RequestMapping("/system/task")
 @Validated
 @Slf4j
 public class TaskController {
@@ -34,7 +31,7 @@ public class TaskController {
     @Resource private TaskLogService taskLogService;
 
     @SaCheckPermission(CREATE_TASK)
-    @PostMapping
+    @PostMapping("/{eventId}")
     public CommonResult<TaskRespVO> createTask(
             @PathVariable("eventId") @NotNull Long eventId,
             @Valid @RequestBody TaskCreateReqVO reqVO) {
@@ -44,7 +41,7 @@ public class TaskController {
         return result;
     }
 
-    @GetMapping
+    @GetMapping("/{eventId}")
     public CommonResult<List<TaskRespVO>> listTasksByEvent(
             @PathVariable("eventId") @NotNull Long eventId) {
         List<TaskRespVO> resp = taskService.listTasksByEvent(eventId);
@@ -53,7 +50,14 @@ public class TaskController {
         return result;
     }
 
-    @GetMapping("/{taskId}")
+    @GetMapping("/dashboard")
+    public CommonResult<TaskDashboardRespVO> getByMemberId() {
+        Long memberId = StpUtil.getLoginIdAsLong();
+        TaskDashboardRespVO resp = taskService.getByMemberId(memberId);
+        return CommonResult.success(resp);
+    }
+
+    @GetMapping("/{eventId}/{taskId}")
     public CommonResult<TaskRespVO> getTask(
             @PathVariable("eventId") @NotNull Long eventId,
             @PathVariable("taskId") @NotNull Long taskId) {
@@ -64,7 +68,7 @@ public class TaskController {
     }
 
     @SaCheckPermission(UPDATE_TASK)
-    @PatchMapping("/{taskId}")
+    @PatchMapping("/{eventId}/{taskId}")
     public CommonResult<TaskRespVO> updateTask(
             @PathVariable("eventId") @NotNull Long eventId,
             @PathVariable("taskId") @NotNull Long taskId,
@@ -76,7 +80,7 @@ public class TaskController {
     }
 
     @SaCheckPermission(DELETE_TASK)
-    @DeleteMapping("/{taskId}")
+    @DeleteMapping("/{eventId}/{taskId}")
     public CommonResult<Void> deleteTask(
             @PathVariable("eventId") @NotNull Long eventId,
             @PathVariable("taskId") @NotNull Long taskId) {
@@ -86,9 +90,8 @@ public class TaskController {
         return result;
     }
 
-    @GetMapping("/log/{taskId}")
+    @GetMapping("/{eventId}/log/{taskId}")
     public CommonResult<List<TaskLogRespVO>> getLog(@PathVariable("taskId") @NotNull Long taskId) {
         return CommonResult.success(taskLogService.getTaskLog(taskId));
     }
-
 }

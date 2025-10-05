@@ -14,6 +14,7 @@ import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
+import nus.edu.u.system.domain.vo.task.TaskDashboardRespVO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
 import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
@@ -595,7 +596,8 @@ class TaskServiceImplTest {
         DeptDO dept1 = mockDept(5L, "Dept A");
         DeptDO dept2 = mockDept(6L, "Dept B");
 
-        when(deptMapper.selectBatchIds(List.of(5L, 6L))).thenReturn(List.of(dept1, dept2));
+        // 使用 anyList() 而不是具体的 List.of(5L, 6L)
+        when(deptMapper.selectBatchIds(anyList())).thenReturn(List.of(dept1, dept2));
 
         Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> result =
                 ReflectionTestUtils.invokeMethod(service, "buildGroupsByDept", usersMap);
@@ -669,5 +671,296 @@ class TaskServiceImplTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(5L);
         assertThat(result.getName()).isEqualTo("Test Dept");
+    }
+
+    // ---------- listTasksByMember tests ----------
+
+    @Test
+    void listTasksByMember_success() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+        Long deptId = 5L;
+        Long eventId1 = 1L;
+        Long eventId2 = 2L;
+
+        UserDO member = mockUser(memberId, tenantId, deptId);
+        TaskDO task1 = mockTask(10L, eventId1, memberId);
+        TaskDO task2 = mockTask(11L, eventId2, memberId);
+        EventDO event1 = mockEvent(eventId1, tenantId);
+        EventDO event2 = mockEvent(eventId2, tenantId);
+        DeptDO dept = mockDept(deptId, "Dept A");
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of(task1, task2));
+        when(eventMapper.selectBatchIds(List.of(eventId1, eventId2)))
+                .thenReturn(List.of(event1, event2));
+        when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
+
+        List<TaskRespVO> resp = service.listTasksByMember(memberId);
+
+        assertThat(resp).hasSize(2);
+        assertThat(resp).extracting(TaskRespVO::getId).containsExactly(10L, 11L);
+        assertThat(resp.get(0).getAssignedUser()).isNotNull();
+        assertThat(resp.get(0).getAssignedUser().getId()).isEqualTo(memberId);
+        assertThat(resp.get(0).getEvent()).isNotNull();
+    }
+
+    @Test
+    void listTasksByMember_memberNotFound_throws() {
+        Long memberId = 201L;
+
+        when(userMapper.selectById(memberId)).thenReturn(null);
+
+        assertThatThrownBy(() -> service.listTasksByMember(memberId))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(USER_NOT_FOUND.getCode());
+    }
+
+    @Test
+    void listTasksByMember_noTasks_returnsEmptyList() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+
+        UserDO member = mockUser(memberId, tenantId, null);
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of());
+
+        List<TaskRespVO> resp = service.listTasksByMember(memberId);
+
+        assertThat(resp).isEmpty();
+    }
+
+    @Test
+    void listTasksByMember_withNullEventId_handlesGracefully() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+
+        UserDO member = mockUser(memberId, tenantId, null);
+        TaskDO task = mockTask(10L, null, memberId); // null eventId
+        task.setEventId(null);
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of(task));
+
+        List<TaskRespVO> resp = service.listTasksByMember(memberId);
+
+        assertThat(resp).hasSize(1);
+        assertThat(resp.get(0).getEvent()).isNull();
+    }
+
+    // ---------- getByMemberId tests ----------
+
+    @Test
+    void getByMemberId_success() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+        Long deptId = 5L;
+        Long eventId = 1L;
+
+        UserDO member = mockUser(memberId, tenantId, deptId);
+        TaskDO task = mockTask(10L, eventId, memberId);
+        EventDO event = mockEvent(eventId, tenantId);
+        DeptDO dept = mockDept(deptId, "Dept A");
+        dept.setEventId(eventId);
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of(task));
+        when(eventMapper.selectBatchIds(List.of(eventId))).thenReturn(List.of(event));
+        when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
+        when(deptMapper.selectById(deptId)).thenReturn(dept);
+        when(eventMapper.selectById(eventId)).thenReturn(event);
+
+        TaskDashboardRespVO resp = service.getByMemberId(memberId);
+
+        assertThat(resp).isNotNull();
+        assertThat(resp.getMember()).isNotNull();
+        assertThat(resp.getMember().getId()).isEqualTo(memberId);
+        assertThat(resp.getMember().getUsername()).isEqualTo("User" + memberId);
+        assertThat(resp.getGroups()).hasSize(1);
+        assertThat(resp.getGroups().get(0).getName()).isEqualTo("Dept A");
+        assertThat(resp.getTasks()).hasSize(1);
+    }
+
+    @Test
+    void getByMemberId_memberNotFound_throws() {
+        Long memberId = 201L;
+
+        when(userMapper.selectById(memberId)).thenReturn(null);
+
+        assertThatThrownBy(() -> service.getByMemberId(memberId))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(USER_NOT_FOUND.getCode());
+    }
+
+    @Test
+    void getByMemberId_memberWithoutDept_success() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+
+        UserDO member = mockUser(memberId, tenantId, null); // No department
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of());
+
+        TaskDashboardRespVO resp = service.getByMemberId(memberId);
+
+        assertThat(resp).isNotNull();
+        assertThat(resp.getMember()).isNotNull();
+        assertThat(resp.getGroups()).isEmpty();
+        assertThat(resp.getTasks()).isEmpty();
+    }
+
+    @Test
+    void getByMemberId_deptNotFound_returnsEmptyGroups() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+        Long deptId = 5L;
+
+        UserDO member = mockUser(memberId, tenantId, deptId);
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of());
+        when(deptMapper.selectById(deptId)).thenReturn(null);
+
+        TaskDashboardRespVO resp = service.getByMemberId(memberId);
+
+        assertThat(resp).isNotNull();
+        assertThat(resp.getGroups()).isEmpty();
+    }
+
+    // ---------- Private method tests ----------
+
+    @Test
+    void toMemberVO_convertsCorrectly() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+        UserDO member = mockUser(memberId, tenantId, 5L);
+        member.setEmail("test@example.com");
+        member.setPhone("1234567890");
+        member.setStatus(1);
+        member.setCreateTime(LocalDateTime.of(2025, 1, 1, 10, 0));
+        member.setUpdateTime(LocalDateTime.of(2025, 1, 2, 10, 0));
+
+        TaskDashboardRespVO.MemberVO result =
+                ReflectionTestUtils.invokeMethod(service, "toMemberVO", member);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(memberId);
+        assertThat(result.getUsername()).isEqualTo("User" + memberId);
+        assertThat(result.getEmail()).isEqualTo("test@example.com");
+        assertThat(result.getPhone()).isEqualTo("1234567890");
+        assertThat(result.getStatus()).isEqualTo(1);
+        assertThat(result.getCreateTime()).isEqualTo(LocalDateTime.of(2025, 1, 1, 10, 0));
+        assertThat(result.getUpdateTime()).isEqualTo(LocalDateTime.of(2025, 1, 2, 10, 0));
+    }
+
+    @Test
+    void resolveMemberGroups_withDept_returnsGroups() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+        Long deptId = 5L;
+        Long eventId = 1L;
+
+        UserDO member = mockUser(memberId, tenantId, deptId);
+        DeptDO dept = mockDept(deptId, "Dept A");
+        dept.setEventId(eventId);
+        dept.setLeadUserId(100L);
+        dept.setRemark("Test Remark");
+        dept.setStatus(1);
+        dept.setSort(1);
+
+        EventDO event = mockEvent(eventId, tenantId);
+
+        when(deptMapper.selectById(deptId)).thenReturn(dept);
+        when(eventMapper.selectById(eventId)).thenReturn(event);
+
+        List<TaskDashboardRespVO.GroupVO> result =
+                ReflectionTestUtils.invokeMethod(service, "resolveMemberGroups", member);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(deptId);
+        assertThat(result.get(0).getName()).isEqualTo("Dept A");
+        assertThat(result.get(0).getLeadUserId()).isEqualTo(100L);
+        assertThat(result.get(0).getEvent()).isNotNull();
+    }
+
+    @Test
+    void resolveMemberGroups_noDept_returnsEmptyList() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+
+        UserDO member = mockUser(memberId, tenantId, null); // No department
+
+        List<TaskDashboardRespVO.GroupVO> result =
+                ReflectionTestUtils.invokeMethod(service, "resolveMemberGroups", member);
+
+        assertThat(result).isEmpty();
+        verifyNoInteractions(deptMapper);
+    }
+
+    @Test
+    void resolveMemberGroups_deptNotFound_returnsEmptyList() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+        Long deptId = 5L;
+
+        UserDO member = mockUser(memberId, tenantId, deptId);
+
+        when(deptMapper.selectById(deptId)).thenReturn(null);
+
+        List<TaskDashboardRespVO.GroupVO> result =
+                ReflectionTestUtils.invokeMethod(service, "resolveMemberGroups", member);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void toGroupEvent_validEventId_convertsCorrectly() {
+        Long eventId = 1L;
+        Long tenantId = 100L;
+
+        EventDO event = mockEvent(eventId, tenantId);
+        event.setName("Test Event");
+        event.setDescription("Test Description");
+        event.setLocation("Test Location");
+        event.setStatus(1);
+        event.setRemark("Test Remark");
+
+        when(eventMapper.selectById(eventId)).thenReturn(event);
+
+        TaskDashboardRespVO.GroupVO.EventVO result =
+                ReflectionTestUtils.invokeMethod(service, "toGroupEvent", eventId);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(eventId);
+        assertThat(result.getName()).isEqualTo("Test Event");
+        assertThat(result.getDescription()).isEqualTo("Test Description");
+        assertThat(result.getLocation()).isEqualTo("Test Location");
+        assertThat(result.getStatus()).isEqualTo(1);
+        assertThat(result.getRemark()).isEqualTo("Test Remark");
+    }
+
+    @Test
+    void toGroupEvent_nullEventId_returnsNull() {
+        TaskDashboardRespVO.GroupVO.EventVO result =
+                ReflectionTestUtils.invokeMethod(service, "toGroupEvent", new Object[] {null});
+
+        assertThat(result).isNull();
+        verifyNoInteractions(eventMapper);
+    }
+
+    @Test
+    void toGroupEvent_eventNotFound_returnsNull() {
+        Long eventId = 1L;
+
+        when(eventMapper.selectById(eventId)).thenReturn(null);
+
+        TaskDashboardRespVO.GroupVO.EventVO result =
+                ReflectionTestUtils.invokeMethod(service, "toGroupEvent", eventId);
+
+        assertThat(result).isNull();
     }
 }

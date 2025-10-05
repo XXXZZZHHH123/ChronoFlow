@@ -245,12 +245,11 @@ public class TaskServiceImpl implements TaskService {
 
         return tasks.stream()
                 .map(
-                        task ->
-                                buildTaskResponse(
-                                        task,
-                                        eventsById.get(task.getEventId()),
-                                        member,
-                                        groupsByDeptId))
+                        task -> {
+                            Long eventId = task.getEventId();
+                            EventDO event = eventId != null ? eventsById.get(eventId) : null;
+                            return buildTaskResponse(task, event, member, groupsByDeptId);
+                        })
                 .toList();
     }
 
@@ -271,6 +270,7 @@ public class TaskServiceImpl implements TaskService {
 
     private TaskRespVO buildTaskResponse(TaskDO task, EventDO event, UserDO assignee) {
         return buildTaskResponse(task, event, assignee, null);
+    }
 
     private TaskRespVO buildTaskResponse(
             TaskDO task,
