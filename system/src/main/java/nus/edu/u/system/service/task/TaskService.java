@@ -9,7 +9,7 @@ import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
 public interface TaskService {
     TaskRespVO createTask(Long eventId, TaskCreateReqVO reqVO);
 
-    TaskRespVO updateTask(Long eventId, Long taskId, TaskUpdateReqVO reqVO);
+    TaskRespVO updateTask(Long eventId, Long taskId, TaskUpdateReqVO reqVO, Integer type);
 
     void deleteTask(Long eventId, Long taskId);
 

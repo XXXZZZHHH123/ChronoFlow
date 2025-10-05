@@ -18,6 +18,7 @@ import nus.edu.u.system.domain.dataobject.task.EventParticipantDO;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.event.*;
+import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.enums.ErrorCodeConstants;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.mapper.dept.DeptMapper;
@@ -26,6 +27,7 @@ import nus.edu.u.system.mapper.task.EventParticipantMapper;
 import nus.edu.u.system.mapper.task.TaskMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.event.EventServiceImpl;
+import nus.edu.u.system.service.group.GroupService;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +43,7 @@ class EventServiceImplTest {
     @Mock private UserMapper userMapper;
     @Mock private DeptMapper deptMapper;
     @Mock private TaskMapper taskMapper;
+    @Mock private GroupService groupService;
 
     @InjectMocks private EventServiceImpl service;
 
@@ -148,11 +151,11 @@ class EventServiceImplTest {
                         List.of(
                                 TaskDO.builder()
                                         .eventId(eventId)
-                                        .status(TaskStatusEnum.DONE.getStatus())
+                                        .status(TaskStatusEnum.COMPLETED.getStatus())
                                         .build(),
                                 TaskDO.builder()
                                         .eventId(eventId)
-                                        .status(TaskStatusEnum.DOING.getStatus())
+                                        .status(TaskStatusEnum.PROGRESS.getStatus())
                                         .build()));
 
         EventRespVO resp = service.getByEventId(eventId);
@@ -231,7 +234,7 @@ class EventServiceImplTest {
                         List.of(
                                 TaskDO.builder()
                                         .eventId(1L)
-                                        .status(TaskStatusEnum.DONE.getStatus())
+                                        .status(TaskStatusEnum.COMPLETED.getStatus())
                                         .build()));
 
         Map<Long, EventRespVO.TaskStatusVO> result =
@@ -339,15 +342,15 @@ class EventServiceImplTest {
                         List.of(
                                 TaskDO.builder()
                                         .eventId(101L)
-                                        .status(TaskStatusEnum.DONE.getStatus())
+                                        .status(TaskStatusEnum.COMPLETED.getStatus())
                                         .build(),
                                 TaskDO.builder()
                                         .eventId(101L)
-                                        .status(TaskStatusEnum.DOING.getStatus())
+                                        .status(TaskStatusEnum.PROGRESS.getStatus())
                                         .build(),
                                 TaskDO.builder()
                                         .eventId(202L)
-                                        .status(TaskStatusEnum.DOING.getStatus())
+                                        .status(TaskStatusEnum.PROGRESS.getStatus())
                                         .build()));
 
         List<EventRespVO> resp = service.getByOrganizerId(organizerId);
@@ -984,5 +987,124 @@ class EventServiceImplTest {
         verify(eventParticipantMapper, never()).delete(any());
         verify(eventParticipantMapper, never()).insert(any());
         assertThat(resp.getParticipantUserIds()).containsExactlyInAnyOrder(301L, 302L);
+    }
+
+    @Test
+    void assignableMember_groupListNull_returnsEmpty() {
+        Long eventId = 100L;
+        when(deptMapper.selectList(any())).thenReturn(null);
+
+        List<EventGroupRespVO> result = service.assignableMember(eventId);
+
+        assertThat(result).isEmpty();
+        verify(groupService, never()).getGroupMembers(anyLong());
+    }
+
+    @Test
+    void assignableMember_groupListEmpty_returnsEmpty() {
+        Long eventId = 100L;
+        when(deptMapper.selectList(any())).thenReturn(List.of());
+
+        List<EventGroupRespVO> result = service.assignableMember(eventId);
+
+        assertThat(result).isEmpty();
+        verify(groupService, never()).getGroupMembers(anyLong());
+    }
+
+    @Test
+    void assignableMember_singleGroupWithMembers_success() {
+        Long eventId = 100L;
+        Long groupId = 10L;
+
+        DeptDO group = DeptDO.builder().id(groupId).eventId(eventId).name("Team Alpha").build();
+
+        when(deptMapper.selectList(any())).thenReturn(List.of(group));
+
+        GroupRespVO.MemberInfo member1 = new GroupRespVO.MemberInfo();
+        member1.setUserId(201L);
+        member1.setUsername("Alice");
+
+        GroupRespVO.MemberInfo member2 = new GroupRespVO.MemberInfo();
+        member2.setUserId(202L);
+        member2.setUsername("Bob");
+
+        when(groupService.getGroupMembers(groupId)).thenReturn(List.of(member1, member2));
+
+        List<EventGroupRespVO> result = service.assignableMember(eventId);
+
+        assertThat(result).hasSize(1);
+        EventGroupRespVO groupVO = result.get(0);
+        assertThat(groupVO.getId()).isEqualTo(groupId);
+        assertThat(groupVO.getName()).isEqualTo("Team Alpha");
+        assertThat(groupVO.getMembers()).hasSize(2);
+        assertThat(groupVO.getMembers())
+                .extracting(EventGroupRespVO.Member::getId)
+                .containsExactly(201L, 202L);
+        assertThat(groupVO.getMembers())
+                .extracting(EventGroupRespVO.Member::getUsername)
+                .containsExactly("Alice", "Bob");
+    }
+
+    @Test
+    void assignableMember_multipleGroupsWithMembers_success() {
+        Long eventId = 100L;
+
+        DeptDO group1 = DeptDO.builder().id(10L).eventId(eventId).name("Team Alpha").build();
+
+        DeptDO group2 = DeptDO.builder().id(20L).eventId(eventId).name("Team Beta").build();
+
+        when(deptMapper.selectList(any())).thenReturn(List.of(group1, group2));
+
+        GroupRespVO.MemberInfo member1 = new GroupRespVO.MemberInfo();
+        member1.setUserId(201L);
+        member1.setUsername("Alice");
+
+        GroupRespVO.MemberInfo member2 = new GroupRespVO.MemberInfo();
+        member2.setUserId(301L);
+        member2.setUsername("Charlie");
+
+        GroupRespVO.MemberInfo member3 = new GroupRespVO.MemberInfo();
+        member3.setUserId(302L);
+        member3.setUsername("David");
+
+        when(groupService.getGroupMembers(10L)).thenReturn(List.of(member1));
+        when(groupService.getGroupMembers(20L)).thenReturn(List.of(member2, member3));
+
+        List<EventGroupRespVO> result = service.assignableMember(eventId);
+
+        assertThat(result).hasSize(2);
+
+        EventGroupRespVO alpha =
+                result.stream().filter(g -> g.getId().equals(10L)).findFirst().orElseThrow();
+        assertThat(alpha.getName()).isEqualTo("Team Alpha");
+        assertThat(alpha.getMembers()).hasSize(1);
+        assertThat(alpha.getMembers().get(0).getId()).isEqualTo(201L);
+
+        EventGroupRespVO beta =
+                result.stream().filter(g -> g.getId().equals(20L)).findFirst().orElseThrow();
+        assertThat(beta.getName()).isEqualTo("Team Beta");
+        assertThat(beta.getMembers()).hasSize(2);
+        assertThat(beta.getMembers())
+                .extracting(EventGroupRespVO.Member::getId)
+                .containsExactly(301L, 302L);
+    }
+
+    @Test
+    void assignableMember_groupWithNoMembers_returnsGroupWithEmptyMemberList() {
+        Long eventId = 100L;
+        Long groupId = 10L;
+
+        DeptDO group = DeptDO.builder().id(groupId).eventId(eventId).name("Empty Team").build();
+
+        when(deptMapper.selectList(any())).thenReturn(List.of(group));
+        when(groupService.getGroupMembers(groupId)).thenReturn(List.of());
+
+        List<EventGroupRespVO> result = service.assignableMember(eventId);
+
+        assertThat(result).hasSize(1);
+        EventGroupRespVO groupVO = result.get(0);
+        assertThat(groupVO.getId()).isEqualTo(groupId);
+        assertThat(groupVO.getName()).isEqualTo("Empty Team");
+        assertThat(groupVO.getMembers()).isEmpty();
     }
 }
