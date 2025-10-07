@@ -99,6 +99,19 @@ public interface ErrorCodeConstants {
     ErrorCode TASK_DELETE_FAILED = new ErrorCode(13_02_009, "task delete failed");
     ErrorCode WRONG_TASK_ACTION_TYPE = new ErrorCode(13_02_010, "task action failed");
 
+    // ========= Check-in module 10-03-000 ============
+    ErrorCode EVENT_ATTENDEE_NOT_FOUND = new ErrorCode(10_03_001, "Attendee not found");
+    ErrorCode INVALID_CHECKIN_TOKEN = new ErrorCode(10_03_002, "Invalid check-in token");
+    ErrorCode ALREADY_CHECKED_IN = new ErrorCode(10_03_003, "Already checked in");
+    ErrorCode CHECKIN_NOT_STARTED = new ErrorCode(10_03_004, "Check-in has not started yet");
+    ErrorCode CHECKIN_ENDED = new ErrorCode(10_03_005, "Check-in has ended");
+    ErrorCode EVENT_NOT_ACTIVE = new ErrorCode(10_03_006, "Event is not active");
+
+    // ========= QR Code module 10-04-000 ============
+    ErrorCode QRCODE_GENERATION_FAILED = new ErrorCode(10_04_001, "Failed to generate QR code");
+    ErrorCode QRCODE_INVALID_CONTENT = new ErrorCode(10_04_002, "Invalid QR code content");
+    ErrorCode QRCODE_INVALID_SIZE = new ErrorCode(10_04_003, "Invalid QR code size");
+
     // ========= RolePermission module 14-01-000 ============
     ErrorCode CREATE_ROLE_FAILED = new ErrorCode(14_01_001, "Create role failed");
     ErrorCode CANNOT_FIND_ROLE = new ErrorCode(14_01_002, "Role not found");
