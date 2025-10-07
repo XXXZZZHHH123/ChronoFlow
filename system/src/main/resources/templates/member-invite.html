@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="${subject}">You’re invited to join ChronoFlow</title>
+    <style>
+        body {
+            font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            color: #222;
+            background-color: #f7f8fa;
+            margin: 0;
+            padding: 32px 0;
+            text-align: left;
+        }
+        .container {
+            max-width: 640px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 32px;
+            text-align: left;
+            margin: 0; /* left-aligned, not centered */
+        }
+        h2 {
+            color: #2c3e50;
+            margin: 0 0 12px 0;
+        }
+        p { line-height: 1.6; margin: 0 0 18px 0; }
+        .meta {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 6px 14px;
+            background: #fafafa;
+            border-radius: 10px;
+            padding: 16px 20px;
+            border: 1px solid #eee;
+            margin: 16px 0 22px 0;
+        }
+        .meta dt { font-weight: 600; color: #444; }
+        .meta dd { margin: 0 0 8px 0; color: #555; word-break: break-word; }
+        a.btn {
+            display: inline-block;
+            background-color: #1a73e8;
+            color: #fff !important;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .foot {
+            margin-top: 28px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+        .support {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #777;
+            text-align: left;
+        }
+        .logo img { height: 40px; margin-top: 12px; }
+    </style>
+</head>
+<body style="margin:0;padding:0;text-align:left;background:#f7f8fa;">
+<!-- left-aligned wrapper so it renders from the start of the page -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" align="left" style="border-collapse:collapse;">
+    <tr>
+        <td align="left" style="padding:32px 0 32px 24px;">
+            <div class="container">
+                <h2 th:text="${subject}">You’re invited to join ChronoFlow</h2>
+
+                <p>
+                    Hi there,<br/>
+                    You’ve been invited to join an organization on <b>ChronoFlow</b>. Please complete your registration using the link below.
+                </p>
+
+                <dl class="meta">
+                    <dt>Organization ID</dt>
+                    <dd th:text="${organizationId}">123</dd>
+
+                    <dt>User ID</dt>
+                    <dd th:text="${userId}">456</dd>
+                </dl>
+
+                <p style="text-align:center; margin: 18px 0 14px;">
+                    <a class="btn" th:href="${inviteUrl}" target="_blank" rel="noopener">Complete your registration</a>
+                </p>
+
+                <p>
+                    Or copy &amp; paste this URL into your browser:<br/>
+                    <span th:text="${inviteUrl}">https://app.chronoflow.com/register?organisation_id=...&amp;user_id=...</span>
+                </p>
+
+                <div class="foot">
+                    If you weren’t expecting this invitation, you can safely ignore this email.
+                </div>
+
+                <div class="support">
+                    If you need assistance, please contact support@chronoflowse.xyz
+                </div>
+
+                <!-- Inline logo at the very end (CID provided by service) -->
+                <div class="logo">
+                    <img th:src="'cid:' + ${logoCid}" alt="ChronoFlow Logo" />
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

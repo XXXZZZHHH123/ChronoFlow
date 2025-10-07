@@ -82,6 +82,11 @@
         </dependency>
 
         <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sesv2</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>nus.edu.u</groupId>
             <artifactId>common</artifactId>
         </dependency>
