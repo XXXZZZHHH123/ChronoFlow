@@ -4,4 +4,3 @@ public enum EventOperationType {
     CREATE,
     UPDATE
 }
-

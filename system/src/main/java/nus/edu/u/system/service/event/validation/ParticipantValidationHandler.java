@@ -52,4 +52,3 @@ public class ParticipantValidationHandler implements EventValidationHandler {
         }
     }
 }
-

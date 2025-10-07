@@ -6,4 +6,3 @@ public interface EventValidationHandler {
 
     void validate(EventValidationContext context);
 }
-
