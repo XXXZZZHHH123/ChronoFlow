@@ -11,11 +11,12 @@ import org.mapstruct.factory.Mappers;
 public interface TaskConvert {
     TaskConvert INSTANCE = Mappers.getMapper(TaskConvert.class);
 
-    @Mapping(target = "userId", source = "assignedUserId")
+    @Mapping(target = "userId", source = "targetUserId")
     @Mapping(target = "eventId", ignore = true)
     @Mapping(target = "remark", ignore = true)
     TaskDO convert(TaskCreateReqVO bean);
 
     @Mapping(target = "assignedUser", ignore = true)
+    @Mapping(target = "event", ignore = true)
     TaskRespVO toRespVO(TaskDO bean);
 }

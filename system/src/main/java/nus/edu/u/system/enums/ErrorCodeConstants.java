@@ -56,6 +56,11 @@ public interface ErrorCodeConstants {
             new ErrorCode(10_02_007, "Cannot remove group leader from group");
     ErrorCode GET_GROUP_ID_FAILED =
             new ErrorCode(10_02_008, "Failed to get group ID after insert ");
+    ErrorCode USER_ALREADY_IN_OTHER_GROUP_OF_EVENT =
+            new ErrorCode(1_002_015_000, "User already in other group at this event");
+    ErrorCode USER_NOT_IN_GROUP = new ErrorCode(1_002_015_001, "user not in this group");
+    ErrorCode ADD_MEMBERS_FAILED =
+            new ErrorCode(1_002_015_004, "Add failed: A user can only be in one group per event");
 
     // ========= Reg module 11-01-000 =============
     ErrorCode NO_SEARCH_RESULT = new ErrorCode(11_01_001, "No matching result found");
@@ -79,19 +84,20 @@ public interface ErrorCodeConstants {
     ErrorCode EVENT_NOT_DELETED = new ErrorCode(13_01_006, "Event not deleted");
     ErrorCode EVENT_RESTORE_FAILED = new ErrorCode(13_01_006, "Event restore failed");
 
-    // ========= Task module 13-02-000 ============
+    // ========= task module 13-02-000 ============
     ErrorCode TASK_STATUS_INVALID = new ErrorCode(13_02_001, "Illegal task status");
     ErrorCode TASK_ASSIGNEE_NOT_FOUND = new ErrorCode(13_02_002, "Assigned user does not exist");
     ErrorCode TASK_TIME_RANGE_INVALID =
             new ErrorCode(13_02_003, "The task start time must be earlier than the end time");
     ErrorCode TASK_ASSIGNEE_TENANT_MISMATCH =
             new ErrorCode(13_02_004, "The assigned user does not belong to this event");
-    ErrorCode TASK_NOT_FOUND = new ErrorCode(13_02_005, "Task does not exist");
+    ErrorCode TASK_NOT_FOUND = new ErrorCode(13_02_005, "task does not exist");
     ErrorCode TASK_TIME_OUTSIDE_EVENT =
             new ErrorCode(13_02_006, "The task timeframe must fall within the event timeframe");
-    ErrorCode TASK_CREATE_FAILED = new ErrorCode(13_02_007, "Task creation failed");
-    ErrorCode TASK_UPDATE_FAILED = new ErrorCode(13_02_008, "Task update failed");
-    ErrorCode TASK_DELETE_FAILED = new ErrorCode(13_02_009, "Task delete failed");
+    ErrorCode TASK_CREATE_FAILED = new ErrorCode(13_02_007, "task creation failed");
+    ErrorCode TASK_UPDATE_FAILED = new ErrorCode(13_02_008, "task update failed");
+    ErrorCode TASK_DELETE_FAILED = new ErrorCode(13_02_009, "task delete failed");
+    ErrorCode WRONG_TASK_ACTION_TYPE = new ErrorCode(13_02_010, "task action failed");
 
     // ========= RolePermission module 14-01-000 ============
     ErrorCode CREATE_ROLE_FAILED = new ErrorCode(14_01_001, "Create role failed");

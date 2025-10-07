@@ -20,22 +20,31 @@ import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dto.EventDTO;
 import nus.edu.u.system.domain.vo.event.*;
+import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.EventParticipantMapper;
 import nus.edu.u.system.mapper.task.TaskMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
+import nus.edu.u.system.service.group.GroupService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
 public class EventServiceImpl implements EventService {
+
+    @Resource private GroupService groupService;
+
     @Resource private EventMapper eventMapper;
+
     @Resource private EventParticipantMapper eventParticipantMapper;
+
     @Resource private UserMapper userMapper;
+
     @Resource private DeptMapper deptMapper;
+
     @Resource private TaskMapper taskMapper;
 
     @Override
@@ -256,6 +265,31 @@ public class EventServiceImpl implements EventService {
         return true;
     }
 
+    @Override
+    public List<EventGroupRespVO> assignableMember(Long eventId) {
+        List<DeptDO> groupList =
+                deptMapper.selectList(
+                        new LambdaQueryWrapper<DeptDO>().eq(DeptDO::getEventId, eventId));
+        if (groupList == null || groupList.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<EventGroupRespVO> groupRespVOList = new ArrayList<>();
+        groupList.forEach(
+                group -> {
+                    List<GroupRespVO.MemberInfo> memberInfoList =
+                            groupService.getGroupMembers(group.getId());
+                    List<EventGroupRespVO.Member> memberList = new ArrayList<>();
+                    memberInfoList.forEach(
+                            member ->
+                                    memberList.add(
+                                            new EventGroupRespVO.Member(
+                                                    member.getUserId(), member.getUsername())));
+                    groupRespVOList.add(
+                            new EventGroupRespVO(group.getId(), group.getName(), memberList));
+                });
+        return groupRespVOList;
+    }
+
     private void validateTimeRange(LocalDateTime start, LocalDateTime end) {
         if (start != null && end != null && !start.isBefore(end)) {
             throw exception(TIME_RANGE_INVALID);
@@ -346,7 +380,7 @@ public class EventServiceImpl implements EventService {
                                         task ->
                                                 Objects.equals(
                                                         task.getStatus(),
-                                                        TaskStatusEnum.DONE.getStatus()))
+                                                        TaskStatusEnum.COMPLETED.getStatus()))
                                 .count();
         statusVO.setTotal(total);
         statusVO.setCompleted(completed);

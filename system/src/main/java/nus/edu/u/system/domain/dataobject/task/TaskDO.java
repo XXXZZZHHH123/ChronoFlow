@@ -11,7 +11,7 @@ import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
 
 /**
- * Task data object for table task
+ * task data object for table task
  *
  * @author Lu Shuwen
  * @date 2025-08-28

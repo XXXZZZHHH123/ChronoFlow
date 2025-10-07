@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import lombok.Data;
 import nus.edu.u.common.annotation.InEnum;
-import nus.edu.u.system.enums.task.TaskStatusEnum;
+import nus.edu.u.system.enums.task.TaskActionEnum;
 
 @Data
 public class TaskUpdateReqVO {
@@ -13,14 +13,14 @@ public class TaskUpdateReqVO {
 
     private String description;
 
-    @InEnum(value = TaskStatusEnum.class, message = "Illegal task status")
-    private Integer status;
+    @InEnum(value = TaskActionEnum.class, message = "Wrong action type")
+    private Integer type;
+
+    private Long targetUserId;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
     private LocalDateTime startTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
     private LocalDateTime endTime;
-
-    private Long assignedUserId;
 }
