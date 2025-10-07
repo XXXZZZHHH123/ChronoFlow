@@ -1,4 +1,4 @@
-package nus.edu.u.system.configuration.email;
+package nus.edu.u.framework.notification.email;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

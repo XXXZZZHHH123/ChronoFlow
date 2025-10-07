@@ -1,4 +1,4 @@
-package nus.edu.u.system.configuration.idempotency;
+package nus.edu.u.framework.notification.idempotency;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

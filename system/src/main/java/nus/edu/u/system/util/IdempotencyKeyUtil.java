@@ -3,7 +3,7 @@ package nus.edu.u.system.util;
 
 import com.google.common.hash.Hashing;
 import lombok.RequiredArgsConstructor;
-import nus.edu.u.system.configuration.idempotency.IdempotencyPropertiesConfig;
+import nus.edu.u.framework.notification.idempotency.IdempotencyPropertiesConfig;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;

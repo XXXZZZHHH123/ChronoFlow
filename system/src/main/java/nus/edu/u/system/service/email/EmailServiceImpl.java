@@ -4,7 +4,7 @@ package nus.edu.u.system.service.email;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.exception.RateLimitExceededException;
-import nus.edu.u.system.configuration.email.EmailLimitPropertiesConfig;
+import nus.edu.u.framework.notification.email.EmailLimitPropertiesConfig;
 import nus.edu.u.system.domain.dto.AttachmentDTO;
 import nus.edu.u.system.domain.dto.EmailSendResultDTO;
 import nus.edu.u.system.provider.EmailClient;

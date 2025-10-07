@@ -9,7 +9,7 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.util.ByteArrayDataSource;
 import lombok.RequiredArgsConstructor;
-import nus.edu.u.system.configuration.email.EmailProviderPropertiesConfig;
+import nus.edu.u.framework.notification.email.EmailProviderPropertiesConfig;
 import nus.edu.u.system.domain.dto.AttachmentDTO;
 import nus.edu.u.system.domain.dto.EmailSendResultDTO;
 import nus.edu.u.system.enums.email.EmailProvider;

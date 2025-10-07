@@ -155,3 +155,9 @@ notification:
     idempotency-ttl: 10m   # dedupe window
     rate-key: "rate:email:global"
 
+aws:
+  region: ${AWS_REGION}
+  credentials:
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
+
