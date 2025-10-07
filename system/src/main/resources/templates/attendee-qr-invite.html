@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${subject}">Your ChronoFlow QR Code</title>
+    <style>
+        body {
+            font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            color: #222;
+            background-color: #f7f8fa;
+            margin: 0;
+            padding: 32px 0;
+        }
+        .container {
+            max-width: 640px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 32px;
+            margin-left: 24px;
+            text-align: left;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+        p {
+            line-height: 1.6;
+            margin: 10px 0 16px;
+        }
+        .box {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 20px 0;
+        }
+        .foot {
+            color: #777;
+            font-size: 12px;
+            margin-top: 32px;
+            text-align: center;
+        }
+        .foot img {
+            height: 40px;
+            margin-top: 12px;
+        }
+        .highlight {
+            font-weight: 600;
+            color: #1a73e8;
+        }
+    </style>
+</head>
+<body>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" align="left">
+    <tr>
+        <td align="left" style="padding-left:24px;">
+            <div class="container">
+
+                <h2 th:text="${subject}">Your ChronoFlow QR Code</h2>
+
+                <p>
+                    Hi <b th:text="${attendeeName}">Attendee</b>,<br/>
+                    You’ve been invited to attend the event organized by
+                    <b th:text="${organizationName}">Organization</b>.
+                </p>
+
+                <div class="box">
+                    Please present the attached QR code at the event check-in counter.<br/>
+                    It helps us verify your registration quickly.
+                </div>
+
+                <p>
+                    We’re excited to have you join us!<br/>
+                    Stay tuned for updates from <b th:text="${organizationName}">Organization</b>.
+                </p>
+
+                <div class="foot">
+                    <p>
+                        Powered by <b class="highlight">ChronoFlow</b> — your trusted event management platform.<br/>
+                        If you weren’t expecting this email, you can safely ignore it.<br/>
+                        Need help? Contact <a href="mailto:support@chronoflowse.xyz">support@chronoflowse.xyz</a>
+                    </p>
+                    <img th:src="'cid:' + ${logoCid}" alt="ChronoFlow Logo" />
+                </div>
+
+            </div>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
