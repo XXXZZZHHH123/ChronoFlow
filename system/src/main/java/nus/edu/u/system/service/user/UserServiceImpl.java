@@ -1,6 +1,7 @@
 package nus.edu.u.system.service.user;
 
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.framework.mybatis.MybatisPlusConfig.getCurrentTenantId;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
 import cn.dev33.satoken.stp.StpUtil;
@@ -19,12 +20,14 @@ import nus.edu.u.system.domain.dto.CreateUserDTO;
 import nus.edu.u.system.domain.dto.RoleDTO;
 import nus.edu.u.system.domain.dto.UpdateUserDTO;
 import nus.edu.u.system.domain.dto.UserRoleDTO;
+import nus.edu.u.system.domain.vo.reg.RegSearchReqVO;
 import nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO;
 import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 import nus.edu.u.system.enums.user.UserStatusEnum;
 import nus.edu.u.system.mapper.role.RoleMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.mapper.user.UserRoleMapper;
+import nus.edu.u.system.service.email.MemberEmailService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,6 +49,8 @@ public class UserServiceImpl implements UserService {
     @Resource private UserRoleMapper userRoleMapper;
 
     @Resource private RoleMapper roleMapper;
+
+    @Resource private MemberEmailService memberEmailService;
 
     @Resource private PasswordEncoder passwordEncoder;
 
@@ -119,6 +124,9 @@ public class UserServiceImpl implements UserService {
                 }
             }
         }
+        try {
+            memberEmailService.sendMemberInviteEmail(dto.getEmail(), new RegSearchReqVO(getCurrentTenantId(), user.getId()));
+        } catch (Exception ignored) {}
 
         return user.getId();
     }
