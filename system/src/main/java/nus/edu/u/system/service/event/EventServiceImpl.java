@@ -27,7 +27,10 @@ import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.EventParticipantMapper;
 import nus.edu.u.system.mapper.task.TaskMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
+import nus.edu.u.system.service.event.validation.EventValidationContext;
+import nus.edu.u.system.service.event.validation.EventValidationHandler;
 import nus.edu.u.system.service.group.GroupService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,12 +50,12 @@ public class EventServiceImpl implements EventService {
 
     @Resource private TaskMapper taskMapper;
 
+    @Autowired private List<EventValidationHandler> validationHandlers;
+
     @Override
     @Transactional
     public EventRespVO createEvent(EventCreateReqVO reqVO) {
-        validateTimeRange(reqVO.getStartTime(), reqVO.getEndTime());
-        validateOrganizerExists(reqVO.getOrganizerId());
-        validateParticipantsExist(reqVO.getParticipantUserIds());
+        runValidations(EventValidationContext.forCreate(reqVO));
 
         EventDTO dto = EventConvert.INSTANCE.convert(reqVO);
         EventDO event = EventConvert.INSTANCE.convert(dto);
@@ -157,15 +160,7 @@ public class EventServiceImpl implements EventService {
             throw exception(EVENT_NOT_FOUND);
         }
 
-        LocalDateTime start =
-                reqVO.getStartTime() != null ? reqVO.getStartTime() : db.getStartTime();
-        LocalDateTime end = reqVO.getEndTime() != null ? reqVO.getEndTime() : db.getEndTime();
-        validateTimeRange(start, end);
-
-        if (reqVO.getOrganizerId() != null) {
-            validateOrganizerExists(reqVO.getOrganizerId());
-        }
-        validateParticipantsExist(reqVO.getParticipantUserIds());
+        runValidations(EventValidationContext.forUpdate(reqVO, db));
 
         EventDO patch = new EventDO();
         patch.setId(id);
@@ -290,6 +285,31 @@ public class EventServiceImpl implements EventService {
         return groupRespVOList;
     }
 
+    private void runValidations(EventValidationContext context) {
+        if (validationHandlers == null || validationHandlers.isEmpty()) {
+            System.out.println("Using legacy validation for event");
+            legacyValidate(context);
+            return;
+        }
+        for (EventValidationHandler handler : validationHandlers) {
+            System.out.println("Running handler: " + handler.getClass().getSimpleName());
+            if (handler.supports(context)) {
+                handler.validate(context);
+            }
+        }
+    }
+
+    private void legacyValidate(EventValidationContext context) {
+        validateTimeRange(context.getEffectiveStartTime(), context.getEffectiveEndTime());
+        if (context.shouldValidateOrganizer()) {
+            validateOrganizerExists(context.getRequestedOrganizerId());
+        }
+        List<Long> participantIds = context.getParticipantUserIds();
+        if (participantIds != null) {
+            validateParticipantsExist(participantIds);
+        }
+    }
+
     private void validateTimeRange(LocalDateTime start, LocalDateTime end) {
         if (start != null && end != null && !start.isBefore(end)) {
             throw exception(TIME_RANGE_INVALID);
@@ -303,7 +323,9 @@ public class EventServiceImpl implements EventService {
     }
 
     private void validateParticipantsExist(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) return;
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
 
         List<Long> distinct = ids.stream().filter(Objects::nonNull).distinct().toList();
         if (distinct.size() != ids.size()) {
