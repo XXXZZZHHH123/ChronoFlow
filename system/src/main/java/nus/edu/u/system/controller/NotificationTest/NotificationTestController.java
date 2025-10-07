@@ -1,5 +1,6 @@
 package nus.edu.u.system.controller.NotificationTest;
 
+import cn.dev33.satoken.annotation.SaIgnore;
 import lombok.RequiredArgsConstructor;
 import nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO;
 import nus.edu.u.system.domain.vo.reg.RegOrganizerReqVO;
@@ -46,6 +47,7 @@ public class NotificationTestController {
      *   "organizationCode": "CF12345"
      * }
      */
+    @SaIgnore
     @PostMapping("/test/organizer/welcome")
     public ResponseEntity<?> sendWelcomeEmail(@RequestBody RegOrganizerReqVO req) {
         String result = organizerEmailService.sendWelcomeEmailOrganizer(req);
@@ -55,11 +57,12 @@ public class NotificationTestController {
         );
     }
 
+    @SaIgnore
     @PostMapping("/test/member-invite")
     public ResponseEntity<Map<String, String>> testMemberInvite(
-            @RequestParam String to,
-            @RequestParam Long organizationId,
-            @RequestParam Long userId
+            @RequestParam("to") String to,
+            @RequestParam("organizationId") Long organizationId,
+            @RequestParam("userId") Long userId
     ) {
         var req = new RegSearchReqVO(organizationId, userId);
         String result = memberEmailService.sendMemberInviteEmail(to, req);
