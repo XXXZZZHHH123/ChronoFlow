@@ -131,3 +131,33 @@ sa-token:
   token-style: uuid
   cookie:
     http-only: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info    # 只暴露 health/info（安全）
+      base-path: /actuator      # 默认就是 /actuator，可省略
+  endpoint:
+    health:
+      show-details: never       # 生产环境建议 never；开发可用 always
+
+email:
+  from: no-reply@chronoflowse.xyz
+
+notification:
+  idempotency:
+    email-prefix: "idem:email:"
+    push-prefix: "idem:push:"
+  email:
+    rate-limit: 100        # max messages per window
+    rate-window: 1m        # window size
+    idempotency-ttl: 10m   # dedupe window
+    rate-key: "rate:email:global"
+
+aws:
+  region: ${AWS_REGION}
+  credentials:
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
+

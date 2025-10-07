@@ -27,6 +27,7 @@ import nus.edu.u.system.mapper.role.RolePermissionMapper;
 import nus.edu.u.system.mapper.tenant.TenantMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.mapper.user.UserRoleMapper;
+import nus.edu.u.system.service.email.OrganizerEmailService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +53,8 @@ public class RegServiceImpl implements RegService {
     @Resource private UserRoleMapper userRoleMapper;
 
     @Resource private PasswordEncoder passwordEncoder;
+
+    @Resource private OrganizerEmailService organizerEmailService;
 
     public static final String ORGANIZER_REMARK = "Organizer account";
 
@@ -205,6 +208,10 @@ public class RegServiceImpl implements RegService {
         isSuccess = rolePermissionMapper.insert(rolePermissionDO) > 0;
         if (!isSuccess) {
             throw exception(REG_FAIL);
+        }
+        try {
+            organizerEmailService.sendWelcomeEmailOrganizer(regOrganizerReqVO);
+        } catch (Exception ignored) {
         }
         return isSuccess;
     }

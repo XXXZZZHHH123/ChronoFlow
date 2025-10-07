@@ -15,4 +15,6 @@ public interface EventService {
     Boolean deleteEvent(Long id);
 
     Boolean restoreEvent(Long id);
+
+    List<EventGroupRespVO> assignableMember(Long eventId);
 }

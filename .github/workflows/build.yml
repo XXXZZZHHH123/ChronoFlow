@@ -7,6 +7,12 @@ on:
       - test
   pull_request:
     types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
 jobs:
   build:
     name: Build & JUnit & Lint
@@ -34,6 +40,60 @@ jobs:
 
       - name: Build & Run tests
         run: mvn -B clean verify
+
+  sca_sbom:
+    name: SCA & SBOM (CycloneDX + Grype)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: zulu
+
+      - name: Build (skip tests)
+        run: mvn -B clean package -DskipTests
+
+      - name: Generate SBOM (CycloneDX JSON)
+        uses: anchore/sbom-action@v0
+        with:
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+
+      - name: SCA via Anchore (SARIF)
+        uses: anchore/scan-action@v6
+        with:
+          sbom: sbom.cdx.json
+          fail-build: false
+          severity-cutoff: high
+          only-fixed: true
+          output-format: sarif
+          output-file: grype-report.sarif
+
+      - name: SCA via Anchore (table)
+        uses: anchore/scan-action@v6
+        with:
+          sbom: sbom.cdx.json
+          fail-build: false
+          severity-cutoff: high
+          only-fixed: true
+          output-format: table
+          output-file: grype-report.txt
+
+      - name: Upload SARIF & table
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-and-sca-reports
+          path: |
+            sbom.cdx.json
+            grype-report.sarif
+            grype-report.txt
 
   sonarjobs:
     name: Sonar Jobs
@@ -78,7 +138,7 @@ jobs:
   docker_image:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, sca_sbom]
     if: ${{ github.ref == 'refs/heads/test' || github.ref == 'refs/heads/dev' }}
     permissions:
       contents: read
@@ -137,3 +197,87 @@ jobs:
     steps:
       - name: Redeploy service (non-interactive)
         run: railway redeploy --service ${{ secrets.RAILWAY_SERVICE_ID }} --yes
+
+      - name: Install curl in container
+        shell: sh
+        run: |
+          if command -v apk >/dev/null 2>&1; then
+            apk add --no-cache curl
+          elif command -v apt-get >/dev/null 2>&1; then
+            apt-get update -y && apt-get install -y curl
+          elif command -v microdnf >/dev/null 2>&1; then
+            microdnf install -y curl
+          else
+            echo "No supported package manager found." >&2
+            exit 1
+          fi
+
+      - name: Wait for healthy service
+        if: ${{ github.ref == 'refs/heads/test' }}
+        shell: sh
+        run: |
+          RAW_URL="${{ vars.TEST_BASE_URL }}"
+          URL="${RAW_URL%/}"
+          echo "Probing $URL ..."
+          sleep 20
+          i=0
+          while [ $i -lt 60 ]; do
+            if curl -fsSL --connect-timeout 3 --max-time 4 "$URL/actuator/health" | grep -qi '"status":"UP"'; then
+              echo "Service healthy."
+              exit 0
+            fi
+            i=$((i+1))
+            sleep 5
+          done
+          echo "Service not healthy in time."
+          exit 1
+  
+  dast_zap:
+    name: DAST (ZAP full-scan)
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: ${{ github.ref == 'refs/heads/test' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ZAP Full Scan
+        env:
+          TARGET_URL: ${{ vars.TEST_BASE_URL }}
+        run: |
+          set -euo pipefail
+          TARGET="${TARGET_URL%/}"
+          if [ -z "$TARGET" ]; then
+            echo "TEST_BASE_URL is not configured." >&2
+            exit 1
+          fi
+          echo "Running ZAP full scan against $TARGET"
+          docker pull ghcr.io/zaproxy/zaproxy:stable -q
+          set +e
+          docker run --rm \
+            -v "$PWD":/zap/wrk/:rw \
+            --network host \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-full-scan.py \
+              -t "$TARGET" \
+              -j zap-report.json \
+              -x zap-report.xml \
+              -r zap-report.html \
+              -P 1001 \
+              -m 5
+          ZAP_EXIT=$?
+          set -e
+          if [ "$ZAP_EXIT" -eq 2 ]; then
+            echo "ZAP reported warnings only (exit code 2). Continuing pipeline."
+          elif [ "$ZAP_EXIT" -ne 0 ]; then
+            echo "ZAP scan failed with exit code $ZAP_EXIT" >&2
+            exit "$ZAP_EXIT"
+          fi
+
+      - name: Upload ZAP reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-dast-reports
+          path: |
+            zap-report.json
+            zap-report.xml
+            zap-report.html

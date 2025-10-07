@@ -6,10 +6,9 @@ import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,12 +18,14 @@ import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dataobject.user.UserGroupDO;
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
 import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
 import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
+import nus.edu.u.system.mapper.user.UserGroupMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.user.UserService;
 import org.springframework.aop.framework.AopContext;
@@ -48,6 +49,8 @@ public class GroupServiceImpl implements GroupService {
     @Resource private EventMapper eventMapper;
 
     @Resource private UserService userService;
+
+    @Resource private UserGroupMapper userGroupMapper;
 
     @Override
     @Transactional
@@ -177,82 +180,117 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     @Transactional
-    public void addMemberToGroup(@Param("groupId") Long groupId, @Param("userId") Long userId) {
-        // 1. Validate group exists
+    public void addMemberToGroup(Long groupId, Long userId) {
+        // 1. verify if Group exist
         DeptDO group = deptMapper.selectById(groupId);
         if (ObjectUtil.isNull(group)) {
             throw exception(GROUP_NOT_FOUND);
         }
 
-        // 2. Validate user exists
+        // 2. verify if user exist
         UserDO user = userMapper.selectById(userId);
         if (ObjectUtil.isNull(user)) {
             throw exception(USER_NOT_FOUND);
         }
 
-        // 3. Check if user is already a member of the group
-        if (ObjectUtil.equal(user.getDeptId(), groupId)) {
-            throw exception(GROUP_MEMBER_ALREADY_EXISTS);
-        }
-
-        // 4. Check if user is disabled
+        // 3. verify user status
         if (!CommonStatusEnum.isEnable(user.getStatus())) {
             throw exception(USER_STATUS_INVALID);
         }
 
-        // 5. Update user's department
-        LambdaUpdateWrapper<UserDO> updateWrapper =
-                new LambdaUpdateWrapper<UserDO>()
-                        .eq(UserDO::getId, userId)
-                        .set(UserDO::getDeptId, groupId);
+        // 4. check if this user already in other group in this Event
+        Long eventId = group.getEventId();
+        LambdaQueryWrapper<UserGroupDO> checkWrapper =
+                new LambdaQueryWrapper<UserGroupDO>()
+                        .eq(UserGroupDO::getUserId, userId)
+                        .eq(UserGroupDO::getEventId, eventId);
 
-        userMapper.update(null, updateWrapper);
-        log.info("Added user {} to group {}", userId, groupId);
+        UserGroupDO existingRelation = userGroupMapper.selectOne(checkWrapper);
+
+        if (ObjectUtil.isNotNull(existingRelation)) {
+            // if already in other group, throw exception
+            if (!existingRelation.getDeptId().equals(groupId)) {
+                throw exception(USER_ALREADY_IN_OTHER_GROUP_OF_EVENT);
+            }
+            // if already in current Group，throw exception
+            throw exception(GROUP_MEMBER_ALREADY_EXISTS);
+        }
+
+        // 5. create user-group relation
+        UserGroupDO userGroup =
+                UserGroupDO.builder()
+                        .userId(userId)
+                        .deptId(groupId)
+                        .eventId(eventId)
+                        .joinTime(LocalDateTime.now())
+                        .build();
+
+        userGroupMapper.insert(userGroup);
+        log.info("Added user {} to group {} in event {}", userId, groupId, eventId);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void removeMemberFromGroup(Long groupId, Long userId) {
-        // 1. Validate user exists and is in the group
-        UserDO user = userMapper.selectById(userId);
-        if (ObjectUtil.isNull(user) || !groupId.equals(user.getDeptId())) {
-            throw exception(USER_NOT_FOUND);
+        // 1. 验证关联关系存在
+        LambdaQueryWrapper<UserGroupDO> queryWrapper =
+                new LambdaQueryWrapper<UserGroupDO>()
+                        .eq(UserGroupDO::getUserId, userId)
+                        .eq(UserGroupDO::getDeptId, groupId);
+
+        UserGroupDO userGroup = userGroupMapper.selectOne(queryWrapper);
+        if (ObjectUtil.isNull(userGroup)) {
+            throw exception(USER_NOT_IN_GROUP);
         }
 
-        // 2. Check if user is the group leader
+        // 2. 检查是否是组长
         DeptDO group = deptMapper.selectById(groupId);
         if (ObjectUtil.isNotNull(group) && ObjectUtil.equal(group.getLeadUserId(), userId)) {
             throw exception(CANNOT_REMOVE_GROUP_LEADER);
         }
 
-        // 3. Remove user from group by setting deptId to null
-        LambdaUpdateWrapper<UserDO> updateWrapper =
-                new LambdaUpdateWrapper<UserDO>()
-                        .eq(UserDO::getId, userId)
-                        .set(UserDO::getDeptId, null);
-
-        userMapper.update(null, updateWrapper);
+        // 3. 删除关联关系
+        userGroupMapper.deleteById(userGroup.getId());
         log.info("Removed user {} from group {}", userId, groupId);
     }
 
     @Override
     public List<GroupRespVO.MemberInfo> getGroupMembers(Long groupId) {
-        LambdaQueryWrapper<UserDO> queryWrapper =
-                new LambdaQueryWrapper<UserDO>()
-                        .eq(UserDO::getDeptId, groupId)
-                        .eq(UserDO::getStatus, CommonStatusEnum.ENABLE.getStatus());
+        // 通过关联表查询
+        LambdaQueryWrapper<UserGroupDO> queryWrapper =
+                new LambdaQueryWrapper<UserGroupDO>().eq(UserGroupDO::getDeptId, groupId);
 
-        List<UserDO> members = userMapper.selectList(queryWrapper);
+        List<UserGroupDO> userGroups = userGroupMapper.selectList(queryWrapper);
 
-        return members.stream()
+        if (ObjectUtil.isEmpty(userGroups)) {
+            return Collections.emptyList();
+        }
+
+        List<Long> userIds =
+                userGroups.stream().map(UserGroupDO::getUserId).collect(Collectors.toList());
+
+        // 批量查询用户信息
+        List<UserDO> users = userMapper.selectBatchIds(userIds);
+
+        // 只返回启用状态的用户
+        return users.stream()
+                .filter(user -> CommonStatusEnum.isEnable(user.getStatus()))
                 .map(
-                        user ->
-                                GroupRespVO.MemberInfo.builder()
-                                        .userId(user.getId())
-                                        .username(user.getUsername())
-                                        .email(user.getEmail())
-                                        .phone(user.getPhone())
-                                        .build())
+                        user -> {
+                            UserGroupDO userGroup =
+                                    userGroups.stream()
+                                            .filter(ug -> ug.getUserId().equals(user.getId()))
+                                            .findFirst()
+                                            .orElse(null);
+
+                            return GroupRespVO.MemberInfo.builder()
+                                    .userId(user.getId())
+                                    .username(user.getUsername())
+                                    .email(user.getEmail())
+                                    .phone(user.getPhone())
+                                    .joinTime(userGroup != null ? userGroup.getJoinTime() : null)
+                                    .build();
+                        })
                 .collect(Collectors.toList());
     }
 
@@ -288,6 +326,7 @@ public class GroupServiceImpl implements GroupService {
 
         if (!failedIds.isEmpty()) {
             log.warn("failed to add members to group: failedUserIds={}", failedIds);
+            throw exception(ADD_MEMBERS_FAILED);
         }
     }
 
@@ -357,15 +396,14 @@ public class GroupServiceImpl implements GroupService {
         return deptList.stream()
                 .map(
                         dept -> {
+                            // 修改：使用 UserGroupDO 表统计成员数量
                             int memberCount =
                                     Math.toIntExact(
-                                            userMapper.selectCount(
-                                                    new LambdaQueryWrapper<UserDO>()
-                                                            .eq(UserDO::getDeptId, dept.getId())
+                                            userGroupMapper.selectCount(
+                                                    new LambdaQueryWrapper<UserGroupDO>()
                                                             .eq(
-                                                                    UserDO::getStatus,
-                                                                    CommonStatusEnum.ENABLE
-                                                                            .getStatus())));
+                                                                    UserGroupDO::getDeptId,
+                                                                    dept.getId())));
 
                             String leadUserName = null;
                             if (ObjectUtil.isNotNull(dept.getLeadUserId())) {

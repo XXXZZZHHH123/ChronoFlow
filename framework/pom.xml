@@ -15,6 +15,10 @@
         core framework
     </description>
 
+    <properties>
+        <spring-boot.run.skip>true</spring-boot.run.skip>
+    </properties>
+
     <dependencies>
 
         <!-- SpringBoot 拦截器 -->
@@ -75,6 +79,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sesv2</artifactId>
         </dependency>
 
         <dependency>

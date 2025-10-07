@@ -19,5 +19,7 @@ public class RoleRespVO {
 
     private String key;
 
+    private Boolean isDefault = false;
+
     private List<PermissionRespVO> permissions;
 }
