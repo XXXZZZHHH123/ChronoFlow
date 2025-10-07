@@ -25,5 +25,4 @@ public class AttendeeInviteReqVO {
     private String eventDate;
     private String eventLocation;
     private String eventDescription;
-
 }

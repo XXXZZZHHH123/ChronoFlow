@@ -1,11 +1,10 @@
 package nus.edu.u.system.domain.dataobject.attendee;
 
 import com.baomidou.mybatisplus.annotation.*;
-import lombok.*;
-import nus.edu.u.common.core.domain.base.TenantBaseDO;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import lombok.*;
+import nus.edu.u.common.core.domain.base.TenantBaseDO;
 
 /**
  * Event Attendee data object for table event_attendee
@@ -34,8 +33,7 @@ public class EventAttendeeDO extends TenantBaseDO implements Serializable {
     private LocalDateTime checkInTime;
     private LocalDateTime qrCodeGeneratedTime;
 
-    @TableLogic
-    private Boolean deleted;
+    @TableLogic private Boolean deleted;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

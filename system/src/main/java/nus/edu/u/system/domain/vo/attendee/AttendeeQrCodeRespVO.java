@@ -5,9 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Single attendee's QR code response
- */
+/** Single attendee's QR code response */
 @Data
 @Builder
 @AllArgsConstructor
