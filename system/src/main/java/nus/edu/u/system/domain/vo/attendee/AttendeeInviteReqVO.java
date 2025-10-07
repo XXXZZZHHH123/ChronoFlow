@@ -13,6 +13,17 @@ import org.springframework.web.multipart.MultipartFile;
 public class AttendeeInviteReqVO {
     private String toEmail;
     private String attendeeName;
+    private String attendeeMobile;
+
     private String organizationName;
+
     private MultipartFile qrFile;
+
+    private Long eventId;
+
+    private String eventName;
+    private String eventDate;
+    private String eventLocation;
+    private String eventDescription;
+
 }
