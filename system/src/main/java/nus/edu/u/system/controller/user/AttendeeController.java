@@ -1,4 +1,4 @@
-package nus.edu.u.system.controller;
+package nus.edu.u.system.controller.user;
 
 import static nus.edu.u.common.constant.PermissionConstants.CREATE_MEMBER;
 import static nus.edu.u.common.core.domain.CommonResult.success;
@@ -7,33 +7,60 @@ import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.annotation.SaIgnore;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
+import nus.edu.u.system.domain.vo.attendee.AttendeeQrCodeRespVO;
+import nus.edu.u.system.domain.vo.attendee.AttendeeReqVO;
 import nus.edu.u.system.domain.vo.checkin.CheckInReqVO;
 import nus.edu.u.system.domain.vo.checkin.CheckInRespVO;
 import nus.edu.u.system.domain.vo.checkin.GenerateQrCodesReqVO;
 import nus.edu.u.system.domain.vo.checkin.GenerateQrCodesRespVO;
-import nus.edu.u.system.service.checkin.CheckInService;
+import nus.edu.u.system.service.attendee.AttendeeService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/system/checkin")
+@RequestMapping("/system/attendee")
 @Validated
 @Slf4j
-public class CheckInController {
-    @Resource private CheckInService checkInService;
+public class AttendeeController {
+
+    @Resource private AttendeeService attendeeService;
+
+    @GetMapping("list/{eventId}")
+    public CommonResult<List<AttendeeQrCodeRespVO>> list(@PathVariable @NotNull Long eventId) {
+        return success(attendeeService.list(eventId));
+    }
+
+    @GetMapping("/{attendeeId}")
+    public CommonResult<AttendeeQrCodeRespVO> get(@PathVariable @NotNull Long attendeeId) {
+        return success(attendeeService.get(attendeeId));
+    }
+
+    @DeleteMapping("/{attendeeId}")
+    public CommonResult<Boolean> delete(@PathVariable @NotNull Long attendeeId) {
+        attendeeService.delete(attendeeId);
+        return success(true);
+    }
+
+    @PatchMapping("/{attendeeId}")
+    public CommonResult<AttendeeQrCodeRespVO> update(
+            @PathVariable @NotNull Long attendeeId, @Valid AttendeeReqVO reqVO) {
+        return success(attendeeService.update(attendeeId, reqVO));
+    }
 
     /** Generate batch QR codes */
     @SaCheckPermission(CREATE_MEMBER)
-    @PostMapping("/generate-qrcodes")
+    @PostMapping
     public CommonResult<GenerateQrCodesRespVO> generateQrCodes(
             @RequestBody @Valid GenerateQrCodesReqVO reqVO) {
         log.info(
                 "Generating QR codes for event {} with {} attendees",
                 reqVO.getEventId(),
                 reqVO.getAttendees().size());
-        GenerateQrCodesRespVO response = checkInService.generateQrCodesForAttendees(reqVO);
+        GenerateQrCodesRespVO response = attendeeService.generateQrCodesForAttendees(reqVO);
         return success(response);
     }
 
@@ -43,7 +70,7 @@ public class CheckInController {
         log.info(
                 "Check-in request with token: {}",
                 reqVO.getToken().substring(0, Math.min(8, reqVO.getToken().length())) + "...");
-        CheckInRespVO response = checkInService.checkIn(reqVO.getToken());
+        CheckInRespVO response = attendeeService.checkIn(reqVO.getToken());
         return success(response);
     }
 
@@ -53,7 +80,7 @@ public class CheckInController {
         log.info(
                 "Check-in request (GET) with token: {}",
                 token.substring(0, Math.min(8, token.length())) + "...");
-        CheckInRespVO response = checkInService.checkIn(token);
+        CheckInRespVO response = attendeeService.checkIn(token);
         return success(response);
     }
 }
