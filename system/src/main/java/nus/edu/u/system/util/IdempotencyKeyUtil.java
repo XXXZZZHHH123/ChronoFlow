@@ -1,12 +1,10 @@
 package nus.edu.u.system.util;
 
-
 import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import nus.edu.u.framework.notification.idempotency.IdempotencyPropertiesConfig;
 import org.springframework.stereotype.Component;
-
-import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
@@ -23,8 +21,6 @@ public class IdempotencyKeyUtil {
     }
 
     private static String sha256(String input) {
-        return Hashing.sha256()
-                .hashString(input, StandardCharsets.UTF_8)
-                .toString();
+        return Hashing.sha256().hashString(input, StandardCharsets.UTF_8).toString();
     }
 }

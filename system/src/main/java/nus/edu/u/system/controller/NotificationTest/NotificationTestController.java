@@ -1,6 +1,7 @@
 package nus.edu.u.system.controller.NotificationTest;
 
 import cn.dev33.satoken.annotation.SaIgnore;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO;
 import nus.edu.u.system.domain.vo.reg.RegOrganizerReqVO;
@@ -13,8 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/notifications")
@@ -26,8 +25,7 @@ public class NotificationTestController {
 
     @PostMapping(value = "/attendee-invite", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> sendAttendeeInvite(
-            @ModelAttribute AttendeeInviteReqVO req
-    ) throws Exception {
+            @ModelAttribute AttendeeInviteReqVO req) throws Exception {
         String status = attendeeEmailService.sendAttendeeInvite(req);
         HttpStatus http = "ALREADY_ACCEPTED".equals(status) ? HttpStatus.OK : HttpStatus.ACCEPTED;
         return ResponseEntity.status(http).body(Map.of("status", status));
@@ -36,25 +34,17 @@ public class NotificationTestController {
     /**
      * POST /api/v1/notifications/test/organizer/welcome
      *
-     * Example request (application/json):
-     * {
-     *   "name": "Thet Naung Soe",
-     *   "username": "thetnaung",
-     *   "userEmail": "thet@example.com",
-     *   "mobile": "12345678",
-     *   "organizationName": "ChronoFlow",
-     *   "organizationAddress": "Singapore",
-     *   "organizationCode": "CF12345"
-     * }
+     * <p>Example request (application/json): { "name": "Thet Naung Soe", "username": "thetnaung",
+     * "userEmail": "thet@example.com", "mobile": "12345678", "organizationName": "ChronoFlow",
+     * "organizationAddress": "Singapore", "organizationCode": "CF12345" }
      */
     @SaIgnore
     @PostMapping("/test/organizer/welcome")
     public ResponseEntity<?> sendWelcomeEmail(@RequestBody RegOrganizerReqVO req) {
         String result = organizerEmailService.sendWelcomeEmailOrganizer(req);
         HttpStatus status = "ALREADY_ACCEPTED".equals(result) ? HttpStatus.OK : HttpStatus.ACCEPTED;
-        return ResponseEntity.status(status).body(
-                Map.of("status", result, "email", req.getUserEmail())
-        );
+        return ResponseEntity.status(status)
+                .body(Map.of("status", result, "email", req.getUserEmail()));
     }
 
     @SaIgnore
@@ -62,8 +52,7 @@ public class NotificationTestController {
     public ResponseEntity<Map<String, String>> testMemberInvite(
             @RequestParam("to") String to,
             @RequestParam("organizationId") Long organizationId,
-            @RequestParam("userId") Long userId
-    ) {
+            @RequestParam("userId") Long userId) {
         var req = new RegSearchReqVO(organizationId, userId);
         String result = memberEmailService.sendMemberInviteEmail(to, req);
         return ResponseEntity.accepted().body(Map.of("status", result));

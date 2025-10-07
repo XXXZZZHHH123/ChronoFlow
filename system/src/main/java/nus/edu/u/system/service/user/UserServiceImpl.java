@@ -125,8 +125,10 @@ public class UserServiceImpl implements UserService {
             }
         }
         try {
-            memberEmailService.sendMemberInviteEmail(dto.getEmail(), new RegSearchReqVO(getCurrentTenantId(), user.getId()));
-        } catch (Exception ignored) {}
+            memberEmailService.sendMemberInviteEmail(
+                    dto.getEmail(), new RegSearchReqVO(getCurrentTenantId(), user.getId()));
+        } catch (Exception ignored) {
+        }
 
         return user.getId();
     }

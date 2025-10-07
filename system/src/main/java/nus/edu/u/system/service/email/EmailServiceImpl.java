@@ -1,6 +1,8 @@
 package nus.edu.u.system.service.email;
 
-
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.exception.RateLimitExceededException;
@@ -11,11 +13,6 @@ import nus.edu.u.system.provider.EmailClient;
 import nus.edu.u.system.provider.EmailClientFactory;
 import nus.edu.u.system.util.IdempotencyKeyUtil;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
 
 @Service
 @RequiredArgsConstructor
@@ -47,22 +44,33 @@ public class EmailServiceImpl implements EmailService {
 
         // 3) Choose provider and send
         try {
-            List<AttachmentDTO> safe = (attachments == null) ? Collections.emptyList() : attachments;
+            List<AttachmentDTO> safe =
+                    (attachments == null) ? Collections.emptyList() : attachments;
             EmailClient client = emailClientFactory.getClient(safe);
 
             EmailSendResultDTO result = client.sendEmail(to, subject, html, safe);
             String provider = result.provider() != null ? result.provider().name() : "UNKNOWN";
             String providerMsgId = result.providerMessageId();
 
-            log.info("Email sent (requestId={}): provider={}, providerMsgId={}, to={}, subject={}",
-                    requestId, provider, providerMsgId, to, subject);
+            log.info(
+                    "Email sent (requestId={}): provider={}, providerMsgId={}, to={}, subject={}",
+                    requestId,
+                    provider,
+                    providerMsgId,
+                    to,
+                    subject);
 
             // Prefer returning provider message id if present; else return our requestId
             return (providerMsgId != null && !providerMsgId.isBlank()) ? providerMsgId : requestId;
 
         } catch (Exception ex) {
-            log.warn("Email send failed (requestId={}): to={}, subject={}, error={}",
-                    requestId, to, subject, ex.getMessage(), ex);
+            log.warn(
+                    "Email send failed (requestId={}): to={}, subject={}, error={}",
+                    requestId,
+                    to,
+                    subject,
+                    ex.getMessage(),
+                    ex);
             // Surface the failure to the caller (you could also rethrow or map to a domain error)
             throw ex;
         }

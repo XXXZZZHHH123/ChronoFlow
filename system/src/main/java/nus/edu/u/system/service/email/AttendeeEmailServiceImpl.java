@@ -1,5 +1,6 @@
 package nus.edu.u.system.service.email;
 
+import java.util.*;
 import lombok.RequiredArgsConstructor;
 import nus.edu.u.system.domain.dto.AttachmentDTO;
 import nus.edu.u.system.domain.dto.NotificationRequestDTO;
@@ -8,8 +9,6 @@ import nus.edu.u.system.enums.email.NotificationChannel;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
-
-import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -29,14 +28,15 @@ public class AttendeeEmailServiceImpl implements AttendeeEmailService {
         attachments.addAll(getQrAttachment(req));
         attachments.addAll(getInlineLogoAttachment());
 
-        var request = NotificationRequestDTO.builder()
-                .channel(NotificationChannel.EMAIL)
-                .to(req.getToEmail())
-                .templateId(ATTENDEE_INVITE_TEMPLATE_ID)
-                .variables(vars)
-                .locale(Locale.ENGLISH)
-                .attachments(attachments)
-                .build();
+        var request =
+                NotificationRequestDTO.builder()
+                        .channel(NotificationChannel.EMAIL)
+                        .to(req.getToEmail())
+                        .templateId(ATTENDEE_INVITE_TEMPLATE_ID)
+                        .variables(vars)
+                        .locale(Locale.ENGLISH)
+                        .attachments(attachments)
+                        .build();
 
         return notificationService.send(request);
     }
@@ -54,14 +54,16 @@ public class AttendeeEmailServiceImpl implements AttendeeEmailService {
         List<AttachmentDTO> attachments = new ArrayList<>();
         if (req.getQrFile() != null && !req.getQrFile().isEmpty()) {
             try {
-                attachments.add(new AttachmentDTO(
-                        req.getQrFile().getOriginalFilename(),
-                        req.getQrFile().getContentType() != null ? req.getQrFile().getContentType() : "image/png",
-                        req.getQrFile().getBytes(),
-                        null,
-                        false,
-                        null
-                ));
+                attachments.add(
+                        new AttachmentDTO(
+                                req.getQrFile().getOriginalFilename(),
+                                req.getQrFile().getContentType() != null
+                                        ? req.getQrFile().getContentType()
+                                        : "image/png",
+                                req.getQrFile().getBytes(),
+                                null,
+                                false,
+                                null));
             } catch (Exception e) {
                 throw new RuntimeException("Failed to read QR code attachment", e);
             }
@@ -75,14 +77,8 @@ public class AttendeeEmailServiceImpl implements AttendeeEmailService {
             var res = new ClassPathResource("images/email/logo.png");
             if (res.exists()) {
                 byte[] bytes = StreamUtils.copyToByteArray(res.getInputStream());
-                attachments.add(new AttachmentDTO(
-                        "logo.png",
-                        "image/png",
-                        bytes,
-                        null,
-                        true,
-                        LOGO_CID
-                ));
+                attachments.add(
+                        new AttachmentDTO("logo.png", "image/png", bytes, null, true, LOGO_CID));
             }
         } catch (Exception ignored) {
             // ignore missing logo

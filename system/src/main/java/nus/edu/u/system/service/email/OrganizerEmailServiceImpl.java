@@ -1,6 +1,6 @@
 package nus.edu.u.system.service.email;
 
-
+import java.util.*;
 import lombok.RequiredArgsConstructor;
 import nus.edu.u.system.domain.dto.AttachmentDTO;
 import nus.edu.u.system.domain.dto.NotificationRequestDTO;
@@ -9,8 +9,6 @@ import nus.edu.u.system.enums.email.NotificationChannel;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
-
-import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -31,27 +29,28 @@ public class OrganizerEmailServiceImpl implements OrganizerEmailService {
             var res = new ClassPathResource("images/email/logo.png");
             if (res.exists()) {
                 byte[] bytes = StreamUtils.copyToByteArray(res.getInputStream());
-                attachments.add(new AttachmentDTO(
-                        "logo.png",
-                        "image/png",
-                        bytes,
-                        null,   // url
-                        true,   // inline
-                        LOGO_CID
-                ));
+                attachments.add(
+                        new AttachmentDTO(
+                                "logo.png",
+                                "image/png",
+                                bytes,
+                                null, // url
+                                true, // inline
+                                LOGO_CID));
             }
         } catch (Exception ignored) {
             // if logo missing, just proceed without it
         }
 
-        var request = NotificationRequestDTO.builder()
-                .channel(NotificationChannel.EMAIL)
-                .to(req.getUserEmail())
-                .templateId(WELCOME_EMAIL_ORGANIZER_TEMPLATE_ID)
-                .variables(vars)
-                .locale(Locale.ENGLISH)
-                .attachments(attachments)
-                .build();
+        var request =
+                NotificationRequestDTO.builder()
+                        .channel(NotificationChannel.EMAIL)
+                        .to(req.getUserEmail())
+                        .templateId(WELCOME_EMAIL_ORGANIZER_TEMPLATE_ID)
+                        .variables(vars)
+                        .locale(Locale.ENGLISH)
+                        .attachments(attachments)
+                        .build();
 
         return notificationService.send(request);
     }
@@ -64,8 +63,12 @@ public class OrganizerEmailServiceImpl implements OrganizerEmailService {
         vars.put("email", req.getUserEmail());
         vars.put("mobile", req.getMobile());
         vars.put("organizationName", req.getOrganizationName());
-        vars.put("organizationAddress", req.getOrganizationAddress() == null ? "" : req.getOrganizationAddress());
-        vars.put("organizationCode", req.getOrganizationCode() == null ? "" : req.getOrganizationCode());
+        vars.put(
+                "organizationAddress",
+                req.getOrganizationAddress() == null ? "" : req.getOrganizationAddress());
+        vars.put(
+                "organizationCode",
+                req.getOrganizationCode() == null ? "" : req.getOrganizationCode());
         vars.put("logoCid", LOGO_CID);
         return vars;
     }

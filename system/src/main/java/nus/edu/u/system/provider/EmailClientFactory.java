@@ -1,10 +1,9 @@
 package nus.edu.u.system.provider;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import nus.edu.u.system.domain.dto.AttachmentDTO;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor

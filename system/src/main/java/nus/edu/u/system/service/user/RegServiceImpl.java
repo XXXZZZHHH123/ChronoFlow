@@ -211,7 +211,8 @@ public class RegServiceImpl implements RegService {
         }
         try {
             organizerEmailService.sendWelcomeEmailOrganizer(regOrganizerReqVO);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return isSuccess;
     }
 }

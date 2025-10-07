@@ -6,5 +6,4 @@ public record AttachmentDTO(
         byte[] bytes,
         String url,
         boolean inline,
-        String contentId
-) {}
+        String contentId) {}
