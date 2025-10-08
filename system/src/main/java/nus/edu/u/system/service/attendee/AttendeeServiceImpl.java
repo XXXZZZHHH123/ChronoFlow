@@ -1,6 +1,7 @@
 package nus.edu.u.system.service.attendee;
 
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.framework.mybatis.MybatisPlusConfig.getCurrentTenantId;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
 import cn.hutool.core.util.ObjectUtil;
@@ -318,7 +319,7 @@ public class AttendeeServiceImpl implements AttendeeService {
 
     private void sendEmail(EventAttendeeDO attendee, EventDO event, QrCodeRespVO qrCode) {
         byte[] qrCodeBytes = Base64.getDecoder().decode(qrCode.getBase64Image());
-        TenantDO tenant = tenantMapper.selectById(attendee.getTenantId());
+        TenantDO tenant = tenantMapper.selectById(getCurrentTenantId());
         AttendeeInviteReqVO emailReq = AttendeeInviteReqVO.builder()
                 .toEmail(attendee.getAttendeeEmail())
                 .attendeeMobile(attendee.getAttendeeMobile())
