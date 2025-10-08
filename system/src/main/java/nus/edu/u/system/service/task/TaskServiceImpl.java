@@ -28,6 +28,7 @@ import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.TaskMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.task.action.TaskActionFactory;
+import nus.edu.u.system.service.task.builder.TaskRespVOBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,7 +81,16 @@ public class TaskServiceImpl implements TaskService {
             throw exception(TASK_CREATE_FAILED);
         }
 
-        return buildTaskResponse(task, event, assignee);
+        return TaskRespVOBuilder.from(task)
+                .withEvent(event)
+                .withAssignee(assignee)
+                .withAssigneeSupplier(
+                        () -> {
+                            Long userId = task.getUserId();
+                            return userId != null ? userMapper.selectById(userId) : null;
+                        })
+                .withGroupResolver(user -> resolveGroups(user.getDeptId(), null))
+                .build();
     }
 
     @Override
@@ -137,7 +147,17 @@ public class TaskServiceImpl implements TaskService {
             throw exception(UPDATE_FAILURE);
         }
 
-        return buildTaskResponse(task, event, assignee);
+        return TaskRespVOBuilder.from(task)
+                .withEvent(event)
+                .withEventSupplier(() -> fetchEvent(task.getEventId()))
+                .withAssignee(assignee)
+                .withAssigneeSupplier(
+                        () -> {
+                            Long userId = task.getUserId();
+                            return userId != null ? userMapper.selectById(userId) : null;
+                        })
+                .withGroupResolver(user -> resolveGroups(user.getDeptId(), null))
+                .build();
     }
 
     @Override
@@ -172,7 +192,16 @@ public class TaskServiceImpl implements TaskService {
             throw exception(TASK_NOT_FOUND);
         }
 
-        return buildTaskResponse(task, event, null);
+        return TaskRespVOBuilder.from(task)
+                .withEvent(event)
+                .withEventSupplier(() -> fetchEvent(task.getEventId()))
+                .withAssigneeSupplier(
+                        () -> {
+                            Long userId = task.getUserId();
+                            return userId != null ? userMapper.selectById(userId) : null;
+                        })
+                .withGroupResolver(user -> resolveGroups(user.getDeptId(), null))
+                .build();
     }
 
     @Override
@@ -208,7 +237,23 @@ public class TaskServiceImpl implements TaskService {
                         task -> {
                             Long userId = task.getUserId();
                             UserDO user = userId != null ? usersById.get(userId) : null;
-                            return buildTaskResponse(task, event, user, groupsByDeptId);
+                            return TaskRespVOBuilder.from(task)
+                                    .withEvent(event)
+                                    .withEventSupplier(() -> fetchEvent(task.getEventId()))
+                                    .withAssignee(user)
+                                    .withAssigneeSupplier(
+                                            () -> {
+                                                Long fallbackUserId = task.getUserId();
+                                                return fallbackUserId != null
+                                                        ? userMapper.selectById(fallbackUserId)
+                                                        : null;
+                                            })
+                                    .withGroupResolver(
+                                            assignedUser ->
+                                                    resolveGroups(
+                                                            assignedUser.getDeptId(),
+                                                            groupsByDeptId))
+                                    .build();
                         })
                 .toList();
     }
@@ -248,7 +293,23 @@ public class TaskServiceImpl implements TaskService {
                         task -> {
                             Long eventId = task.getEventId();
                             EventDO event = eventId != null ? eventsById.get(eventId) : null;
-                            return buildTaskResponse(task, event, member, groupsByDeptId);
+                            return TaskRespVOBuilder.from(task)
+                                    .withEvent(event)
+                                    .withEventSupplier(() -> fetchEvent(task.getEventId()))
+                                    .withAssignee(member)
+                                    .withAssigneeSupplier(
+                                            () -> {
+                                                Long userId = task.getUserId();
+                                                return userId != null
+                                                        ? userMapper.selectById(userId)
+                                                        : null;
+                                            })
+                                    .withGroupResolver(
+                                            assignedUser ->
+                                                    resolveGroups(
+                                                            assignedUser.getDeptId(),
+                                                            groupsByDeptId))
+                                    .build();
                         })
                 .toList();
     }
@@ -268,62 +329,11 @@ public class TaskServiceImpl implements TaskService {
         return dashboard;
     }
 
-    private TaskRespVO buildTaskResponse(TaskDO task, EventDO event, UserDO assignee) {
-        return buildTaskResponse(task, event, assignee, null);
-    }
-
-    private TaskRespVO buildTaskResponse(
-            TaskDO task,
-            EventDO event,
-            UserDO assignee,
-            Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> groupsByDeptId) {
-        TaskRespVO resp = TaskConvert.INSTANCE.toRespVO(task);
-        EventDO eventData = event != null ? event : fetchEvent(task.getEventId());
-        resp.setEvent(toEventSummary(eventData));
-        UserDO user = assignee;
-
-        if (user == null && task.getUserId() != null) {
-            user = userMapper.selectById(task.getUserId());
-        }
-
-        if (user != null) {
-            TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
-            assignedUserVO.setId(user.getId());
-            assignedUserVO.setName(user.getUsername());
-            assignedUserVO.setEmail(user.getEmail());
-            assignedUserVO.setPhone(user.getPhone());
-            assignedUserVO.setGroups(resolveGroups(user.getDeptId(), groupsByDeptId));
-            resp.setAssignedUser(assignedUserVO);
-        } else {
-            resp.setAssignedUser(null);
-        }
-
-        return resp;
-    }
-
     private EventDO fetchEvent(Long eventId) {
         if (eventId == null) {
             return null;
         }
         return eventMapper.selectById(eventId);
-    }
-
-    private TaskRespVO.EventSummaryVO toEventSummary(EventDO event) {
-        if (event == null) {
-            return null;
-        }
-
-        TaskRespVO.EventSummaryVO eventVO = new TaskRespVO.EventSummaryVO();
-        eventVO.setId(event.getId());
-        eventVO.setName(event.getName());
-        eventVO.setDescription(event.getDescription());
-        eventVO.setOrganizerId(event.getUserId());
-        eventVO.setLocation(event.getLocation());
-        eventVO.setStatus(event.getStatus());
-        eventVO.setStartTime(event.getStartTime());
-        eventVO.setEndTime(event.getEndTime());
-        eventVO.setRemark(event.getRemark());
-        return eventVO;
     }
 
     private List<TaskRespVO.AssignedUserVO.GroupVO> resolveGroups(
