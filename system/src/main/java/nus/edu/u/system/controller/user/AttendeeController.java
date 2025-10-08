@@ -30,24 +30,24 @@ public class AttendeeController {
     @Resource private AttendeeService attendeeService;
 
     @GetMapping("list/{eventId}")
-    public CommonResult<List<AttendeeQrCodeRespVO>> list(@PathVariable @NotNull Long eventId) {
+    public CommonResult<List<AttendeeQrCodeRespVO>> list(@PathVariable("eventId") @NotNull Long eventId) {
         return success(attendeeService.list(eventId));
     }
 
     @GetMapping("/{attendeeId}")
-    public CommonResult<AttendeeQrCodeRespVO> get(@PathVariable @NotNull Long attendeeId) {
+    public CommonResult<AttendeeQrCodeRespVO> get(@PathVariable("attendeeId") @NotNull Long attendeeId) {
         return success(attendeeService.get(attendeeId));
     }
 
     @DeleteMapping("/{attendeeId}")
-    public CommonResult<Boolean> delete(@PathVariable @NotNull Long attendeeId) {
+    public CommonResult<Boolean> delete(@PathVariable("attendeeId") @NotNull Long attendeeId) {
         attendeeService.delete(attendeeId);
         return success(true);
     }
 
     @PatchMapping("/{attendeeId}")
     public CommonResult<AttendeeQrCodeRespVO> update(
-            @PathVariable @NotNull Long attendeeId, @Valid AttendeeReqVO reqVO) {
+            @PathVariable("attendeeId") @NotNull Long attendeeId, @RequestBody @Valid AttendeeReqVO reqVO) {
         return success(attendeeService.update(attendeeId, reqVO));
     }
 

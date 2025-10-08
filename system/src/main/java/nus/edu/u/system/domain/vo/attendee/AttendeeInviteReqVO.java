@@ -17,7 +17,8 @@ public class AttendeeInviteReqVO {
 
     private String organizationName;
 
-    private MultipartFile qrFile;
+    private byte[] qrCodeBytes;
+    private String qrCodeContentType;
 
     private Long eventId;
 
