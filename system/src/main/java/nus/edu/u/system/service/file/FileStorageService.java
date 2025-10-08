@@ -8,5 +8,6 @@ public interface FileStorageService {
     List<FileResultVO> uploadToTaskLog(FileUploadReqVO req);
 
     FileResultVO downloadFile(Long fileId);
+
     List<FileResultVO> downloadFilesByTaskLogId(Long taskLogId);
 }

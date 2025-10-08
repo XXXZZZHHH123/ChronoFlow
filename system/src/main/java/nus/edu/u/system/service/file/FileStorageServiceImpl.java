@@ -1,7 +1,6 @@
 package nus.edu.u.system.service.file;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -51,52 +50,58 @@ public class FileStorageServiceImpl implements FileStorageService {
 
         try {
 
-            List<CompletableFuture<FileClient.FileUploadResult>> futures = req.getFiles().stream()
-                    .filter(f -> f != null && !f.isEmpty())
-                    .map(file -> CompletableFuture.supplyAsync(() -> {
-                        FileClient.FileUploadResult r = client.uploadFile(file);
-                        uploadedObjectNames.add(r.objectName());
-                        return r;
-                    }, pool))
-                    .toList();
+            List<CompletableFuture<FileClient.FileUploadResult>> futures =
+                    req.getFiles().stream()
+                            .filter(f -> f != null && !f.isEmpty())
+                            .map(
+                                    file ->
+                                            CompletableFuture.supplyAsync(
+                                                    () -> {
+                                                        FileClient.FileUploadResult r =
+                                                                client.uploadFile(file);
+                                                        uploadedObjectNames.add(r.objectName());
+                                                        return r;
+                                                    },
+                                                    pool))
+                            .toList();
 
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-            List<FileClient.FileUploadResult> uploaded = futures.stream()
-                    .map(CompletableFuture::join)
-                    .toList();
-
+            List<FileClient.FileUploadResult> uploaded =
+                    futures.stream().map(CompletableFuture::join).toList();
 
             List<FileDO> batchEntities = new ArrayList<>(uploaded.size());
             for (int i = 0; i < uploaded.size(); i++) {
                 MultipartFile file = req.getFiles().get(i);
                 FileClient.FileUploadResult r = uploaded.get(i);
 
-                batchEntities.add(FileDO.builder()
-                        .taskLogId(req.getTaskLogId())
-                        .eventId(req.getEventId())
-                        .provider(provider)
-                        .name(file.getOriginalFilename())
-                        .objectName(r.objectName())
-                        .type(r.contentType())
-                        .size(r.size())
-                        .build());
+                batchEntities.add(
+                        FileDO.builder()
+                                .taskLogId(req.getTaskLogId())
+                                .eventId(req.getEventId())
+                                .provider(provider)
+                                .name(file.getOriginalFilename())
+                                .objectName(r.objectName())
+                                .type(r.contentType())
+                                .size(r.size())
+                                .build());
             }
 
-            //Genius Lu
-//            if (!batchEntities.isEmpty()) {
-//                fileMapper.insertBatch(batchEntities);
-//            }
+            // Genius Lu
+            //            if (!batchEntities.isEmpty()) {
+            //                fileMapper.insertBatch(batchEntities);
+            //            }
 
             List<FileResultVO> results = new ArrayList<>(uploaded.size());
             for (FileClient.FileUploadResult r : uploaded) {
                 String signedUrl = isGcs ? gcs.generateSignedUrl(r.objectName()) : null;
-                results.add(FileResultVO.builder()
-                        .objectName(r.objectName())
-                        .contentType(r.contentType())
-                        .size(r.size())
-                        .signedUrl(signedUrl)
-                        .build());
+                results.add(
+                        FileResultVO.builder()
+                                .objectName(r.objectName())
+                                .contentType(r.contentType())
+                                .size(r.size())
+                                .signedUrl(signedUrl)
+                                .build());
             }
             return results;
 

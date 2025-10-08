@@ -19,7 +19,8 @@ public class FileTestController {
     private final FileStorageService fileStorageService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<List<FileResultVO>> uploadToTaskLog(@ModelAttribute @Validated FileUploadReqVO req) {
+    public ResponseEntity<List<FileResultVO>> uploadToTaskLog(
+            @ModelAttribute @Validated FileUploadReqVO req) {
         List<FileResultVO> results = fileStorageService.uploadToTaskLog(req);
         return ResponseEntity.ok(results);
     }
