@@ -1,8 +1,13 @@
 package nus.edu.u.system.service.file;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import jakarta.validation.Valid;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import lombok.RequiredArgsConstructor;
 import nus.edu.u.framework.file.FileProviderPropertiesConfig;
 import nus.edu.u.system.domain.dataobject.file.FileDO;
@@ -14,6 +19,7 @@ import nus.edu.u.system.provider.file.FileClientFactory;
 import nus.edu.u.system.provider.file.GcsFileClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -25,40 +31,84 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     @Transactional
-    public FileResultVO uploadToTaskLog(@Valid FileUploadReqVO req) {
-        FileClient client = fileClientFactory.create(providerConfig.getProvider());
-        FileClient.FileUploadResult r = client.uploadFile(req.getFile());
+    public List<FileResultVO> uploadToTaskLog(FileUploadReqVO req) {
 
-        FileDO entity =
-                FileDO.builder()
+        if (req.getFiles() == null || req.getFiles().isEmpty()) {
+            throw new IllegalArgumentException("files must not be empty");
+        }
+
+        final String provider = providerConfig.getProvider();
+        final FileClient client = fileClientFactory.create(provider);
+        final boolean isGcs = client instanceof GcsFileClient;
+        final GcsFileClient gcs = isGcs ? (GcsFileClient) client : null;
+
+        final int n = req.getFiles().size();
+        final int threads = Math.min(8, Math.max(2, n));
+
+        final ExecutorService pool = Executors.newFixedThreadPool(threads);
+
+        final List<String> uploadedObjectNames = Collections.synchronizedList(new ArrayList<>());
+
+        try {
+
+            List<CompletableFuture<FileClient.FileUploadResult>> futures = req.getFiles().stream()
+                    .filter(f -> f != null && !f.isEmpty())
+                    .map(file -> CompletableFuture.supplyAsync(() -> {
+                        FileClient.FileUploadResult r = client.uploadFile(file);
+                        uploadedObjectNames.add(r.objectName());
+                        return r;
+                    }, pool))
+                    .toList();
+
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+            List<FileClient.FileUploadResult> uploaded = futures.stream()
+                    .map(CompletableFuture::join)
+                    .toList();
+
+
+            List<FileDO> batchEntities = new ArrayList<>(uploaded.size());
+            for (int i = 0; i < uploaded.size(); i++) {
+                MultipartFile file = req.getFiles().get(i);
+                FileClient.FileUploadResult r = uploaded.get(i);
+
+                batchEntities.add(FileDO.builder()
                         .taskLogId(req.getTaskLogId())
                         .eventId(req.getEventId())
-                        .provider(providerConfig.getProvider())
-                        .name(req.getFile().getOriginalFilename())
+                        .provider(provider)
+                        .name(file.getOriginalFilename())
                         .objectName(r.objectName())
                         .type(r.contentType())
                         .size(r.size())
-                        .build();
+                        .build());
+            }
 
-        fileMapper.insert(entity);
+            //Genius Lu
+//            if (!batchEntities.isEmpty()) {
+//                fileMapper.insertBatch(batchEntities);
+//            }
 
-        // Return with temporary signed URL for immediate use
-        if (client instanceof GcsFileClient gcs) {
-            String signedUrl = gcs.generateSignedUrl(r.objectName());
-            return FileResultVO.builder()
-                    .objectName(r.objectName())
-                    .contentType(r.contentType())
-                    .size(r.size())
-                    .signedUrl(signedUrl)
-                    .build();
+            List<FileResultVO> results = new ArrayList<>(uploaded.size());
+            for (FileClient.FileUploadResult r : uploaded) {
+                String signedUrl = isGcs ? gcs.generateSignedUrl(r.objectName()) : null;
+                results.add(FileResultVO.builder()
+                        .objectName(r.objectName())
+                        .contentType(r.contentType())
+                        .size(r.size())
+                        .signedUrl(signedUrl)
+                        .build());
+            }
+            return results;
+
+        } catch (RuntimeException ex) {
+
+            for (String name : uploadedObjectNames) {
+                client.deleteQuietly(name);
+            }
+            throw ex;
+        } finally {
+            pool.shutdown();
         }
-
-        return FileResultVO.builder()
-                .objectName(r.objectName())
-                .contentType(r.contentType())
-                .size(r.size())
-                .signedUrl(null)
-                .build();
     }
 
     @Override

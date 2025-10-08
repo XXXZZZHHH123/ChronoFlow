@@ -18,10 +18,10 @@ public class FileTestController {
 
     private final FileStorageService fileStorageService;
 
-    /** Upload a file linked to a specific task log */
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<FileResultVO> upload(@ModelAttribute @Validated FileUploadReqVO req) {
-        return ResponseEntity.ok(fileStorageService.uploadToTaskLog(req));
+    public ResponseEntity<List<FileResultVO>> uploadToTaskLog(@ModelAttribute @Validated FileUploadReqVO req) {
+        List<FileResultVO> results = fileStorageService.uploadToTaskLog(req);
+        return ResponseEntity.ok(results);
     }
 
     /** Download a single file by taskLogId */

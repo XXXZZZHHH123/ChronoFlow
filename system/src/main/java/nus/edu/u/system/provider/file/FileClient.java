@@ -4,6 +4,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface FileClient {
     record FileUploadResult(String objectName, String contentType, long size, String signedUrl) {}
-
     FileUploadResult uploadFile(MultipartFile file);
+    default void deleteQuietly(String objectName) {}
 }
