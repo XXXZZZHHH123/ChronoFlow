@@ -21,6 +21,5 @@ public class QrCodeReqVO {
     @Builder.Default
     private Integer size = 300;
 
-    @Builder.Default
-    private String format = "PNG"; // PNG, JPG, GIF
+    @Builder.Default private String format = "PNG"; // PNG, JPG, GIF
 }

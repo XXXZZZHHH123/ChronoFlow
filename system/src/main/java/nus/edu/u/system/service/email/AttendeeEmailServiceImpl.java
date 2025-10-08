@@ -66,7 +66,9 @@ public class AttendeeEmailServiceImpl implements AttendeeEmailService {
             attachments.add(
                     new AttachmentDTO(
                             null,
-                            req.getQrCodeContentType() != null ? req.getQrCodeContentType() : "image/png",
+                            req.getQrCodeContentType() != null
+                                    ? req.getQrCodeContentType()
+                                    : "image/png",
                             req.getQrCodeBytes(),
                             null,
                             true,

@@ -30,12 +30,14 @@ public class AttendeeController {
     @Resource private AttendeeService attendeeService;
 
     @GetMapping("list/{eventId}")
-    public CommonResult<List<AttendeeQrCodeRespVO>> list(@PathVariable("eventId") @NotNull Long eventId) {
+    public CommonResult<List<AttendeeQrCodeRespVO>> list(
+            @PathVariable("eventId") @NotNull Long eventId) {
         return success(attendeeService.list(eventId));
     }
 
     @GetMapping("/{attendeeId}")
-    public CommonResult<AttendeeQrCodeRespVO> get(@PathVariable("attendeeId") @NotNull Long attendeeId) {
+    public CommonResult<AttendeeQrCodeRespVO> get(
+            @PathVariable("attendeeId") @NotNull Long attendeeId) {
         return success(attendeeService.get(attendeeId));
     }
 
@@ -47,7 +49,8 @@ public class AttendeeController {
 
     @PatchMapping("/{attendeeId}")
     public CommonResult<AttendeeQrCodeRespVO> update(
-            @PathVariable("attendeeId") @NotNull Long attendeeId, @RequestBody @Valid AttendeeReqVO reqVO) {
+            @PathVariable("attendeeId") @NotNull Long attendeeId,
+            @RequestBody @Valid AttendeeReqVO reqVO) {
         return success(attendeeService.update(attendeeId, reqVO));
     }
 

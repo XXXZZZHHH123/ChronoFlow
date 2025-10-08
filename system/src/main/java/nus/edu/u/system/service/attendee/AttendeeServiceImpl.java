@@ -8,7 +8,6 @@ import cn.hutool.core.util.ObjectUtil;
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.*;
-
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.system.domain.dataobject.attendee.EventAttendeeDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
@@ -320,19 +319,20 @@ public class AttendeeServiceImpl implements AttendeeService {
     private void sendEmail(EventAttendeeDO attendee, EventDO event, QrCodeRespVO qrCode) {
         byte[] qrCodeBytes = Base64.getDecoder().decode(qrCode.getBase64Image());
         TenantDO tenant = tenantMapper.selectById(getCurrentTenantId());
-        AttendeeInviteReqVO emailReq = AttendeeInviteReqVO.builder()
-                .toEmail(attendee.getAttendeeEmail())
-                .attendeeMobile(attendee.getAttendeeMobile())
-                .attendeeName(attendee.getAttendeeName())
-                .qrCodeBytes(qrCodeBytes)
-                .qrCodeContentType(qrCode.getContentType())
-                .eventName(event.getName())
-                .eventDescription(event.getDescription())
-                .eventId(event.getId())
-                .eventLocation(event.getLocation())
-                .eventDate(event.getStartTime().toString())
-                .organizationName(ObjectUtil.isNotNull(tenant) ? tenant.getName() : null)
-                .build();
+        AttendeeInviteReqVO emailReq =
+                AttendeeInviteReqVO.builder()
+                        .toEmail(attendee.getAttendeeEmail())
+                        .attendeeMobile(attendee.getAttendeeMobile())
+                        .attendeeName(attendee.getAttendeeName())
+                        .qrCodeBytes(qrCodeBytes)
+                        .qrCodeContentType(qrCode.getContentType())
+                        .eventName(event.getName())
+                        .eventDescription(event.getDescription())
+                        .eventId(event.getId())
+                        .eventLocation(event.getLocation())
+                        .eventDate(event.getStartTime().toString())
+                        .organizationName(ObjectUtil.isNotNull(tenant) ? tenant.getName() : null)
+                        .build();
         attendeeEmailService.sendAttendeeInvite(emailReq);
     }
 }
