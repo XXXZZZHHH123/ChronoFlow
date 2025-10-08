@@ -32,12 +32,4 @@ public class EventAttendeeDO extends TenantBaseDO implements Serializable {
     private Integer checkInStatus;
     private LocalDateTime checkInTime;
     private LocalDateTime qrCodeGeneratedTime;
-
-    @TableLogic private Boolean deleted;
-
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
-
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
 }

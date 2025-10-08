@@ -1,4 +1,4 @@
-package nus.edu.u.system.controller;
+package nus.edu.u.system.controller.event;
 
 import static nus.edu.u.common.constant.PermissionConstants.*;
 
