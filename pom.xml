@@ -36,7 +36,8 @@
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
 		<easyexcel.version>3.3.2</easyexcel.version>
 		<zxing-core.version>3.5.3</zxing-core.version>
-		 <zxing-javase.version>3.5.3</zxing-javase.version>
+        <zxing-javase.version>3.5.3</zxing-javase.version>
+		<gcs.version>2.22.2</gcs.version>
 	</properties>
 
 	<dependencyManagement>
@@ -173,10 +174,18 @@
 				<artifactId>core</artifactId>
 				<version>${zxing-core.version}</version>
 			</dependency>
+
 			<dependency>
 				<groupId>com.google.zxing</groupId>
 				<artifactId>javase</artifactId>
 				<version>${zxing-javase.version}</version>
+			</dependency>
+
+			<!--Google cloud storage -->
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>google-cloud-storage</artifactId>
+				<version>${gcs.version}</version>
 			</dependency>
 
 			<!-- Framework module -->
