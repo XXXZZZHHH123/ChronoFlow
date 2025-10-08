@@ -37,8 +37,6 @@ public interface EventAttendeeMapper extends BaseMapper<EventAttendeeDO> {
     /** 通过 eventId 查询所有 attendees */
     default List<EventAttendeeDO> selectByEventId(Long eventId) {
         return this.selectList(
-                Wrappers.<EventAttendeeDO>lambdaQuery()
-                        .eq(EventAttendeeDO::getEventId, eventId)
-                        .eq(EventAttendeeDO::getDeleted, false));
+                Wrappers.<EventAttendeeDO>lambdaQuery().eq(EventAttendeeDO::getEventId, eventId));
     }
 }

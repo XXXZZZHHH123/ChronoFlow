@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import lombok.Data;
+import nus.edu.u.system.domain.vo.attendee.AttendeeReqVO;
 
 @Data
 public class GenerateQrCodesReqVO {
@@ -11,14 +12,7 @@ public class GenerateQrCodesReqVO {
     private Long eventId;
 
     @NotEmpty(message = "Attendee list cannot be empty")
-    private List<AttendeeInfo> attendees;
-
-    @Data
-    public static class AttendeeInfo {
-        private String email;
-        private String name;
-        private String mobile;
-    }
+    private List<AttendeeReqVO> attendees;
 
     private Integer qrSize = 400;
 }

@@ -1,10 +1,13 @@
-package nus.edu.u.system.service.checkin;
+package nus.edu.u.system.service.attendee;
 
+import java.util.List;
+import nus.edu.u.system.domain.vo.attendee.AttendeeQrCodeRespVO;
+import nus.edu.u.system.domain.vo.attendee.AttendeeReqVO;
 import nus.edu.u.system.domain.vo.checkin.CheckInRespVO;
 import nus.edu.u.system.domain.vo.checkin.GenerateQrCodesReqVO;
 import nus.edu.u.system.domain.vo.checkin.GenerateQrCodesRespVO;
 
-public interface CheckInService {
+public interface AttendeeService {
     /**
      * Perform check-in with token
      *
@@ -30,4 +33,33 @@ public interface CheckInService {
      * @return Check-in token
      */
     String getCheckInToken(Long eventId, String email);
+
+    /**
+     * List attendee info
+     *
+     * @param eventId Event id
+     * @return Attendee info with qr code
+     */
+    List<AttendeeQrCodeRespVO> list(Long eventId);
+
+    /**
+     * Query attendee info by id
+     *
+     * @return One attendee info
+     */
+    AttendeeQrCodeRespVO get(Long attendeeId);
+
+    /**
+     * @param attendeeId attendee id
+     */
+    void delete(Long attendeeId);
+
+    /**
+     * Update attendee info
+     *
+     * @param attendeeId attendee id
+     * @param reqVO attendee info
+     * @return attendee info with qr code
+     */
+    AttendeeQrCodeRespVO update(Long attendeeId, AttendeeReqVO reqVO);
 }

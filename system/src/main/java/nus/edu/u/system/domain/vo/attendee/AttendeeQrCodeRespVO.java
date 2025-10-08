@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AttendeeQrCodeRespVO {
 
+    private Long id;
+
     private String attendeeEmail;
 
     private String attendeeName;

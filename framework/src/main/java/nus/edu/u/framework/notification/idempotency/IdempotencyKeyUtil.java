@@ -1,9 +1,8 @@
-package nus.edu.u.system.util;
+package nus.edu.u.framework.notification.idempotency;
 
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
-import nus.edu.u.framework.notification.idempotency.IdempotencyPropertiesConfig;
 import org.springframework.stereotype.Component;
 
 @Component
