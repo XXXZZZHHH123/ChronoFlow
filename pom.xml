@@ -35,6 +35,7 @@
 		<satoken.version>1.44.0</satoken.version>
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
 		<easyexcel.version>3.3.2</easyexcel.version>
+		<gcs.version>2.22.2</gcs.version>
 	</properties>
 
 	<dependencyManagement>

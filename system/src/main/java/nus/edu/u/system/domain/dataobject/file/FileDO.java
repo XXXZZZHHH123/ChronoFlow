@@ -35,7 +35,9 @@ public class FileDO extends TenantBaseDO implements Serializable {
 
     private String name;
 
-    private String url;
+    private String objectName;
+
+    private String provider;
 
     private String type;
 

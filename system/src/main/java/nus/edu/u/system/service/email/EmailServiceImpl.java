@@ -9,8 +9,8 @@ import nus.edu.u.common.exception.RateLimitExceededException;
 import nus.edu.u.framework.notification.email.EmailLimitPropertiesConfig;
 import nus.edu.u.system.domain.dto.AttachmentDTO;
 import nus.edu.u.system.domain.dto.EmailSendResultDTO;
-import nus.edu.u.system.provider.EmailClient;
-import nus.edu.u.system.provider.EmailClientFactory;
+import nus.edu.u.system.provider.email.EmailClient;
+import nus.edu.u.system.provider.email.EmailClientFactory;
 import nus.edu.u.system.util.IdempotencyKeyUtil;
 import org.springframework.stereotype.Service;
 

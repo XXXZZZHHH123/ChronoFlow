@@ -1,4 +1,4 @@
-package nus.edu.u.system.provider;
+package nus.edu.u.system.provider.email;
 
 import jakarta.activation.DataHandler;
 import jakarta.mail.Message;

@@ -1,4 +1,4 @@
-package nus.edu.u.system.provider;
+package nus.edu.u.system.provider.email;
 
 import java.util.List;
 import nus.edu.u.system.domain.dto.AttachmentDTO;
