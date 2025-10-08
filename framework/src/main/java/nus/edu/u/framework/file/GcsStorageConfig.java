@@ -6,6 +6,8 @@ import com.google.cloud.storage.StorageOptions;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,11 +18,18 @@ public class GcsStorageConfig {
 
     @Bean
     public Storage storage() throws IOException {
-        String json = System.getenv(GCP_SERVICE_ENV_NAME);
-        GoogleCredentials credentials =
-                GoogleCredentials.fromStream(
-                        new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+        String encoded = System.getenv(GCP_SERVICE_ENV_NAME);
+        if (encoded == null || encoded.isBlank()) {
+            throw new IllegalStateException(GCP_SERVICE_ENV_NAME + " is not set");
+        }
 
-        return StorageOptions.newBuilder().setCredentials(credentials).build().getService();
+        byte[] decodedBytes = Base64.getDecoder().decode(encoded);
+        try (var inputStream = new ByteArrayInputStream(decodedBytes)) {
+            GoogleCredentials credentials = GoogleCredentials.fromStream(inputStream);
+            return StorageOptions.newBuilder()
+                    .setCredentials(credentials)
+                    .build()
+                    .getService();
+        }
     }
 }
