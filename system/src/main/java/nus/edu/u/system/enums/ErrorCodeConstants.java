@@ -112,6 +112,10 @@ public interface ErrorCodeConstants {
     ErrorCode QRCODE_INVALID_CONTENT = new ErrorCode(10_04_002, "Invalid QR code content");
     ErrorCode QRCODE_INVALID_SIZE = new ErrorCode(10_04_003, "Invalid QR code size");
 
+    // ========= Attendee module 10-05-000 ============
+    ErrorCode ATTENDEE_NOT_EXIST = new ErrorCode(10_05_001, "Attendee does not exist");
+    ErrorCode UPDATE_ATTENDEE_FAILED = new ErrorCode(10_05_002, "Update attendee failed");
+
     // ========= RolePermission module 14-01-000 ============
     ErrorCode CREATE_ROLE_FAILED = new ErrorCode(14_01_001, "Create role failed");
     ErrorCode CANNOT_FIND_ROLE = new ErrorCode(14_01_002, "Role not found");

@@ -84,7 +84,7 @@ public class QrCodeServiceImpl implements QrCodeService {
     @Override
     public QrCodeRespVO generateEventCheckInQrWithToken(String checkInToken) {
         // Build secure check-in URL with token
-        String url = baseUrl + "/system/checkin/scan?token=" + checkInToken;
+        String url = baseUrl + "/system/attendee/scan?token=" + checkInToken;
 
         QrCodeReqVO reqVO = QrCodeReqVO.builder().content(url).size(400).format("PNG").build();
 

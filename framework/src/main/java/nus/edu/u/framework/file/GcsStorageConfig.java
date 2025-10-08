@@ -5,9 +5,7 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -26,10 +24,7 @@ public class GcsStorageConfig {
         byte[] decodedBytes = Base64.getDecoder().decode(encoded);
         try (var inputStream = new ByteArrayInputStream(decodedBytes)) {
             GoogleCredentials credentials = GoogleCredentials.fromStream(inputStream);
-            return StorageOptions.newBuilder()
-                    .setCredentials(credentials)
-                    .build()
-                    .getService();
+            return StorageOptions.newBuilder().setCredentials(credentials).build().getService();
         }
     }
 }

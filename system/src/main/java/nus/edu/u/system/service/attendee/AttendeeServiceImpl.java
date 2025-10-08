@@ -1,18 +1,20 @@
-package nus.edu.u.system.service.checkin;
+package nus.edu.u.system.service.attendee;
 
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.framework.mybatis.MybatisPlusConfig.getCurrentTenantId;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
 import cn.hutool.core.util.ObjectUtil;
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.system.domain.dataobject.attendee.EventAttendeeDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
+import nus.edu.u.system.domain.dataobject.tenant.TenantDO;
+import nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO;
 import nus.edu.u.system.domain.vo.attendee.AttendeeQrCodeRespVO;
+import nus.edu.u.system.domain.vo.attendee.AttendeeReqVO;
 import nus.edu.u.system.domain.vo.checkin.CheckInRespVO;
 import nus.edu.u.system.domain.vo.checkin.GenerateQrCodesReqVO;
 import nus.edu.u.system.domain.vo.checkin.GenerateQrCodesRespVO;
@@ -20,6 +22,8 @@ import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
 import nus.edu.u.system.enums.event.EventStatusEnum;
 import nus.edu.u.system.mapper.attendee.EventAttendeeMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
+import nus.edu.u.system.mapper.tenant.TenantMapper;
+import nus.edu.u.system.service.email.AttendeeEmailService;
 import nus.edu.u.system.service.qrcode.QrCodeService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,13 +31,109 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
-public class CheckInServiceImpl implements CheckInService {
+public class AttendeeServiceImpl implements AttendeeService {
+
     @Resource private EventAttendeeMapper attendeeMapper;
+
     @Resource private EventMapper eventMapper;
+
     @Resource private QrCodeService qrCodeService;
+
+    @Resource private AttendeeEmailService attendeeEmailService;
+
+    @Resource private TenantMapper tenantMapper;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
+
+    @Override
+    public List<AttendeeQrCodeRespVO> list(Long eventId) {
+        List<EventAttendeeDO> list = attendeeMapper.selectByEventId(eventId);
+        if (ObjectUtil.isEmpty(list)) {
+            return Collections.emptyList();
+        }
+        return list.stream()
+                .map(
+                        attendee ->
+                                AttendeeQrCodeRespVO.builder()
+                                        .id(attendee.getId())
+                                        .attendeeEmail(attendee.getAttendeeEmail())
+                                        .attendeeMobile(attendee.getAttendeeMobile())
+                                        .attendeeName(attendee.getAttendeeName())
+                                        .checkInToken(attendee.getCheckInToken())
+                                        .build())
+                .toList();
+    }
+
+    @Override
+    public AttendeeQrCodeRespVO get(Long attendeeId) {
+        EventAttendeeDO attendee = attendeeMapper.selectById(attendeeId);
+        if (ObjectUtil.isNull(attendee)) {
+            return null;
+        }
+        return AttendeeQrCodeRespVO.builder()
+                .id(attendee.getId())
+                .attendeeEmail(attendee.getAttendeeEmail())
+                .attendeeMobile(attendee.getAttendeeMobile())
+                .attendeeName(attendee.getAttendeeName())
+                .checkInToken(attendee.getCheckInToken())
+                .build();
+    }
+
+    @Override
+    public void delete(Long attendeeId) {
+        EventAttendeeDO attendee = attendeeMapper.selectById(attendeeId);
+        if (ObjectUtil.isEmpty(attendee)) {
+            throw exception(ATTENDEE_NOT_EXIST);
+        }
+        attendeeMapper.deleteById(attendeeId);
+    }
+
+    @Override
+    public AttendeeQrCodeRespVO update(Long attendeeId, AttendeeReqVO reqVO) {
+        EventAttendeeDO attendee = attendeeMapper.selectById(attendeeId);
+        if (ObjectUtil.isEmpty(attendee)) {
+            throw exception(ATTENDEE_NOT_EXIST);
+        }
+        EventDO event = eventMapper.selectById(attendee.getEventId());
+        if (ObjectUtil.isEmpty(event)) {
+            throw exception(EVENT_NOT_FOUND);
+        }
+        attendee.setAttendeeEmail(reqVO.getEmail());
+        attendee.setAttendeeMobile(reqVO.getMobile());
+        attendee.setAttendeeName(reqVO.getName());
+        boolean isSuccess = attendeeMapper.updateById(attendee) > 0;
+        if (!isSuccess) {
+            throw exception(UPDATE_ATTENDEE_FAILED);
+        }
+
+        String token = attendee.getCheckInToken();
+        if (ObjectUtil.isNull(attendee.getCheckInToken())) {
+            token = UUID.randomUUID().toString();
+            attendee.setCheckInToken(token);
+            attendee.setQrCodeGeneratedTime(LocalDateTime.now());
+            attendeeMapper.updateById(attendee);
+            log.info(
+                    "Generated new token for updating attendee: email={}",
+                    attendee.getAttendeeEmail());
+        }
+        // Generate QR code
+        QrCodeRespVO qrCode = qrCodeService.generateEventCheckInQrWithToken(token);
+        String qrCodeUrl = baseUrl + "/system/attendee/scan?token=" + token;
+
+        // Send email
+        sendEmail(attendee, event, qrCode);
+
+        return AttendeeQrCodeRespVO.builder()
+                .id(attendee.getId())
+                .attendeeEmail(attendee.getAttendeeEmail())
+                .attendeeName(attendee.getAttendeeName())
+                .attendeeMobile(attendee.getAttendeeMobile())
+                .checkInToken(token)
+                .qrCodeBase64(qrCode.getBase64Image())
+                .qrCodeUrl(qrCodeUrl)
+                .build();
+    }
 
     @Override
     @Transactional
@@ -96,7 +196,7 @@ public class CheckInServiceImpl implements CheckInService {
     @Transactional
     public GenerateQrCodesRespVO generateQrCodesForAttendees(GenerateQrCodesReqVO reqVO) {
         Long eventId = reqVO.getEventId();
-        List<GenerateQrCodesReqVO.AttendeeInfo> attendeeInfos = reqVO.getAttendees();
+        List<AttendeeReqVO> attendeeInfos = reqVO.getAttendees();
 
         // 1. Validate event
         EventDO event = eventMapper.selectById(eventId);
@@ -108,7 +208,7 @@ public class CheckInServiceImpl implements CheckInService {
         List<AttendeeQrCodeRespVO> attendeeQrCodes = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
 
-        for (GenerateQrCodesReqVO.AttendeeInfo info : attendeeInfos) {
+        for (AttendeeReqVO info : attendeeInfos) {
             if (info.getEmail() == null || info.getEmail().isBlank()) {
                 log.warn("Skipping attendee with empty email");
                 continue;
@@ -153,10 +253,14 @@ public class CheckInServiceImpl implements CheckInService {
 
             // Generate QR code
             QrCodeRespVO qrCode = qrCodeService.generateEventCheckInQrWithToken(token);
-            String qrCodeUrl = baseUrl + "/system/checkin/scan?token=" + token;
+            String qrCodeUrl = baseUrl + "/system/attendee/scan?token=" + token;
+
+            // Send email
+            sendEmail(attendee, event, qrCode);
 
             AttendeeQrCodeRespVO attendeeQr =
                     AttendeeQrCodeRespVO.builder()
+                            .id(attendee.getId())
                             .attendeeEmail(attendee.getAttendeeEmail())
                             .attendeeName(attendee.getAttendeeName())
                             .attendeeMobile(attendee.getAttendeeMobile())
@@ -210,5 +314,25 @@ public class CheckInServiceImpl implements CheckInService {
         }
 
         return attendee.getCheckInToken();
+    }
+
+    private void sendEmail(EventAttendeeDO attendee, EventDO event, QrCodeRespVO qrCode) {
+        byte[] qrCodeBytes = Base64.getDecoder().decode(qrCode.getBase64Image());
+        TenantDO tenant = tenantMapper.selectById(getCurrentTenantId());
+        AttendeeInviteReqVO emailReq =
+                AttendeeInviteReqVO.builder()
+                        .toEmail(attendee.getAttendeeEmail())
+                        .attendeeMobile(attendee.getAttendeeMobile())
+                        .attendeeName(attendee.getAttendeeName())
+                        .qrCodeBytes(qrCodeBytes)
+                        .qrCodeContentType(qrCode.getContentType())
+                        .eventName(event.getName())
+                        .eventDescription(event.getDescription())
+                        .eventId(event.getId())
+                        .eventLocation(event.getLocation())
+                        .eventDate(event.getStartTime().toString())
+                        .organizationName(ObjectUtil.isNotNull(tenant) ? tenant.getName() : null)
+                        .build();
+        attendeeEmailService.sendAttendeeInvite(emailReq);
     }
 }
