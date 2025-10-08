@@ -43,7 +43,7 @@ public class MemberEmailServiceImpl implements MemberEmailService {
                                 "logo.png",
                                 "image/png",
                                 bytes,
-                                null, // url
+                                null, // objectName
                                 true, // inline
                                 LOGO_CID));
             }
