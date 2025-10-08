@@ -1,15 +1,14 @@
 package nus.edu.u.system.controller.FileTest;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import nus.edu.u.system.domain.vo.file.FileResultVO;
 import nus.edu.u.system.domain.vo.file.FileUploadReqVO;
 import nus.edu.u.system.service.file.FileStorageService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/files")

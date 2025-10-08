@@ -15,5 +15,4 @@ public class FileUploadReqVO {
 
     @NotNull(message = "File cannot be null")
     private MultipartFile file;
-
 }

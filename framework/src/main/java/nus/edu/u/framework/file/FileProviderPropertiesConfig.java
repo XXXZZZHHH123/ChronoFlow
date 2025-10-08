@@ -12,6 +12,5 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "file")
 public class FileProviderPropertiesConfig {
 
-    @NotBlank
-    private String provider;
+    @NotBlank private String provider;
 }

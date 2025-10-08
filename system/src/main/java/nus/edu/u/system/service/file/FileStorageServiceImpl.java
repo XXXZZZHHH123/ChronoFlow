@@ -2,6 +2,7 @@ package nus.edu.u.system.service.file;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import nus.edu.u.framework.file.FileProviderPropertiesConfig;
 import nus.edu.u.system.domain.dataobject.file.FileDO;
@@ -13,8 +14,6 @@ import nus.edu.u.system.provider.file.FileClientFactory;
 import nus.edu.u.system.provider.file.GcsFileClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,15 +29,16 @@ public class FileStorageServiceImpl implements FileStorageService {
         FileClient client = fileClientFactory.create(providerConfig.getProvider());
         FileClient.FileUploadResult r = client.uploadFile(req.getFile());
 
-        FileDO entity = FileDO.builder()
-                .taskLogId(req.getTaskLogId())
-                .eventId(req.getEventId())
-                .provider(providerConfig.getProvider())
-                .name(req.getFile().getOriginalFilename())
-                .objectName(r.objectName())
-                .type(r.contentType())
-                .size(r.size())
-                .build();
+        FileDO entity =
+                FileDO.builder()
+                        .taskLogId(req.getTaskLogId())
+                        .eventId(req.getEventId())
+                        .provider(providerConfig.getProvider())
+                        .name(req.getFile().getOriginalFilename())
+                        .objectName(r.objectName())
+                        .type(r.contentType())
+                        .size(r.size())
+                        .build();
 
         fileMapper.insert(entity);
 
@@ -63,11 +63,11 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public FileResultVO downloadFile(Long taskLogId) {
-        FileDO file = fileMapper.selectOne(
-                new LambdaQueryWrapper<FileDO>()
-                        .eq(FileDO::getTaskLogId, taskLogId)
-                        .last("LIMIT 1")
-        );
+        FileDO file =
+                fileMapper.selectOne(
+                        new LambdaQueryWrapper<FileDO>()
+                                .eq(FileDO::getTaskLogId, taskLogId)
+                                .last("LIMIT 1"));
         if (file == null)
             throw new IllegalArgumentException("File not found for taskLogId: " + taskLogId);
 
@@ -89,9 +89,9 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public List<FileResultVO> downloadFilesByTaskLogId(Long taskLogId) {
-        List<FileDO> files = fileMapper.selectList(
-                new LambdaQueryWrapper<FileDO>().eq(FileDO::getTaskLogId, taskLogId)
-        );
+        List<FileDO> files =
+                fileMapper.selectList(
+                        new LambdaQueryWrapper<FileDO>().eq(FileDO::getTaskLogId, taskLogId));
 
         if (files.isEmpty())
             throw new IllegalArgumentException("No files found for taskLogId: " + taskLogId);
@@ -100,12 +100,14 @@ public class FileStorageServiceImpl implements FileStorageService {
 
         if (client instanceof GcsFileClient gcs) {
             return files.stream()
-                    .map(f -> FileResultVO.builder()
-                            .objectName(f.getObjectName())
-                            .contentType(f.getType())
-                            .size(f.getSize())
-                            .signedUrl(gcs.generateSignedUrl(f.getObjectName()))
-                            .build())
+                    .map(
+                            f ->
+                                    FileResultVO.builder()
+                                            .objectName(f.getObjectName())
+                                            .contentType(f.getType())
+                                            .size(f.getSize())
+                                            .signedUrl(gcs.generateSignedUrl(f.getObjectName()))
+                                            .build())
                     .toList();
         }
 
