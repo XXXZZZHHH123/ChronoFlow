@@ -60,4 +60,14 @@ public class GcsFileClient implements FileClient {
                         Storage.SignUrlOption.withV4Signature());
         return signedUrl.toString();
     }
+
+    @Override
+    public void deleteQuietly(String objectName) {
+        try {
+            storage.delete(BlobId.of(gcsConfig.getBucket(), objectName));
+            log.info("Rolled back uploaded object '{}'", objectName);
+        } catch (Exception e) {
+            log.warn("Failed to rollback object '{}': {}", objectName, e.getMessage());
+        }
+    }
 }
