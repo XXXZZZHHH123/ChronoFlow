@@ -10,7 +10,7 @@ import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
 
-/** Builder for {@link TaskRespVO} aggregating event and user details. */
+/** Builder for {@link TaskRespVO} aggregating event and assignee details. */
 public final class TaskRespVOBuilder {
 
     private final TaskRespVO response;
@@ -18,13 +18,10 @@ public final class TaskRespVOBuilder {
 
     private EventDO event;
     private Supplier<EventDO> eventSupplier = () -> null;
+    private Function<EventDO, TaskRespVO.EventSummaryVO> eventMapper = this::toEventSummary;
 
     private UserDO assignee;
     private Supplier<UserDO> assigneeSupplier = () -> null;
-
-    private UserDO assigner;
-    private Supplier<UserDO> assignerSupplier = () -> null;
-
     private Function<UserDO, List<TaskRespVO.AssignedUserVO.GroupVO>> groupResolver =
             user -> Collections.emptyList();
 
@@ -49,6 +46,13 @@ public final class TaskRespVOBuilder {
         return this;
     }
 
+    public TaskRespVOBuilder withEventMapper(Function<EventDO, TaskRespVO.EventSummaryVO> mapper) {
+        if (mapper != null) {
+            this.eventMapper = mapper;
+        }
+        return this;
+    }
+
     public TaskRespVOBuilder withAssignee(UserDO assignee) {
         this.assignee = assignee;
         return this;
@@ -57,18 +61,6 @@ public final class TaskRespVOBuilder {
     public TaskRespVOBuilder withAssigneeSupplier(Supplier<UserDO> supplier) {
         if (supplier != null) {
             this.assigneeSupplier = supplier;
-        }
-        return this;
-    }
-
-    public TaskRespVOBuilder withAssigner(UserDO assigner) {
-        this.assigner = assigner;
-        return this;
-    }
-
-    public TaskRespVOBuilder withAssignerSupplier(Supplier<UserDO> supplier) {
-        if (supplier != null) {
-            this.assignerSupplier = supplier;
         }
         return this;
     }
@@ -82,40 +74,43 @@ public final class TaskRespVOBuilder {
     }
 
     public TaskRespVO build() {
+        EventDO eventData = event != null ? event : eventSupplier.get();
+        response.setEvent(eventMapper.apply(eventData));
 
-        UserDO assigneeData = assignee != null ? assignee : assigneeSupplier.get();
-        response.setAssignedUser(toAssignedUser(assigneeData));
-
-        UserDO assignerData = assigner != null ? assigner : assignerSupplier.get();
-        response.setAssignerUser(toAssignerUser(assignerData));
-
+        UserDO userData = assignee != null ? assignee : assigneeSupplier.get();
+        if (userData != null) {
+            response.setAssignedUser(toAssignedUser(userData));
+        } else {
+            response.setAssignedUser(null);
+        }
         return response;
     }
 
-    private TaskRespVO.AssignedUserVO toAssignedUser(UserDO user) {
-        if (user == null) {
+    private TaskRespVO.EventSummaryVO toEventSummary(EventDO event) {
+        if (event == null) {
             return null;
         }
+        TaskRespVO.EventSummaryVO eventVO = new TaskRespVO.EventSummaryVO();
+        eventVO.setId(event.getId());
+        eventVO.setName(event.getName());
+        eventVO.setDescription(event.getDescription());
+        eventVO.setOrganizerId(event.getUserId());
+        eventVO.setLocation(event.getLocation());
+        eventVO.setStatus(event.getStatus());
+        eventVO.setStartTime(event.getStartTime());
+        eventVO.setEndTime(event.getEndTime());
+        eventVO.setRemark(event.getRemark());
+        return eventVO;
+    }
+
+    private TaskRespVO.AssignedUserVO toAssignedUser(UserDO user) {
         TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
         assignedUserVO.setId(user.getId());
         assignedUserVO.setName(user.getUsername());
         assignedUserVO.setEmail(user.getEmail());
         assignedUserVO.setPhone(user.getPhone());
-        List<TaskRespVO.AssignedUserVO.GroupVO> groups =
-                groupResolver != null ? groupResolver.apply(user) : Collections.emptyList();
+        List<TaskRespVO.AssignedUserVO.GroupVO> groups = groupResolver.apply(user);
         assignedUserVO.setGroups(groups != null ? groups : Collections.emptyList());
         return assignedUserVO;
-    }
-
-    private TaskRespVO.AssignerUserVO toAssignerUser(UserDO user) {
-        if (user == null) {
-            return null;
-        }
-        TaskRespVO.AssignerUserVO assignerUserVO = new TaskRespVO.AssignerUserVO();
-        assignerUserVO.setId(user.getId());
-        assignerUserVO.setName(user.getUsername());
-        assignerUserVO.setEmail(user.getEmail());
-        assignerUserVO.setPhone(user.getPhone());
-        return assignerUserVO;
     }
 }

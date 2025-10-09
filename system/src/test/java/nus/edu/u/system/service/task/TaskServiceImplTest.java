@@ -65,19 +65,16 @@ class TaskServiceImplTest {
     }
 
     private TaskDO mockTask(Long taskId, Long eventId, Long userId) {
-        TaskDO task =
-                TaskDO.builder()
-                        .id(taskId)
-                        .eventId(eventId)
-                        .userId(userId)
-                        .name("Test Task")
-                        .description("Test Description")
-                        .status(TaskStatusEnum.PROGRESS.getStatus())
-                        .startTime(LocalDateTime.of(2025, 11, 15, 10, 0))
-                        .endTime(LocalDateTime.of(2025, 11, 15, 12, 0))
-                        .build();
-        task.setCreator(userId != null ? String.valueOf(userId) : null);
-        return task;
+        return TaskDO.builder()
+                .id(taskId)
+                .eventId(eventId)
+                .userId(userId)
+                .name("Test Task")
+                .description("Test Description")
+                .status(TaskStatusEnum.PROGRESS.getStatus())
+                .startTime(LocalDateTime.of(2025, 11, 15, 10, 0))
+                .endTime(LocalDateTime.of(2025, 11, 15, 12, 0))
+                .build();
     }
 
     private TaskCreateReqVO mockCreateReqVO(Long targetUserId) {
@@ -174,8 +171,6 @@ class TaskServiceImplTest {
 
         assertThat(resp).isNotNull();
         assertThat(resp.getName()).isEqualTo("Updated Task");
-        assertThat(resp.getAssignerUser()).isNotNull();
-        assertThat(resp.getAssignerUser().getId()).isEqualTo(userId);
         verify(taskStrategy).execute(any(TaskDO.class), eq(userId), any(), any());
     }
 
@@ -457,8 +452,6 @@ class TaskServiceImplTest {
         assertThat(resp).isNotNull();
         assertThat(resp.getId()).isEqualTo(taskId);
         assertThat(resp.getName()).isEqualTo("Test Task");
-        assertThat(resp.getAssignerUser()).isNotNull();
-        assertThat(resp.getAssignerUser().getId()).isEqualTo(userId);
     }
 
     @Test
@@ -492,6 +485,39 @@ class TaskServiceImplTest {
     }
 
     // ---------- listTasksByEvent tests ----------
+
+    @Test
+    void listTasksByEvent_success() {
+        Long eventId = 1L;
+        Long tenantId = 100L;
+        Long userId1 = 201L;
+        Long userId2 = 202L;
+        Long deptId1 = 5L;
+        Long deptId2 = 6L;
+
+        EventDO event = mockEvent(eventId, tenantId);
+        TaskDO task1 = mockTask(1L, eventId, userId1);
+        TaskDO task2 = mockTask(2L, eventId, userId2);
+        UserDO user1 = mockUser(userId1, tenantId, deptId1);
+        UserDO user2 = mockUser(userId2, tenantId, deptId2);
+        DeptDO dept1 = mockDept(deptId1, "Dept A");
+        DeptDO dept2 = mockDept(deptId2, "Dept B");
+
+        when(eventMapper.selectById(eventId)).thenReturn(event);
+        when(taskMapper.selectList(any())).thenReturn(List.of(task1, task2));
+        when(userMapper.selectBatchIds(List.of(userId1, userId2)))
+                .thenReturn(List.of(user1, user2));
+        when(deptMapper.selectBatchIds(List.of(deptId1, deptId2)))
+                .thenReturn(List.of(dept1, dept2));
+
+        List<TaskRespVO> resp = service.listTasksByEvent(eventId);
+
+        assertThat(resp).hasSize(2);
+        assertThat(resp).extracting(TaskRespVO::getId).containsExactly(1L, 2L);
+        assertThat(resp.get(0).getAssignedUser()).isNotNull();
+        assertThat(resp.get(0).getAssignedUser().getGroups()).hasSize(1);
+        assertThat(resp.get(0).getAssignedUser().getGroups().get(0).getName()).isEqualTo("Dept A");
+    }
 
     @Test
     void listTasksByEvent_eventNotFound_throws() {
@@ -528,7 +554,6 @@ class TaskServiceImplTest {
         EventDO event = mockEvent(eventId, tenantId);
         TaskDO task1 = mockTask(1L, eventId, null); // No user assigned
         task1.setUserId(null);
-        task1.setCreator(null);
 
         when(eventMapper.selectById(eventId)).thenReturn(event);
         when(taskMapper.selectList(any())).thenReturn(List.of(task1));
@@ -536,7 +561,6 @@ class TaskServiceImplTest {
         List<TaskRespVO> resp = service.listTasksByEvent(eventId);
 
         assertThat(resp).hasSize(1);
-        assertThat(resp.get(0).getAssignerUser()).isNull();
         verify(userMapper, never()).selectBatchIds(any());
     }
 
@@ -678,7 +702,7 @@ class TaskServiceImplTest {
         assertThat(resp).extracting(TaskRespVO::getId).containsExactly(10L, 11L);
         assertThat(resp.get(0).getAssignedUser()).isNotNull();
         assertThat(resp.get(0).getAssignedUser().getId()).isEqualTo(memberId);
-        assertThat(resp.get(0).getAssignerUser()).isNotNull();
+        assertThat(resp.get(0).getEvent()).isNotNull();
     }
 
     @Test
@@ -723,6 +747,7 @@ class TaskServiceImplTest {
         List<TaskRespVO> resp = service.listTasksByMember(memberId);
 
         assertThat(resp).hasSize(1);
+        assertThat(resp.get(0).getEvent()).isNull();
     }
 
     // ---------- getByMemberId tests ----------
