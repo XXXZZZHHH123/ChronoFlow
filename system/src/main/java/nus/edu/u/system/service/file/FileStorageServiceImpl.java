@@ -87,10 +87,9 @@ public class FileStorageServiceImpl implements FileStorageService {
                                 .build());
             }
 
-            // Genius Lu
-            //            if (!batchEntities.isEmpty()) {
-            //                fileMapper.insertBatch(batchEntities);
-            //            }
+            if (!batchEntities.isEmpty()) {
+                fileMapper.insertBatch(batchEntities);
+            }
 
             List<FileResultVO> results = new ArrayList<>(uploaded.size());
             for (FileClient.FileUploadResult r : uploaded) {

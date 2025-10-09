@@ -7,35 +7,12 @@
 
     <insert id="insertBatch">
         INSERT INTO file (
-        id,
-        task_log_id,
-        event_id,
-        name,
-        object_name,
-        provider,
-        type,
-        size,
-        create_time,
-        update_time,
-        tenant_id,
-        deleted
+        id, task_log_id, event_id, name, object_name, provider, type, size
         )
         VALUES
-        <foreach collection="list" item="file" separator=",">
-            (
-            #{file.id},
-            #{file.taskLogId},
-            #{file.eventId},
-            #{file.name},
-            #{file.objectName},
-            #{file.provider},
-            #{file.type},
-            #{file.size},
-            #{file.createTime},
-            #{file.updateTime},
-            #{file.tenantId},
-            #{file.deleted}
-            )
+        <foreach collection="list" item="f" separator=",">
+            (#{f.id}, #{f.taskLogId}, #{f.eventId}, #{f.name},
+            #{f.objectName}, #{f.provider}, #{f.type}, #{f.size})
         </foreach>
     </insert>
 
