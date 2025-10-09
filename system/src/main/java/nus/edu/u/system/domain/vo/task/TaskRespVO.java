@@ -4,9 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Data;
 
-/**
- * Task response view object used by task CRUD operations.
- */
+/** Task response view object used by task CRUD operations. */
 @Data
 public class TaskRespVO {
     private Long id;

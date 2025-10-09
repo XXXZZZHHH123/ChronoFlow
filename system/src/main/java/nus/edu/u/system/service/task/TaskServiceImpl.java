@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import nus.edu.u.system.convert.task.TaskConvert;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
@@ -93,8 +92,7 @@ public class TaskServiceImpl implements TaskService {
                 .withEventSupplier(() -> fetchEvent(task.getEventId()))
                 .withAssigner(assigner)
                 .withAssignerSupplier(() -> fetchUser(event.getUserId()))
-                .withAssignerGroupsResolver(
-                        user -> resolveAssignerGroups(user.getDeptId()))
+                .withAssignerGroupsResolver(user -> resolveAssignerGroups(user.getDeptId()))
                 .withAssignee(assignee)
                 .withAssigneeSupplier(
                         () -> {
@@ -271,8 +269,7 @@ public class TaskServiceImpl implements TaskService {
                                     .withAssignerSupplier(() -> fetchUser(event.getUserId()))
                                     .withAssignerGroupsResolver(
                                             assignerUser ->
-                                                    resolveAssignerGroups(
-                                                            assignerUser.getDeptId()))
+                                                    resolveAssignerGroups(assignerUser.getDeptId()))
                                     .withAssignee(user)
                                     .withAssigneeSupplier(
                                             () -> {
@@ -334,7 +331,8 @@ public class TaskServiceImpl implements TaskService {
                                     .withAssigner(assignersByEventId.get(eventId))
                                     .withAssignerSupplier(
                                             () -> {
-                                                EventDO fallbackEvent = fetchEvent(task.getEventId());
+                                                EventDO fallbackEvent =
+                                                        fetchEvent(task.getEventId());
                                                 if (fallbackEvent == null) {
                                                     return null;
                                                 }
@@ -345,8 +343,7 @@ public class TaskServiceImpl implements TaskService {
                                             })
                                     .withAssignerGroupsResolver(
                                             assignerUser ->
-                                                    resolveAssignerGroups(
-                                                            assignerUser.getDeptId()))
+                                                    resolveAssignerGroups(assignerUser.getDeptId()))
                                     .withAssignee(member)
                                     .withAssigneeSupplier(
                                             () -> {
@@ -562,8 +559,7 @@ public class TaskServiceImpl implements TaskService {
         return deptMapper.selectBatchIds(deptIds).stream()
                 .filter(Objects::nonNull)
                 .collect(
-                        Collectors.toMap(
-                                DeptDO::getId, dept -> List.of(toDashboardGroupVO(dept))));
+                        Collectors.toMap(DeptDO::getId, dept -> List.of(toDashboardGroupVO(dept))));
     }
 
     private TasksRespVO.AssignedUserVO.GroupVO toDashboardGroupVO(DeptDO dept) {

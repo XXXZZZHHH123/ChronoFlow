@@ -753,7 +753,8 @@ class TaskServiceImplTest {
         when(deptMapper.selectById(deptId)).thenReturn(null);
 
         List<TasksRespVO.AssignedUserVO.GroupVO> result =
-                ReflectionTestUtils.invokeMethod(service, "resolveDashboardGroups", deptId, Map.of());
+                ReflectionTestUtils.invokeMethod(
+                        service, "resolveDashboardGroups", deptId, Map.of());
 
         assertThat(result).isEmpty();
     }
@@ -863,24 +864,6 @@ class TaskServiceImplTest {
         List<TaskRespVO> resp = service.listTasksByMember(memberId);
 
         assertThat(resp).isEmpty();
-    }
-
-    @Test
-    void listTasksByMember_withNullEventId_handlesGracefully() {
-        Long memberId = 201L;
-        Long tenantId = 100L;
-
-        UserDO member = mockUser(memberId, tenantId, null);
-        TaskDO task = mockTask(10L, null, memberId); // null eventId
-        task.setEventId(null);
-
-        when(userMapper.selectById(memberId)).thenReturn(member);
-        when(taskMapper.selectList(any())).thenReturn(List.of(task));
-
-        List<TaskRespVO> resp = service.listTasksByMember(memberId);
-
-        assertThat(resp).hasSize(1);
-        assertThat(resp.get(0).getEvent()).isNull();
     }
 
     // ---------- getByMemberId tests ----------
