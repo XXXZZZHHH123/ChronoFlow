@@ -8,9 +8,12 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import nus.edu.u.system.convert.task.TaskConvert;
@@ -31,6 +34,7 @@ import nus.edu.u.system.service.task.action.TaskActionFactory;
 import nus.edu.u.system.service.task.builder.TaskRespVOBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -81,14 +85,15 @@ public class TaskServiceImpl implements TaskService {
             throw exception(TASK_CREATE_FAILED);
         }
 
+        Long assignerId = parseUserId(task.getCreator());
+        UserDO assigner = resolveAssigner(assignerId, assignee);
+
         return TaskRespVOBuilder.from(task)
                 .withEvent(event)
                 .withAssignee(assignee)
-                .withAssigneeSupplier(
-                        () -> {
-                            Long userId = task.getUserId();
-                            return userId != null ? userMapper.selectById(userId) : null;
-                        })
+                .withAssigneeSupplier(() -> fetchUserById(task.getUserId()))
+                .withAssigner(assigner)
+                .withAssignerSupplier(() -> fetchUserById(assignerId))
                 .withGroupResolver(user -> resolveGroups(user.getDeptId(), null))
                 .build();
     }
@@ -147,15 +152,16 @@ public class TaskServiceImpl implements TaskService {
             throw exception(UPDATE_FAILURE);
         }
 
+        Long assignerId = parseUserId(task.getCreator());
+        UserDO assigner = resolveAssigner(assignerId, assignee);
+
         return TaskRespVOBuilder.from(task)
                 .withEvent(event)
                 .withEventSupplier(() -> fetchEvent(task.getEventId()))
                 .withAssignee(assignee)
-                .withAssigneeSupplier(
-                        () -> {
-                            Long userId = task.getUserId();
-                            return userId != null ? userMapper.selectById(userId) : null;
-                        })
+                .withAssigneeSupplier(() -> fetchUserById(task.getUserId()))
+                .withAssigner(assigner)
+                .withAssignerSupplier(() -> fetchUserById(assignerId))
                 .withGroupResolver(user -> resolveGroups(user.getDeptId(), null))
                 .build();
     }
@@ -192,14 +198,13 @@ public class TaskServiceImpl implements TaskService {
             throw exception(TASK_NOT_FOUND);
         }
 
+        Long assignerId = parseUserId(task.getCreator());
+
         return TaskRespVOBuilder.from(task)
                 .withEvent(event)
                 .withEventSupplier(() -> fetchEvent(task.getEventId()))
-                .withAssigneeSupplier(
-                        () -> {
-                            Long userId = task.getUserId();
-                            return userId != null ? userMapper.selectById(userId) : null;
-                        })
+                .withAssigneeSupplier(() -> fetchUserById(task.getUserId()))
+                .withAssignerSupplier(() -> fetchUserById(assignerId))
                 .withGroupResolver(user -> resolveGroups(user.getDeptId(), null))
                 .build();
     }
@@ -220,13 +225,13 @@ public class TaskServiceImpl implements TaskService {
             return List.of();
         }
 
-        List<Long> userIds =
-                tasks.stream().map(TaskDO::getUserId).filter(Objects::nonNull).distinct().toList();
+        Set<Long> relatedUserIds = collectRelatedUserIds(tasks);
 
         Map<Long, UserDO> usersById =
-                userIds.isEmpty()
+                relatedUserIds.isEmpty()
                         ? Map.of()
-                        : userMapper.selectBatchIds(userIds).stream()
+                        : userMapper.selectBatchIds(relatedUserIds).stream()
+                                .filter(Objects::nonNull)
                                 .collect(Collectors.toMap(UserDO::getId, Function.identity()));
 
         Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> groupsByDeptId =
@@ -237,17 +242,15 @@ public class TaskServiceImpl implements TaskService {
                         task -> {
                             Long userId = task.getUserId();
                             UserDO user = userId != null ? usersById.get(userId) : null;
+                            Long assignerId = parseUserId(task.getCreator());
+                            UserDO assigner = assignerId != null ? usersById.get(assignerId) : null;
                             return TaskRespVOBuilder.from(task)
                                     .withEvent(event)
                                     .withEventSupplier(() -> fetchEvent(task.getEventId()))
                                     .withAssignee(user)
-                                    .withAssigneeSupplier(
-                                            () -> {
-                                                Long fallbackUserId = task.getUserId();
-                                                return fallbackUserId != null
-                                                        ? userMapper.selectById(fallbackUserId)
-                                                        : null;
-                                            })
+                                    .withAssigneeSupplier(() -> fetchUserById(task.getUserId()))
+                                    .withAssigner(assigner)
+                                    .withAssignerSupplier(() -> fetchUserById(assignerId))
                                     .withGroupResolver(
                                             assignedUser ->
                                                     resolveGroups(
@@ -274,9 +277,25 @@ public class TaskServiceImpl implements TaskService {
             return List.of();
         }
 
-        Map<Long, UserDO> usersById = Map.of(memberId, member);
+        Set<Long> relatedUserIds = collectRelatedUserIds(tasks);
+        Set<Long> usersToLoad = new HashSet<>(relatedUserIds);
+        usersToLoad.remove(memberId);
+
+        Map<Long, UserDO> enrichedUsers =
+                usersToLoad.isEmpty()
+                        ? new HashMap<>()
+                        : userMapper.selectBatchIds(usersToLoad).stream()
+                                .filter(Objects::nonNull)
+                                .collect(
+                                        Collectors.toMap(
+                                                UserDO::getId,
+                                                Function.identity(),
+                                                (a, b) -> a,
+                                                HashMap::new));
+        enrichedUsers.put(memberId, member);
+
         Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> groupsByDeptId =
-                buildGroupsByDept(usersById);
+                buildGroupsByDept(enrichedUsers);
 
         List<Long> eventIds =
                 tasks.stream().map(TaskDO::getEventId).filter(Objects::nonNull).distinct().toList();
@@ -293,17 +312,16 @@ public class TaskServiceImpl implements TaskService {
                         task -> {
                             Long eventId = task.getEventId();
                             EventDO event = eventId != null ? eventsById.get(eventId) : null;
+                            Long assignerId = parseUserId(task.getCreator());
+                            UserDO assigner =
+                                    assignerId != null ? enrichedUsers.get(assignerId) : null;
                             return TaskRespVOBuilder.from(task)
                                     .withEvent(event)
                                     .withEventSupplier(() -> fetchEvent(task.getEventId()))
                                     .withAssignee(member)
-                                    .withAssigneeSupplier(
-                                            () -> {
-                                                Long userId = task.getUserId();
-                                                return userId != null
-                                                        ? userMapper.selectById(userId)
-                                                        : null;
-                                            })
+                                    .withAssigneeSupplier(() -> fetchUserById(task.getUserId()))
+                                    .withAssigner(assigner)
+                                    .withAssignerSupplier(() -> fetchUserById(assignerId))
                                     .withGroupResolver(
                                             assignedUser ->
                                                     resolveGroups(
@@ -334,6 +352,45 @@ public class TaskServiceImpl implements TaskService {
             return null;
         }
         return eventMapper.selectById(eventId);
+    }
+
+    private Long parseUserId(String userIdValue) {
+        if (!StringUtils.hasText(userIdValue)) {
+            return null;
+        }
+        try {
+            return Long.valueOf(userIdValue);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private UserDO fetchUserById(Long userId) {
+        return userId != null ? userMapper.selectById(userId) : null;
+    }
+
+    private UserDO resolveAssigner(Long assignerId, UserDO preferredAssignee) {
+        if (assignerId == null) {
+            return null;
+        }
+        if (preferredAssignee != null && Objects.equals(preferredAssignee.getId(), assignerId)) {
+            return preferredAssignee;
+        }
+        return fetchUserById(assignerId);
+    }
+
+    private Set<Long> collectRelatedUserIds(List<TaskDO> tasks) {
+        Set<Long> ids = new HashSet<>();
+        for (TaskDO task : tasks) {
+            if (task.getUserId() != null) {
+                ids.add(task.getUserId());
+            }
+            Long assignerId = parseUserId(task.getCreator());
+            if (assignerId != null) {
+                ids.add(assignerId);
+            }
+        }
+        return ids;
     }
 
     private List<TaskRespVO.AssignedUserVO.GroupVO> resolveGroups(
@@ -380,9 +437,6 @@ public class TaskServiceImpl implements TaskService {
         TaskRespVO.AssignedUserVO.GroupVO groupVO = new TaskRespVO.AssignedUserVO.GroupVO();
         groupVO.setId(dept.getId());
         groupVO.setName(dept.getName());
-        groupVO.setEventId(dept.getEventId());
-        groupVO.setLeadUserId(dept.getLeadUserId());
-        groupVO.setRemark(dept.getRemark());
         return groupVO;
     }
 
