@@ -37,7 +37,6 @@ public class BlockTask extends AbstractTaskStrategy {
             throw exception(MODIFY_WRONG_TASK_STATUS, getType().getAction(), TaskStatusEnum.getEnum(task.getStatus()));
         }
         task.setStatus(TaskStatusEnum.BLOCKED.getStatus());
-        task.setUserId(null);
         boolean isSuccess = taskMapper.updateById(task) > 0;
         if (!isSuccess) {
             throw exception(BLOCK_TASK_FAILED);

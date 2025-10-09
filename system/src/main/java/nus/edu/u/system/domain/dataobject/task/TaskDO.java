@@ -31,7 +31,6 @@ public class TaskDO extends TenantBaseDO implements Serializable {
     @TableId private Long id;
 
     /** Related to {@link UserDO#getId()} */
-    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long userId;
 
     /** Related to {@link EventDO#getId()} */

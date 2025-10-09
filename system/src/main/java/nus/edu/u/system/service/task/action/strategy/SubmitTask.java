@@ -42,7 +42,6 @@ public class SubmitTask extends AbstractTaskStrategy {
             throw exception(MODIFY_WRONG_TASK_STATUS, getType().getAction(), TaskStatusEnum.getEnum(task.getStatus()));
         }
         task.setStatus(TaskStatusEnum.PENDING_APPROVAL.getStatus());
-        task.setUserId(null);
         boolean isSuccess = taskMapper.updateById(task) > 0;
         if (!isSuccess) {
             throw exception(SUBMIT_TASK_FAILED);

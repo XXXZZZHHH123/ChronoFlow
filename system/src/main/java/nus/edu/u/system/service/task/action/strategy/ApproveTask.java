@@ -46,7 +46,6 @@ public class ApproveTask extends AbstractTaskStrategy {
             throw exception(MODIFY_WRONG_TASK_STATUS, getType().getAction(), TaskStatusEnum.getEnum(task.getStatus()));
         }
         task.setStatus(TaskStatusEnum.COMPLETED.getStatus());
-        task.setUserId(null);
         boolean isSuccess = taskMapper.updateById(task) > 0;
         if (!isSuccess) {
             throw exception(APPROVE_TASK_FAILED);
