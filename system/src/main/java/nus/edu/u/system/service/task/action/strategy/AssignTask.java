@@ -3,6 +3,8 @@ package nus.edu.u.system.service.task.action.strategy;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
@@ -13,6 +15,7 @@ import nus.edu.u.system.service.task.action.AbstractTaskStrategy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import static nus.edu.u.common.constant.PermissionConstants.ASSIGN_TASK;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 import static nus.edu.u.system.enums.ErrorCodeConstants.ASSIGN_TASK_FAILED;
 import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_LOG_ERROR;
@@ -31,6 +34,7 @@ public class AssignTask extends AbstractTaskStrategy {
 
     @Override
     public void execute(TaskDO task, TaskActionDTO actionDTO, Object... params) {
+        StpUtil.checkPermission(ASSIGN_TASK);
         validateTimeRange(
                 task,
                 task.getStartTime(),

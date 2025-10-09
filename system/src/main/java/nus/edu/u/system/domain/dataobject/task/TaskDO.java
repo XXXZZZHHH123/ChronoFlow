@@ -1,5 +1,7 @@
 package nus.edu.u.system.domain.dataobject.task;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serial;
@@ -29,6 +31,7 @@ public class TaskDO extends TenantBaseDO implements Serializable {
     @TableId private Long id;
 
     /** Related to {@link UserDO#getId()} */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long userId;
 
     /** Related to {@link EventDO#getId()} */

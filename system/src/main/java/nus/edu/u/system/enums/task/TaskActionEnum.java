@@ -58,12 +58,12 @@ public enum TaskActionEnum implements ArrayValuable<Integer> {
     public static Integer[] getUpdateTaskAction() {
         return new Integer[] {
             APPROVE.getCode(),
+            ASSIGN.getCode(),
             UPDATE.getCode(),
             SUBMIT.getCode(),
             BLOCK.getCode(),
             ACCEPT.getCode(),
             REJECT.getCode(),
-            APPROVE.getCode(),
         };
     }
 }

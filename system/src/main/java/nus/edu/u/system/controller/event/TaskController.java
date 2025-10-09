@@ -67,7 +67,6 @@ public class TaskController {
         return result;
     }
 
-    @SaCheckPermission(UPDATE_TASK)
     @PatchMapping("/{eventId}/{taskId}")
     public CommonResult<TaskRespVO> updateTask(
             @PathVariable("eventId") @NotNull Long eventId,

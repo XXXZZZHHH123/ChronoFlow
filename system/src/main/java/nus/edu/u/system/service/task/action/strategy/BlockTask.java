@@ -11,8 +11,7 @@ import nus.edu.u.system.service.task.action.AbstractTaskStrategy;
 import org.springframework.stereotype.Component;
 
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.BLOCK_TASK_FAILED;
-import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_LOG_ERROR;
+import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
 /**
  * @author Lu Shuwen
@@ -34,11 +33,16 @@ public class BlockTask extends AbstractTaskStrategy {
                 task.getEndTime(),
                 actionDTO.getEventStartTime(),
                 actionDTO.getEventEndTime());
+        if (!ObjectUtil.equals(task.getStatus(), TaskStatusEnum.PROGRESS.getStatus())) {
+            throw exception(MODIFY_WRONG_TASK_STATUS, getType().getAction(), TaskStatusEnum.getEnum(task.getStatus()));
+        }
         task.setStatus(TaskStatusEnum.BLOCKED.getStatus());
+        task.setUserId(null);
         boolean isSuccess = taskMapper.updateById(task) > 0;
         if (!isSuccess) {
             throw exception(BLOCK_TASK_FAILED);
         }
-        taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
+        Long taskLogId = taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
+        uploadFiles(taskLogId, task.getEventId(), actionDTO.getFiles());
     }
 }
