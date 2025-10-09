@@ -4,37 +4,24 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Data;
 
-/** Task response view object used by task CRUD operations. */
+/**
+ * Dashboard-oriented task response containing aggregated event and assignee information.
+ *
+ * <p>Dedicated to dashboard views. For CRUD operations use {@link TaskRespVO}.
+ */
 @Data
-public class TaskRespVO {
+public class TasksRespVO {
     private Long id;
-    private Long eventId;
     private String name;
     private String description;
     private Integer status;
-    private String remark;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private String remark;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-    private AssignerUserVO assignerUser;
     private AssignedUserVO assignedUser;
     private EventVO event;
-
-    @Data
-    public static class AssignerUserVO {
-        private Long id;
-        private String name;
-        private String email;
-        private String phone;
-        private List<GroupVO> groups;
-
-        @Data
-        public static class GroupVO {
-            private Long id;
-            private String name;
-        }
-    }
 
     @Data
     public static class AssignedUserVO {
@@ -48,6 +35,9 @@ public class TaskRespVO {
         public static class GroupVO {
             private Long id;
             private String name;
+            private Long eventId;
+            private Long leadUserId;
+            private String remark;
         }
     }
 
