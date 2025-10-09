@@ -10,7 +10,7 @@ import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
 
-/** Builder for {@link TaskRespVO} aggregating event and assignee details. */
+/** Builder for {@link TaskRespVO} used by task CRUD operations. */
 public final class TaskRespVOBuilder {
 
     private final TaskRespVO response;
@@ -18,11 +18,16 @@ public final class TaskRespVOBuilder {
 
     private EventDO event;
     private Supplier<EventDO> eventSupplier = () -> null;
-    private Function<EventDO, TaskRespVO.EventSummaryVO> eventMapper = this::toEventSummary;
+    private Function<EventDO, TaskRespVO.EventVO> eventMapper = this::toEvent;
+
+    private UserDO assigner;
+    private Supplier<UserDO> assignerSupplier = () -> null;
+    private Function<UserDO, List<TaskRespVO.AssignerUserVO.GroupVO>> assignerGroupsResolver =
+            user -> Collections.emptyList();
 
     private UserDO assignee;
     private Supplier<UserDO> assigneeSupplier = () -> null;
-    private Function<UserDO, List<TaskRespVO.AssignedUserVO.GroupVO>> groupResolver =
+    private Function<UserDO, List<TaskRespVO.AssignedUserVO.GroupVO>> assigneeGroupsResolver =
             user -> Collections.emptyList();
 
     private TaskRespVOBuilder(TaskDO task) {
@@ -46,9 +51,29 @@ public final class TaskRespVOBuilder {
         return this;
     }
 
-    public TaskRespVOBuilder withEventMapper(Function<EventDO, TaskRespVO.EventSummaryVO> mapper) {
+    public TaskRespVOBuilder withEventMapper(Function<EventDO, TaskRespVO.EventVO> mapper) {
         if (mapper != null) {
             this.eventMapper = mapper;
+        }
+        return this;
+    }
+
+    public TaskRespVOBuilder withAssigner(UserDO assigner) {
+        this.assigner = assigner;
+        return this;
+    }
+
+    public TaskRespVOBuilder withAssignerSupplier(Supplier<UserDO> supplier) {
+        if (supplier != null) {
+            this.assignerSupplier = supplier;
+        }
+        return this;
+    }
+
+    public TaskRespVOBuilder withAssignerGroupsResolver(
+            Function<UserDO, List<TaskRespVO.AssignerUserVO.GroupVO>> resolver) {
+        if (resolver != null) {
+            this.assignerGroupsResolver = resolver;
         }
         return this;
     }
@@ -65,10 +90,10 @@ public final class TaskRespVOBuilder {
         return this;
     }
 
-    public TaskRespVOBuilder withGroupResolver(
+    public TaskRespVOBuilder withAssigneeGroupsResolver(
             Function<UserDO, List<TaskRespVO.AssignedUserVO.GroupVO>> resolver) {
         if (resolver != null) {
-            this.groupResolver = resolver;
+            this.assigneeGroupsResolver = resolver;
         }
         return this;
     }
@@ -77,20 +102,24 @@ public final class TaskRespVOBuilder {
         EventDO eventData = event != null ? event : eventSupplier.get();
         response.setEvent(eventMapper.apply(eventData));
 
-        UserDO userData = assignee != null ? assignee : assigneeSupplier.get();
-        if (userData != null) {
-            response.setAssignedUser(toAssignedUser(userData));
-        } else {
-            response.setAssignedUser(null);
+        UserDO assignerData = assigner != null ? assigner : assignerSupplier.get();
+        if (assignerData != null) {
+            response.setAssignerUser(toAssigner(assignerData));
         }
+
+        UserDO assigneeData = assignee != null ? assignee : assigneeSupplier.get();
+        if (assigneeData != null) {
+            response.setAssignedUser(toAssignee(assigneeData));
+        }
+
         return response;
     }
 
-    private TaskRespVO.EventSummaryVO toEventSummary(EventDO event) {
+    private TaskRespVO.EventVO toEvent(EventDO event) {
         if (event == null) {
             return null;
         }
-        TaskRespVO.EventSummaryVO eventVO = new TaskRespVO.EventSummaryVO();
+        TaskRespVO.EventVO eventVO = new TaskRespVO.EventVO();
         eventVO.setId(event.getId());
         eventVO.setName(event.getName());
         eventVO.setDescription(event.getDescription());
@@ -103,14 +132,25 @@ public final class TaskRespVOBuilder {
         return eventVO;
     }
 
-    private TaskRespVO.AssignedUserVO toAssignedUser(UserDO user) {
-        TaskRespVO.AssignedUserVO assignedUserVO = new TaskRespVO.AssignedUserVO();
-        assignedUserVO.setId(user.getId());
-        assignedUserVO.setName(user.getUsername());
-        assignedUserVO.setEmail(user.getEmail());
-        assignedUserVO.setPhone(user.getPhone());
-        List<TaskRespVO.AssignedUserVO.GroupVO> groups = groupResolver.apply(user);
-        assignedUserVO.setGroups(groups != null ? groups : Collections.emptyList());
-        return assignedUserVO;
+    private TaskRespVO.AssignerUserVO toAssigner(UserDO user) {
+        TaskRespVO.AssignerUserVO assignerVO = new TaskRespVO.AssignerUserVO();
+        assignerVO.setId(user.getId());
+        assignerVO.setName(user.getUsername());
+        assignerVO.setEmail(user.getEmail());
+        assignerVO.setPhone(user.getPhone());
+        List<TaskRespVO.AssignerUserVO.GroupVO> groups = assignerGroupsResolver.apply(user);
+        assignerVO.setGroups(groups != null ? groups : Collections.emptyList());
+        return assignerVO;
+    }
+
+    private TaskRespVO.AssignedUserVO toAssignee(UserDO user) {
+        TaskRespVO.AssignedUserVO assignedVO = new TaskRespVO.AssignedUserVO();
+        assignedVO.setId(user.getId());
+        assignedVO.setName(user.getUsername());
+        assignedVO.setEmail(user.getEmail());
+        assignedVO.setPhone(user.getPhone());
+        List<TaskRespVO.AssignedUserVO.GroupVO> groups = assigneeGroupsResolver.apply(user);
+        assignedVO.setGroups(groups != null ? groups : Collections.emptyList());
+        return assignedVO;
     }
 }

@@ -17,6 +17,7 @@ import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
 import nus.edu.u.system.domain.vo.task.TaskDashboardRespVO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
 import nus.edu.u.system.domain.vo.task.TaskUpdateReqVO;
+import nus.edu.u.system.domain.vo.task.TasksRespVO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.mapper.dept.DeptMapper;
@@ -152,11 +153,14 @@ class TaskServiceImplTest {
         Long taskId = 10L;
         Long tenantId = 100L;
         Long userId = 201L;
+        Long organizerId = 300L;
         Integer type = TaskActionEnum.UPDATE.getCode();
 
         EventDO event = mockEvent(eventId, tenantId);
+        event.setUserId(organizerId);
         TaskDO task = mockTask(taskId, eventId, userId);
         UserDO assignee = mockUser(userId, tenantId, 5L);
+        UserDO organizer = mockUser(organizerId, tenantId, null);
         TaskUpdateReqVO reqVO = new TaskUpdateReqVO();
         reqVO.setName("Updated Task");
         reqVO.setTargetUserId(userId);
@@ -164,6 +168,7 @@ class TaskServiceImplTest {
         when(eventMapper.selectById(eventId)).thenReturn(event);
         when(taskMapper.selectById(taskId)).thenReturn(task);
         when(userMapper.selectById(userId)).thenReturn(assignee);
+        when(userMapper.selectById(organizerId)).thenReturn(organizer);
         when(taskActionFactory.getStrategy(TaskActionEnum.UPDATE)).thenReturn(taskStrategy);
         when(taskStrategy.execute(any(TaskDO.class), eq(userId), any(), any())).thenReturn(true);
 
@@ -171,6 +176,8 @@ class TaskServiceImplTest {
 
         assertThat(resp).isNotNull();
         assertThat(resp.getName()).isEqualTo("Updated Task");
+        assertThat(resp.getAssignerUser()).isNotNull();
+        assertThat(resp.getAssignerUser().getId()).isEqualTo(organizerId);
         verify(taskStrategy).execute(any(TaskDO.class), eq(userId), any(), any());
     }
 
@@ -438,20 +445,26 @@ class TaskServiceImplTest {
         Long taskId = 10L;
         Long tenantId = 100L;
         Long userId = 201L;
+        Long organizerId = 300L;
 
         EventDO event = mockEvent(eventId, tenantId);
+        event.setUserId(organizerId);
         TaskDO task = mockTask(taskId, eventId, userId);
         UserDO user = mockUser(userId, tenantId, null);
+        UserDO organizer = mockUser(organizerId, tenantId, null);
 
         when(eventMapper.selectById(eventId)).thenReturn(event);
         when(taskMapper.selectById(taskId)).thenReturn(task);
         when(userMapper.selectById(userId)).thenReturn(user);
+        when(userMapper.selectById(organizerId)).thenReturn(organizer);
 
         TaskRespVO resp = service.getTask(eventId, taskId);
 
         assertThat(resp).isNotNull();
         assertThat(resp.getId()).isEqualTo(taskId);
         assertThat(resp.getName()).isEqualTo("Test Task");
+        assertThat(resp.getAssignerUser()).isNotNull();
+        assertThat(resp.getAssignerUser().getId()).isEqualTo(organizerId);
     }
 
     @Test
@@ -494,12 +507,15 @@ class TaskServiceImplTest {
         Long userId2 = 202L;
         Long deptId1 = 5L;
         Long deptId2 = 6L;
+        Long organizerId = 300L;
 
         EventDO event = mockEvent(eventId, tenantId);
+        event.setUserId(organizerId);
         TaskDO task1 = mockTask(1L, eventId, userId1);
         TaskDO task2 = mockTask(2L, eventId, userId2);
         UserDO user1 = mockUser(userId1, tenantId, deptId1);
         UserDO user2 = mockUser(userId2, tenantId, deptId2);
+        UserDO organizer = mockUser(organizerId, tenantId, null);
         DeptDO dept1 = mockDept(deptId1, "Dept A");
         DeptDO dept2 = mockDept(deptId2, "Dept B");
 
@@ -507,6 +523,7 @@ class TaskServiceImplTest {
         when(taskMapper.selectList(any())).thenReturn(List.of(task1, task2));
         when(userMapper.selectBatchIds(List.of(userId1, userId2)))
                 .thenReturn(List.of(user1, user2));
+        when(userMapper.selectById(organizerId)).thenReturn(organizer);
         when(deptMapper.selectBatchIds(List.of(deptId1, deptId2)))
                 .thenReturn(List.of(dept1, dept2));
 
@@ -517,6 +534,8 @@ class TaskServiceImplTest {
         assertThat(resp.get(0).getAssignedUser()).isNotNull();
         assertThat(resp.get(0).getAssignedUser().getGroups()).hasSize(1);
         assertThat(resp.get(0).getAssignedUser().getGroups().get(0).getName()).isEqualTo("Dept A");
+        assertThat(resp.get(0).getAssignerUser()).isNotNull();
+        assertThat(resp.get(0).getAssignerUser().getId()).isEqualTo(organizerId);
     }
 
     @Test
@@ -550,13 +569,17 @@ class TaskServiceImplTest {
     void listTasksByEvent_tasksWithoutUsers_success() {
         Long eventId = 1L;
         Long tenantId = 100L;
+        Long organizerId = 300L;
 
         EventDO event = mockEvent(eventId, tenantId);
+        event.setUserId(organizerId);
         TaskDO task1 = mockTask(1L, eventId, null); // No user assigned
         task1.setUserId(null);
+        UserDO organizer = mockUser(organizerId, tenantId, null);
 
         when(eventMapper.selectById(eventId)).thenReturn(event);
         when(taskMapper.selectList(any())).thenReturn(List.of(task1));
+        when(userMapper.selectById(organizerId)).thenReturn(organizer);
 
         List<TaskRespVO> resp = service.listTasksByEvent(eventId);
 
@@ -567,28 +590,28 @@ class TaskServiceImplTest {
     // ---------- Private method tests ----------
 
     @Test
-    void buildGroupsByDept_emptyUsersMap_returnsEmptyMap() {
+    void buildCrudGroupsByDept_emptyUsersMap_returnsEmptyMap() {
         Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> result =
-                ReflectionTestUtils.invokeMethod(service, "buildGroupsByDept", Map.of());
+                ReflectionTestUtils.invokeMethod(service, "buildCrudGroupsByDept", Map.of());
 
         assertThat(result).isEmpty();
         verifyNoInteractions(deptMapper);
     }
 
     @Test
-    void buildGroupsByDept_usersWithoutDept_returnsEmptyMap() {
+    void buildCrudGroupsByDept_usersWithoutDept_returnsEmptyMap() {
         UserDO user1 = mockUser(1L, 100L, null);
         Map<Long, UserDO> usersMap = Map.of(1L, user1);
 
         Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> result =
-                ReflectionTestUtils.invokeMethod(service, "buildGroupsByDept", usersMap);
+                ReflectionTestUtils.invokeMethod(service, "buildCrudGroupsByDept", usersMap);
 
         assertThat(result).isEmpty();
         verifyNoInteractions(deptMapper);
     }
 
     @Test
-    void buildGroupsByDept_usersWithDept_returnsGroupMap() {
+    void buildCrudGroupsByDept_usersWithDept_returnsGroupMap() {
         UserDO user1 = mockUser(1L, 100L, 5L);
         UserDO user2 = mockUser(2L, 100L, 6L);
         Map<Long, UserDO> usersMap = Map.of(1L, user1, 2L, user2);
@@ -600,7 +623,7 @@ class TaskServiceImplTest {
         when(deptMapper.selectBatchIds(anyList())).thenReturn(List.of(dept1, dept2));
 
         Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> result =
-                ReflectionTestUtils.invokeMethod(service, "buildGroupsByDept", usersMap);
+                ReflectionTestUtils.invokeMethod(service, "buildCrudGroupsByDept", usersMap);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(5L)).hasSize(1);
@@ -610,15 +633,15 @@ class TaskServiceImplTest {
     }
 
     @Test
-    void resolveGroups_deptIdNull_returnsEmptyList() {
+    void resolveCrudGroups_deptIdNull_returnsEmptyList() {
         List<TaskRespVO.AssignedUserVO.GroupVO> result =
-                ReflectionTestUtils.invokeMethod(service, "resolveGroups", null, null);
+                ReflectionTestUtils.invokeMethod(service, "resolveCrudGroups", null, null);
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    void resolveGroups_deptInCache_returnsCachedGroups() {
+    void resolveCrudGroups_deptInCache_returnsCachedGroups() {
         Long deptId = 5L;
         TaskRespVO.AssignedUserVO.GroupVO groupVO = new TaskRespVO.AssignedUserVO.GroupVO();
         groupVO.setId(deptId);
@@ -627,7 +650,7 @@ class TaskServiceImplTest {
         Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> cache = Map.of(deptId, List.of(groupVO));
 
         List<TaskRespVO.AssignedUserVO.GroupVO> result =
-                ReflectionTestUtils.invokeMethod(service, "resolveGroups", deptId, cache);
+                ReflectionTestUtils.invokeMethod(service, "resolveCrudGroups", deptId, cache);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo("Cached Dept");
@@ -635,14 +658,14 @@ class TaskServiceImplTest {
     }
 
     @Test
-    void resolveGroups_deptNotInCache_fetchesFromDb() {
+    void resolveCrudGroups_deptNotInCache_fetchesFromDb() {
         Long deptId = 5L;
         DeptDO dept = mockDept(deptId, "DB Dept");
 
         when(deptMapper.selectById(deptId)).thenReturn(dept);
 
         List<TaskRespVO.AssignedUserVO.GroupVO> result =
-                ReflectionTestUtils.invokeMethod(service, "resolveGroups", deptId, Map.of());
+                ReflectionTestUtils.invokeMethod(service, "resolveCrudGroups", deptId, Map.of());
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo("DB Dept");
@@ -650,27 +673,127 @@ class TaskServiceImplTest {
     }
 
     @Test
-    void resolveGroups_deptNotFound_returnsEmptyList() {
+    void resolveCrudGroups_deptNotFound_returnsEmptyList() {
         Long deptId = 5L;
 
         when(deptMapper.selectById(deptId)).thenReturn(null);
 
         List<TaskRespVO.AssignedUserVO.GroupVO> result =
-                ReflectionTestUtils.invokeMethod(service, "resolveGroups", deptId, Map.of());
+                ReflectionTestUtils.invokeMethod(service, "resolveCrudGroups", deptId, Map.of());
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    void toGroupVO_convertsCorrectly() {
+    void toCrudGroupVO_convertsCorrectly() {
         DeptDO dept = mockDept(5L, "Test Dept");
 
         TaskRespVO.AssignedUserVO.GroupVO result =
-                ReflectionTestUtils.invokeMethod(service, "toGroupVO", dept);
+                ReflectionTestUtils.invokeMethod(service, "toCrudGroupVO", dept);
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(5L);
         assertThat(result.getName()).isEqualTo("Test Dept");
+    }
+
+    @Test
+    void resolveAssignerGroups_fetchesDept() {
+        Long deptId = 5L;
+        DeptDO dept = mockDept(deptId, "Assigner Dept");
+
+        when(deptMapper.selectById(deptId)).thenReturn(dept);
+
+        List<TaskRespVO.AssignerUserVO.GroupVO> result =
+                ReflectionTestUtils.invokeMethod(service, "resolveAssignerGroups", deptId);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Assigner Dept");
+    }
+
+    @Test
+    void buildDashboardGroupsByDept_usersWithDept_returnsGroupMap() {
+        UserDO user1 = mockUser(1L, 100L, 5L);
+        UserDO user2 = mockUser(2L, 100L, 6L);
+        Map<Long, UserDO> usersMap = Map.of(1L, user1, 2L, user2);
+
+        DeptDO dept1 = mockDept(5L, "Dept A");
+        dept1.setEventId(50L);
+        DeptDO dept2 = mockDept(6L, "Dept B");
+        dept2.setEventId(60L);
+
+        when(deptMapper.selectBatchIds(anyList())).thenReturn(List.of(dept1, dept2));
+
+        Map<Long, List<TasksRespVO.AssignedUserVO.GroupVO>> result =
+                ReflectionTestUtils.invokeMethod(service, "buildDashboardGroupsByDept", usersMap);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(5L).get(0).getEventId()).isEqualTo(50L);
+        assertThat(result.get(6L).get(0).getName()).isEqualTo("Dept B");
+    }
+
+    @Test
+    void resolveDashboardGroups_deptInCache_returnsCachedGroups() {
+        Long deptId = 5L;
+        TasksRespVO.AssignedUserVO.GroupVO cached = new TasksRespVO.AssignedUserVO.GroupVO();
+        cached.setId(deptId);
+        cached.setName("Cached Dept");
+
+        Map<Long, List<TasksRespVO.AssignedUserVO.GroupVO>> cache = Map.of(deptId, List.of(cached));
+
+        List<TasksRespVO.AssignedUserVO.GroupVO> result =
+                ReflectionTestUtils.invokeMethod(service, "resolveDashboardGroups", deptId, cache);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Cached Dept");
+    }
+
+    @Test
+    void resolveDashboardGroups_deptNotFound_returnsEmptyList() {
+        Long deptId = 5L;
+        when(deptMapper.selectById(deptId)).thenReturn(null);
+
+        List<TasksRespVO.AssignedUserVO.GroupVO> result =
+                ReflectionTestUtils.invokeMethod(service, "resolveDashboardGroups", deptId, Map.of());
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void toDashboardGroupVO_convertsCorrectly() {
+        DeptDO dept = mockDept(5L, "Dashboard Dept");
+        dept.setEventId(77L);
+        dept.setLeadUserId(88L);
+        dept.setRemark("dashboard");
+
+        TasksRespVO.AssignedUserVO.GroupVO result =
+                ReflectionTestUtils.invokeMethod(service, "toDashboardGroupVO", dept);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(5L);
+        assertThat(result.getEventId()).isEqualTo(77L);
+        assertThat(result.getLeadUserId()).isEqualTo(88L);
+        assertThat(result.getRemark()).isEqualTo("dashboard");
+    }
+
+    @Test
+    void buildAssignersByEventId_returnsOrganizerMap() {
+        EventDO event1 = mockEvent(1L, 100L);
+        event1.setUserId(200L);
+        EventDO event2 = mockEvent(2L, 100L);
+        event2.setUserId(201L);
+
+        UserDO user1 = mockUser(200L, 100L, null);
+        UserDO user2 = mockUser(201L, 100L, null);
+
+        when(userMapper.selectBatchIds(List.of(200L, 201L))).thenReturn(List.of(user1, user2));
+
+        Map<Long, UserDO> result =
+                ReflectionTestUtils.invokeMethod(
+                        service, "buildAssignersByEventId", List.of(event1, event2));
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(1L)).isEqualTo(user1);
+        assertThat(result.get(2L)).isEqualTo(user2);
     }
 
     // ---------- listTasksByMember tests ----------
@@ -682,18 +805,26 @@ class TaskServiceImplTest {
         Long deptId = 5L;
         Long eventId1 = 1L;
         Long eventId2 = 2L;
+        Long organizerId1 = 301L;
+        Long organizerId2 = 302L;
 
         UserDO member = mockUser(memberId, tenantId, deptId);
         TaskDO task1 = mockTask(10L, eventId1, memberId);
         TaskDO task2 = mockTask(11L, eventId2, memberId);
         EventDO event1 = mockEvent(eventId1, tenantId);
         EventDO event2 = mockEvent(eventId2, tenantId);
+        event1.setUserId(organizerId1);
+        event2.setUserId(organizerId2);
         DeptDO dept = mockDept(deptId, "Dept A");
+        UserDO organizer1 = mockUser(organizerId1, tenantId, null);
+        UserDO organizer2 = mockUser(organizerId2, tenantId, null);
 
         when(userMapper.selectById(memberId)).thenReturn(member);
         when(taskMapper.selectList(any())).thenReturn(List.of(task1, task2));
         when(eventMapper.selectBatchIds(List.of(eventId1, eventId2)))
                 .thenReturn(List.of(event1, event2));
+        when(userMapper.selectBatchIds(List.of(organizerId1, organizerId2)))
+                .thenReturn(List.of(organizer1, organizer2));
         when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
 
         List<TaskRespVO> resp = service.listTasksByMember(memberId);
@@ -703,6 +834,8 @@ class TaskServiceImplTest {
         assertThat(resp.get(0).getAssignedUser()).isNotNull();
         assertThat(resp.get(0).getAssignedUser().getId()).isEqualTo(memberId);
         assertThat(resp.get(0).getEvent()).isNotNull();
+        assertThat(resp.get(0).getAssignerUser()).isNotNull();
+        assertThat(resp.get(0).getAssignerUser().getId()).isEqualTo(organizerId1);
     }
 
     @Test
@@ -758,10 +891,12 @@ class TaskServiceImplTest {
         Long tenantId = 100L;
         Long deptId = 5L;
         Long eventId = 1L;
+        Long organizerId = 300L;
 
         UserDO member = mockUser(memberId, tenantId, deptId);
         TaskDO task = mockTask(10L, eventId, memberId);
         EventDO event = mockEvent(eventId, tenantId);
+        event.setUserId(organizerId);
         DeptDO dept = mockDept(deptId, "Dept A");
         dept.setEventId(eventId);
 
@@ -771,6 +906,7 @@ class TaskServiceImplTest {
         when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
         when(deptMapper.selectById(deptId)).thenReturn(dept);
         when(eventMapper.selectById(eventId)).thenReturn(event);
+        when(userMapper.selectById(memberId)).thenReturn(member);
 
         TaskDashboardRespVO resp = service.getByMemberId(memberId);
 
@@ -781,6 +917,9 @@ class TaskServiceImplTest {
         assertThat(resp.getGroups()).hasSize(1);
         assertThat(resp.getGroups().get(0).getName()).isEqualTo("Dept A");
         assertThat(resp.getTasks()).hasSize(1);
+        TasksRespVO dashboardTask = resp.getTasks().get(0);
+        assertThat(dashboardTask.getAssignedUser()).isNotNull();
+        assertThat(dashboardTask.getAssignedUser().getId()).isEqualTo(memberId);
     }
 
     @Test
