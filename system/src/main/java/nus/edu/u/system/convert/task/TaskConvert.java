@@ -17,6 +17,6 @@ public interface TaskConvert {
     TaskDO convert(TaskCreateReqVO bean);
 
     @Mapping(target = "assignedUser", ignore = true)
-    @Mapping(target = "event", ignore = true)
+    @Mapping(target = "assignerUser", ignore = true)
     TaskRespVO toRespVO(TaskDO bean);
 }
