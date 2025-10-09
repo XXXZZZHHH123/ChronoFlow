@@ -1,5 +1,6 @@
 package nus.edu.u.system.domain.vo.attendee;
 
+import com.alibaba.excel.annotation.ExcelProperty;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
@@ -10,12 +11,15 @@ import lombok.Data;
 @Data
 public class AttendeeReqVO {
 
+    @ExcelProperty("Email")
     @NotEmpty(message = "Email is required")
     private String email;
 
+    @ExcelProperty("Name")
     @NotEmpty(message = "Name is required")
     private String name;
 
+    @ExcelProperty("Mobile")
     @NotEmpty(message = "Mobile is required")
     private String mobile;
 }
