@@ -1,7 +1,11 @@
 package nus.edu.u.system.service.task.action;
 
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
+import nus.edu.u.system.domain.dto.TaskActionDTO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * task action strategy class
@@ -11,7 +15,7 @@ import nus.edu.u.system.enums.task.TaskActionEnum;
  */
 public interface TaskStrategy {
 
-    boolean execute(TaskDO task, Long targetUserId, Object... params);
+    void execute(TaskDO task, TaskActionDTO taskActionDTO, Object... params);
 
     TaskActionEnum getType();
 }

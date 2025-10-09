@@ -2,10 +2,14 @@ package nus.edu.u.system.service.task.action.strategy;
 
 import java.time.LocalDateTime;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
+import nus.edu.u.system.domain.dto.TaskActionDTO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.service.task.action.AbstractTaskStrategy;
 import org.springframework.stereotype.Component;
+
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.REJECT_TASK_FAILED;
 
 /**
  * @author Lu Shuwen
@@ -20,15 +24,19 @@ public class RejectTask extends AbstractTaskStrategy {
     }
 
     @Override
-    public boolean execute(TaskDO task, Long targetUserId, Object... params) {
+    public void execute(TaskDO task, TaskActionDTO actionDTO, Object... params) {
         validateTimeRange(
+                task,
                 task.getStartTime(),
                 task.getEndTime(),
-                (LocalDateTime) params[0],
-                (LocalDateTime) params[1]);
+                actionDTO.getEventStartTime(),
+                actionDTO.getEventEndTime());
         task.setStatus(TaskStatusEnum.REJECTED.getStatus());
+        task.setUserId(null);
         boolean isSuccess = taskMapper.updateById(task) > 0;
-        return isSuccess
-                && taskLogService.insertTaskLog(task.getId(), targetUserId, getType().getCode());
+        if (!isSuccess) {
+            throw exception(REJECT_TASK_FAILED);
+        }
+        taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
     }
 }

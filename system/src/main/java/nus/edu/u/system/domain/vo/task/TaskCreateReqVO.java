@@ -4,7 +4,11 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.List;
+
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class TaskCreateReqVO {
@@ -13,12 +17,14 @@ public class TaskCreateReqVO {
 
     private String description;
 
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
     private LocalDateTime startTime;
 
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
     private LocalDateTime endTime;
 
     @NotNull(message = "You should assign task to a member")
     private Long targetUserId;
+
+    private List<MultipartFile> files;
 }

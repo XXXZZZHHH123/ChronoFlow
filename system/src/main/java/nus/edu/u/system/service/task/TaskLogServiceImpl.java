@@ -15,6 +15,10 @@ import nus.edu.u.system.domain.vo.task.TaskLogRespVO;
 import nus.edu.u.system.mapper.task.TaskLogMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_LOG_ERROR;
 
 /**
  * @author Lu Shuwen
@@ -28,14 +32,19 @@ public class TaskLogServiceImpl implements TaskLogService {
     @Resource private UserMapper userMapper;
 
     @Override
-    public boolean insertTaskLog(Long taskId, Long targetUserId, Integer action) {
+    @Transactional
+    public Long insertTaskLog(Long taskId, Long targetUserId, Integer action) {
         TaskLogDO taskLogDO =
                 TaskLogDO.builder()
                         .taskId(taskId)
                         .targetUserId(targetUserId)
                         .action(action)
                         .build();
-        return taskLogMapper.insert(taskLogDO) > 0;
+        boolean isSuccess = taskLogMapper.insert(taskLogDO) > 0;
+        if (!isSuccess) {
+            throw exception(TASK_LOG_ERROR);
+        }
+        return taskLogDO.getId();
     }
 
     @Override

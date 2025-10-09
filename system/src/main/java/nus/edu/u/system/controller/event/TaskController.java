@@ -34,7 +34,7 @@ public class TaskController {
     @PostMapping("/{eventId}")
     public CommonResult<TaskRespVO> createTask(
             @PathVariable("eventId") @NotNull Long eventId,
-            @Valid @RequestBody TaskCreateReqVO reqVO) {
+            @Valid @ModelAttribute TaskCreateReqVO reqVO) {
         TaskRespVO resp = taskService.createTask(eventId, reqVO);
         CommonResult<TaskRespVO> result = CommonResult.success(resp);
         result.setMsg("task created successfully");
@@ -72,7 +72,7 @@ public class TaskController {
     public CommonResult<TaskRespVO> updateTask(
             @PathVariable("eventId") @NotNull Long eventId,
             @PathVariable("taskId") @NotNull Long taskId,
-            @Valid @RequestBody TaskUpdateReqVO reqVO) {
+            @Valid @ModelAttribute TaskUpdateReqVO reqVO) {
         TaskRespVO resp = taskService.updateTask(eventId, taskId, reqVO, reqVO.getType());
         CommonResult<TaskRespVO> result = CommonResult.success(resp);
         result.setMsg("task updated successfully");

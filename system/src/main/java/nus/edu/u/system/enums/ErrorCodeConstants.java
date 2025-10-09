@@ -98,6 +98,14 @@ public interface ErrorCodeConstants {
     ErrorCode TASK_UPDATE_FAILED = new ErrorCode(13_02_008, "task update failed");
     ErrorCode TASK_DELETE_FAILED = new ErrorCode(13_02_009, "task delete failed");
     ErrorCode WRONG_TASK_ACTION_TYPE = new ErrorCode(13_02_010, "task action failed");
+    ErrorCode TASK_LOG_ERROR = new ErrorCode(13_02_0011, "task log error");
+    ErrorCode TASK_LOG_FILE_FAILED = new ErrorCode(13_02_0012, "task log files upload failed");
+    ErrorCode APPROVE_TASK_FAILED = new ErrorCode(13_02_0013, "approve task failed");
+    ErrorCode ASSIGN_TASK_FAILED = new ErrorCode(13_02_0014, "assign task failed");
+    ErrorCode BLOCK_TASK_FAILED = new ErrorCode(13_02_0015, "block task failed");
+    ErrorCode REJECT_TASK_FAILED = new ErrorCode(13_02_0016, "reject task failed");
+    ErrorCode SUBMIT_TASK_FAILED = new ErrorCode(13_02_0017, "submit task failed");
+    ErrorCode ACCEPT_TASK_FAILED = new ErrorCode(13_02_0018, "accept task failed");
 
     // ========= Check-in module 10-03-000 ============
     ErrorCode EVENT_ATTENDEE_NOT_FOUND = new ErrorCode(10_03_001, "Attendee not found");

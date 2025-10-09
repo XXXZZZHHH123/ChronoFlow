@@ -3,10 +3,14 @@ package nus.edu.u.system.service.task.action.strategy;
 import cn.hutool.core.util.ObjectUtil;
 import java.time.LocalDateTime;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
+import nus.edu.u.system.domain.dto.TaskActionDTO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.service.task.action.AbstractTaskStrategy;
 import org.springframework.stereotype.Component;
+
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_UPDATE_FAILED;
 
 /**
  * @author Lu Shuwen
@@ -21,12 +25,13 @@ public class UpdateTask extends AbstractTaskStrategy {
     }
 
     @Override
-    public boolean execute(TaskDO task, Long targetUserId, Object... params) {
+    public void execute(TaskDO task, TaskActionDTO actionDTO, Object... params) {
         validateTimeRange(
+                task,
                 task.getStartTime(),
                 task.getEndTime(),
-                (LocalDateTime) params[0],
-                (LocalDateTime) params[1]);
+                actionDTO.getEventStartTime(),
+                actionDTO.getEventEndTime());
         if (ObjectUtil.equals(task.getStatus(), TaskStatusEnum.BLOCKED.getStatus())
                 || ObjectUtil.equals(task.getStatus(), TaskStatusEnum.COMPLETED.getStatus())
                 || ObjectUtil.equals(task.getStatus(), TaskStatusEnum.DELAYED.getStatus())
@@ -37,8 +42,11 @@ public class UpdateTask extends AbstractTaskStrategy {
         if (ObjectUtil.equals(task.getStatus(), TaskStatusEnum.REJECTED.getStatus())) {
             task.setStatus(TaskStatusEnum.PENDING.getStatus());
         }
-        task.setUserId(targetUserId);
+        task.setUserId(actionDTO.getTargetUserId());
         boolean isSuccess = taskMapper.updateById(task) > 0;
-        return isSuccess && taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
+        if (isSuccess) {
+            throw exception(TASK_UPDATE_FAILED);
+        }
+        taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
     }
 }

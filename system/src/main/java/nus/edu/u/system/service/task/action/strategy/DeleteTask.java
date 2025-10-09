@@ -1,9 +1,15 @@
 package nus.edu.u.system.service.task.action.strategy;
 
+import cn.hutool.core.util.ObjectUtil;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
+import nus.edu.u.system.domain.dto.TaskActionDTO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
 import nus.edu.u.system.service.task.action.AbstractTaskStrategy;
 import org.springframework.stereotype.Component;
+
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_DELETE_FAILED;
+import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_LOG_ERROR;
 
 /**
  * @author Lu Shuwen
@@ -18,9 +24,11 @@ public class DeleteTask extends AbstractTaskStrategy {
     }
 
     @Override
-    public boolean execute(TaskDO task, Long targetUserId, Object... params) {
+    public void execute(TaskDO task, TaskActionDTO actionDTO, Object... params) {
         boolean isSuccess = taskMapper.deleteById(task.getId()) > 0;
-        return isSuccess
-                && taskLogService.insertTaskLog(task.getId(), targetUserId, getType().getCode());
+        if (!isSuccess) {
+            throw exception(TASK_DELETE_FAILED);
+        }
+        taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
     }
 }
