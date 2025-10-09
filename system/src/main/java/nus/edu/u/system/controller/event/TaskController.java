@@ -13,6 +13,7 @@ import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.system.domain.vo.task.*;
 import nus.edu.u.system.service.task.TaskLogService;
 import nus.edu.u.system.service.task.TaskService;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +32,7 @@ public class TaskController {
     @Resource private TaskLogService taskLogService;
 
     @SaCheckPermission(CREATE_TASK)
-    @PostMapping("/{eventId}")
+    @PostMapping(value = "/{eventId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public CommonResult<TaskRespVO> createTask(
             @PathVariable("eventId") @NotNull Long eventId,
             @Valid @ModelAttribute TaskCreateReqVO reqVO) {
@@ -67,7 +68,7 @@ public class TaskController {
         return result;
     }
 
-    @PatchMapping("/{eventId}/{taskId}")
+    @PatchMapping(value = "/{eventId}/{taskId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public CommonResult<TaskRespVO> updateTask(
             @PathVariable("eventId") @NotNull Long eventId,
             @PathVariable("taskId") @NotNull Long taskId,

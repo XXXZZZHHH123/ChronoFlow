@@ -11,9 +11,11 @@ import java.util.stream.Collectors;
 import nus.edu.u.system.domain.dataobject.task.TaskLogDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.auth.UserVO;
+import nus.edu.u.system.domain.vo.file.FileResultVO;
 import nus.edu.u.system.domain.vo.task.TaskLogRespVO;
 import nus.edu.u.system.mapper.task.TaskLogMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
+import nus.edu.u.system.service.file.FileStorageService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,8 @@ public class TaskLogServiceImpl implements TaskLogService {
     @Resource private TaskLogMapper taskLogMapper;
 
     @Resource private UserMapper userMapper;
+
+    @Resource private FileStorageService fileStorageService;
 
     @Override
     @Transactional
@@ -83,12 +87,14 @@ public class TaskLogServiceImpl implements TaskLogService {
                                 sourceUserVO.setName(sourceUser.getUsername());
                                 sourceUserVO.setEmail(sourceUser.getEmail());
                             }
+                            List<FileResultVO> fileResults = fileStorageService.downloadFilesByTaskLogId(taskLog.getId());
                             return TaskLogRespVO.builder()
                                     .id(taskLog.getId())
                                     .action(taskLog.getAction())
                                     .createTime(taskLog.getCreateTime())
                                     .targetUser(targetUserVO)
                                     .sourceUser(sourceUserVO)
+                                    .fileResults(fileResults)
                                     .build();
                         })
                 .toList();

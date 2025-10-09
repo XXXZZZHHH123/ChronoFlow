@@ -1,6 +1,7 @@
 package nus.edu.u.system.service.file;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 import java.time.LocalDateTime;
@@ -154,8 +155,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                 fileMapper.selectList(
                         new LambdaQueryWrapper<FileDO>().eq(FileDO::getTaskLogId, taskLogId));
 
-        if (files.isEmpty())
-            throw new IllegalArgumentException("No files found for taskLogId: " + taskLogId);
+        if (files.isEmpty()) return Collections.emptyList();
 
         FileClient client = fileClientFactory.create(files.get(0).getProvider());
 
