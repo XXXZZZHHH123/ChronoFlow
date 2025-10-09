@@ -1,15 +1,13 @@
 package nus.edu.u.system.service.task.action.strategy;
 
-import cn.hutool.core.util.ObjectUtil;
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_DELETE_FAILED;
+
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dto.TaskActionDTO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
 import nus.edu.u.system.service.task.action.AbstractTaskStrategy;
 import org.springframework.stereotype.Component;
-
-import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_DELETE_FAILED;
-import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_LOG_ERROR;
 
 /**
  * @author Lu Shuwen

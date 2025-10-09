@@ -106,8 +106,10 @@ public interface ErrorCodeConstants {
     ErrorCode REJECT_TASK_FAILED = new ErrorCode(13_02_016, "reject task failed");
     ErrorCode SUBMIT_TASK_FAILED = new ErrorCode(13_02_017, "submit task failed");
     ErrorCode ACCEPT_TASK_FAILED = new ErrorCode(13_02_018, "accept task failed");
-    ErrorCode MODIFY_OTHER_TASK_ERROR = new ErrorCode(13_02_019, "You can only modify your own task");
-    ErrorCode MODIFY_WRONG_TASK_STATUS = new ErrorCode(13_02_020, "You can't {} the task in {} status");
+    ErrorCode MODIFY_OTHER_TASK_ERROR =
+            new ErrorCode(13_02_019, "You can only modify your own task");
+    ErrorCode MODIFY_WRONG_TASK_STATUS =
+            new ErrorCode(13_02_020, "You can't {} the task in {} status");
 
     // ========= Check-in module 10-03-000 ============
     ErrorCode EVENT_ATTENDEE_NOT_FOUND = new ErrorCode(10_03_001, "Attendee not found");

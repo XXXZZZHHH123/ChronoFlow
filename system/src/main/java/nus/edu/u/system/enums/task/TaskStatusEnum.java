@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nus.edu.u.common.core.ArrayValuable;
@@ -43,6 +42,7 @@ public enum TaskStatusEnum implements ArrayValuable<Integer> {
         }
         return null;
     }
+
     public static TaskStatusEnum fromStatusOrDefault(Integer status) {
         if (status == null) {
             return PENDING;

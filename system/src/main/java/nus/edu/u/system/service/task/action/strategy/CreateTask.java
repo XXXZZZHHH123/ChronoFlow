@@ -1,18 +1,14 @@
 package nus.edu.u.system.service.task.action.strategy;
 
-import java.time.LocalDateTime;
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_CREATE_FAILED;
 
-import cn.hutool.core.util.ObjectUtil;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dto.TaskActionDTO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.service.task.action.AbstractTaskStrategy;
 import org.springframework.stereotype.Component;
-
-import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_CREATE_FAILED;
-import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_LOG_ERROR;
 
 /**
  * @author Lu Shuwen
@@ -40,7 +36,9 @@ public class CreateTask extends AbstractTaskStrategy {
         if (!isSuccess) {
             throw exception(TASK_CREATE_FAILED);
         }
-        Long taskLogId = taskLogService.insertTaskLog(task.getId(), actionDTO.getTargetUserId(), getType().getCode());
+        Long taskLogId =
+                taskLogService.insertTaskLog(
+                        task.getId(), actionDTO.getTargetUserId(), getType().getCode());
         uploadFiles(taskLogId, task.getEventId(), actionDTO.getFiles());
     }
 }

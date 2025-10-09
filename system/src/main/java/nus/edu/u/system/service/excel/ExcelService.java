@@ -10,13 +10,12 @@ import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.role.RoleDO;
@@ -261,17 +260,23 @@ public class ExcelService {
         try {
             List<AttendeeReqVO> attendeeList = new ArrayList<>();
 
-            EasyExcel.read(file.getInputStream(), AttendeeReqVO.class, new AnalysisEventListener<AttendeeReqVO>() {
-                @Override
-                public void invoke(AttendeeReqVO attendee, AnalysisContext context) {
-                    attendeeList.add(attendee);
-                }
+            EasyExcel.read(
+                            file.getInputStream(),
+                            AttendeeReqVO.class,
+                            new AnalysisEventListener<AttendeeReqVO>() {
+                                @Override
+                                public void invoke(
+                                        AttendeeReqVO attendee, AnalysisContext context) {
+                                    attendeeList.add(attendee);
+                                }
 
-                @Override
-                public void doAfterAllAnalysed(AnalysisContext context) {
-                    // no-op
-                }
-            }).sheet().doRead();
+                                @Override
+                                public void doAfterAllAnalysed(AnalysisContext context) {
+                                    // no-op
+                                }
+                            })
+                    .sheet()
+                    .doRead();
 
             if (CollectionUtil.isEmpty(attendeeList)) {
                 throw exception(EMPTY_EXCEL);
@@ -282,14 +287,15 @@ public class ExcelService {
                 // 1️⃣ 校验必填字段
                 Set<ConstraintViolation<AttendeeReqVO>> violations = validator.validate(attendee);
                 if (!violations.isEmpty()) {
-                    throw new IllegalArgumentException("Invalid data for attendee: " + attendee.getEmail());
+                    throw new IllegalArgumentException(
+                            "Invalid data for attendee: " + attendee.getEmail());
                 }
 
                 // 2️⃣ 校验 Excel 内部重复
                 if (!emailSet.add(attendee.getEmail())) {
-                    throw new IllegalArgumentException("Duplicate email in Excel: " + attendee.getEmail());
+                    throw new IllegalArgumentException(
+                            "Duplicate email in Excel: " + attendee.getEmail());
                 }
-
             }
 
             log.info("Imported {} attendees", attendeeList.size());

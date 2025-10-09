@@ -1,9 +1,7 @@
 package nus.edu.u.system.domain.vo.task;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import java.util.List;
-
 import lombok.Data;
 import nus.edu.u.common.annotation.InEnum;
 import nus.edu.u.system.enums.task.TaskActionEnum;

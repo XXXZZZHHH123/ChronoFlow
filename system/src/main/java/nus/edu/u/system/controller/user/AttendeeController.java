@@ -75,7 +75,9 @@ public class AttendeeController {
 
     @SaCheckPermission(CREATE_MEMBER)
     @PostMapping("/bulk/{eventId}")
-    public CommonResult<GenerateQrCodesRespVO> generateQrCodeByExcel(@PathVariable("eventId") @NotNull Long eventId, @RequestParam("file") MultipartFile file) {
+    public CommonResult<GenerateQrCodesRespVO> generateQrCodeByExcel(
+            @PathVariable("eventId") @NotNull Long eventId,
+            @RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             throw exception(BAD_REQUEST);
         }

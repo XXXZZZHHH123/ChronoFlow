@@ -1,5 +1,8 @@
 package nus.edu.u.system.service.task;
 
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_LOG_ERROR;
+
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -18,9 +21,6 @@ import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.file.FileStorageService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
-import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_LOG_ERROR;
 
 /**
  * @author Lu Shuwen
@@ -87,7 +87,8 @@ public class TaskLogServiceImpl implements TaskLogService {
                                 sourceUserVO.setName(sourceUser.getUsername());
                                 sourceUserVO.setEmail(sourceUser.getEmail());
                             }
-                            List<FileResultVO> fileResults = fileStorageService.downloadFilesByTaskLogId(taskLog.getId());
+                            List<FileResultVO> fileResults =
+                                    fileStorageService.downloadFilesByTaskLogId(taskLog.getId());
                             return TaskLogRespVO.builder()
                                     .id(taskLog.getId())
                                     .action(taskLog.getAction())

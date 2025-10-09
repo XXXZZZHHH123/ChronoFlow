@@ -6,7 +6,6 @@ import static nus.edu.u.system.enums.task.TaskActionEnum.getUpdateTaskAction;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,17 +72,16 @@ public class TaskServiceImpl implements TaskService {
         task.setStartTime(reqVO.getStartTime());
         task.setEndTime(reqVO.getEndTime());
 
-        TaskActionDTO actionDTO = TaskActionDTO.builder()
-                .startTime(reqVO.getStartTime())
-                .endTime(reqVO.getEndTime())
-                .files(reqVO.getFiles())
-                .targetUserId(reqVO.getTargetUserId())
-                .eventStartTime(event.getStartTime())
-                .eventEndTime(event.getEndTime())
-                .build();
-        taskActionFactory
-                .getStrategy(TaskActionEnum.CREATE)
-                .execute(task, actionDTO);
+        TaskActionDTO actionDTO =
+                TaskActionDTO.builder()
+                        .startTime(reqVO.getStartTime())
+                        .endTime(reqVO.getEndTime())
+                        .files(reqVO.getFiles())
+                        .targetUserId(reqVO.getTargetUserId())
+                        .eventStartTime(event.getStartTime())
+                        .eventEndTime(event.getEndTime())
+                        .build();
+        taskActionFactory.getStrategy(TaskActionEnum.CREATE).execute(task, actionDTO);
 
         Long assignerId = parseUserId(task.getCreator());
         UserDO assigner = resolveAssigner(assignerId, assignee);
@@ -126,20 +124,19 @@ public class TaskServiceImpl implements TaskService {
         if (!Arrays.asList(getUpdateTaskAction()).contains(type)) {
             throw exception(WRONG_TASK_ACTION_TYPE);
         }
-        TaskActionDTO actionDTO = TaskActionDTO.builder()
-                .name(reqVO.getName())
-                .description(reqVO.getDescription())
-                .startTime(reqVO.getStartTime())
-                .endTime(reqVO.getEndTime())
-                .eventStartTime(event.getStartTime())
-                .eventEndTime(event.getEndTime())
-                .targetUserId(reqVO.getTargetUserId())
-                .files(reqVO.getFiles())
-                .build();
+        TaskActionDTO actionDTO =
+                TaskActionDTO.builder()
+                        .name(reqVO.getName())
+                        .description(reqVO.getDescription())
+                        .startTime(reqVO.getStartTime())
+                        .endTime(reqVO.getEndTime())
+                        .eventStartTime(event.getStartTime())
+                        .eventEndTime(event.getEndTime())
+                        .targetUserId(reqVO.getTargetUserId())
+                        .files(reqVO.getFiles())
+                        .build();
 
-        taskActionFactory
-                .getStrategy(TaskActionEnum.getEnum(type))
-                .execute(task, actionDTO);
+        taskActionFactory.getStrategy(TaskActionEnum.getEnum(type)).execute(task, actionDTO);
 
         Long assignerId = parseUserId(task.getCreator());
         UserDO assigner = resolveAssigner(assignerId, assignee);

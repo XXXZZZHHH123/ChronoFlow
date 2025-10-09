@@ -1,9 +1,7 @@
 package nus.edu.u.system.service.file;
 
 import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,15 +77,16 @@ public class FileStorageServiceImpl implements FileStorageService {
                 MultipartFile file = req.getFiles().get(i);
                 FileClient.FileUploadResult r = uploaded.get(i);
 
-                FileDO fileDO = FileDO.builder()
-                        .taskLogId(req.getTaskLogId())
-                        .eventId(req.getEventId())
-                        .provider(provider)
-                        .name(file.getOriginalFilename())
-                        .objectName(r.objectName())
-                        .type(r.contentType())
-                        .size(r.size())
-                        .build();
+                FileDO fileDO =
+                        FileDO.builder()
+                                .taskLogId(req.getTaskLogId())
+                                .eventId(req.getEventId())
+                                .provider(provider)
+                                .name(file.getOriginalFilename())
+                                .objectName(r.objectName())
+                                .type(r.contentType())
+                                .size(r.size())
+                                .build();
                 fileDO.setCreator(StpUtil.getLoginId().toString());
                 fileDO.setUpdater(StpUtil.getLoginId().toString());
                 fileDO.setCreateTime(LocalDateTime.now());
