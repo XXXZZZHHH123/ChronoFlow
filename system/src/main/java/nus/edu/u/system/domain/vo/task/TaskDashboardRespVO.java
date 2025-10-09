@@ -9,7 +9,7 @@ import lombok.Data;
 public class TaskDashboardRespVO {
     private MemberVO member;
     private List<GroupVO> groups;
-    private List<TaskRespVO> tasks;
+    private List<TasksRespVO> tasks;
 
     @Data
     public static class MemberVO {
