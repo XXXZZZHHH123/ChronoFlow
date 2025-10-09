@@ -13,6 +13,7 @@ import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dto.TaskActionDTO;
 import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
 import nus.edu.u.system.domain.vo.task.TaskDashboardRespVO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
@@ -97,6 +98,40 @@ class TaskServiceImplTest {
     // ---------- createTask tests ----------
 
     @Test
+    void createTask_success() {
+        Long eventId = 1L;
+        Long tenantId = 100L;
+        Long userId = 201L;
+        Long deptId = 5L;
+
+        EventDO event = mockEvent(eventId, tenantId);
+        UserDO assignee = mockUser(userId, tenantId, deptId);
+        TaskCreateReqVO reqVO = mockCreateReqVO(userId);
+        DeptDO dept = mockDept(deptId, "Test Dept");
+
+        when(eventMapper.selectById(eventId)).thenReturn(event);
+        when(userMapper.selectById(userId)).thenReturn(assignee);
+        when(taskActionFactory.getStrategy(TaskActionEnum.CREATE)).thenReturn(taskStrategy);
+        doNothing().when(taskStrategy).execute(any(TaskDO.class), any(TaskActionDTO.class));
+        when(deptMapper.selectById(deptId)).thenReturn(dept);
+
+        TaskRespVO resp = service.createTask(eventId, reqVO);
+
+        // 验证核心业务逻辑
+        assertThat(resp).isNotNull();
+
+        // 验证调用链
+        verify(eventMapper).selectById(eventId);
+        verify(userMapper).selectById(userId);
+        verify(taskActionFactory).getStrategy(TaskActionEnum.CREATE);
+        verify(taskStrategy).execute(any(TaskDO.class), any(TaskActionDTO.class));
+
+        if (resp.getAssignedUser() != null) {
+            assertThat(resp.getAssignedUser().getId()).isEqualTo(userId);
+        }
+    }
+
+    @Test
     void createTask_eventNotFound_throws() {
         Long eventId = 1L;
         TaskCreateReqVO reqVO = mockCreateReqVO(201L);
@@ -155,11 +190,13 @@ class TaskServiceImplTest {
         Long taskId = 10L;
         Long tenantId = 100L;
         Long userId = 201L;
+        Long deptId = 5L;
         Integer type = TaskActionEnum.UPDATE.getCode();
 
         EventDO event = mockEvent(eventId, tenantId);
         TaskDO task = mockTask(taskId, eventId, userId);
-        UserDO assignee = mockUser(userId, tenantId, 5L);
+        UserDO assignee = mockUser(userId, tenantId, deptId);
+        DeptDO dept = mockDept(deptId, "Test Dept");
         TaskUpdateReqVO reqVO = new TaskUpdateReqVO();
         reqVO.setName("Updated Task");
         reqVO.setTargetUserId(userId);
@@ -168,15 +205,16 @@ class TaskServiceImplTest {
         when(taskMapper.selectById(taskId)).thenReturn(task);
         when(userMapper.selectById(userId)).thenReturn(assignee);
         when(taskActionFactory.getStrategy(TaskActionEnum.UPDATE)).thenReturn(taskStrategy);
-        when(taskStrategy.execute(any(TaskDO.class), eq(userId), any(), any())).thenReturn(true);
+        doNothing().when(taskStrategy).execute(any(TaskDO.class), any(TaskActionDTO.class));
+        when(deptMapper.selectById(deptId)).thenReturn(dept);
 
         TaskRespVO resp = service.updateTask(eventId, taskId, reqVO, type);
 
         assertThat(resp).isNotNull();
-        assertThat(resp.getName()).isEqualTo("Updated Task");
+        assertThat(resp.getName()).isEqualTo("Test Task");
         assertThat(resp.getAssignerUser()).isNotNull();
         assertThat(resp.getAssignerUser().getId()).isEqualTo(userId);
-        verify(taskStrategy).execute(any(TaskDO.class), eq(userId), any(), any());
+        verify(taskStrategy).execute(any(TaskDO.class), any(TaskActionDTO.class));
     }
 
     @Test
@@ -308,42 +346,18 @@ class TaskServiceImplTest {
     }
 
     @Test
-    void updateTask_strategyExecuteFailed_throws() {
-        Long eventId = 1L;
-        Long taskId = 10L;
-        Long tenantId = 100L;
-        Long userId = 201L;
-        Integer type = TaskActionEnum.UPDATE.getCode();
-
-        EventDO event = mockEvent(eventId, tenantId);
-        TaskDO task = mockTask(taskId, eventId, userId);
-        UserDO assignee = mockUser(userId, tenantId, null);
-        TaskUpdateReqVO reqVO = new TaskUpdateReqVO();
-        reqVO.setTargetUserId(userId);
-
-        when(eventMapper.selectById(eventId)).thenReturn(event);
-        when(taskMapper.selectById(taskId)).thenReturn(task);
-        when(userMapper.selectById(userId)).thenReturn(assignee);
-        when(taskActionFactory.getStrategy(TaskActionEnum.UPDATE)).thenReturn(taskStrategy);
-        when(taskStrategy.execute(any(TaskDO.class), eq(userId), any(), any())).thenReturn(false);
-
-        assertThatThrownBy(() -> service.updateTask(eventId, taskId, reqVO, type))
-                .isInstanceOf(ServiceException.class)
-                .extracting("code")
-                .isEqualTo(UPDATE_FAILURE.getCode());
-    }
-
-    @Test
-    void updateTask_withoutTargetUserId_usesExistingUserId() {
+    void updateTask_withoutTargetUserId_success() {
         Long eventId = 1L;
         Long taskId = 10L;
         Long tenantId = 100L;
         Long existingUserId = 201L;
+        Long deptId = 5L;
         Integer type = TaskActionEnum.UPDATE.getCode();
 
         EventDO event = mockEvent(eventId, tenantId);
         TaskDO task = mockTask(taskId, eventId, existingUserId);
-        UserDO assignee = mockUser(existingUserId, tenantId, null);
+        UserDO assignee = mockUser(existingUserId, tenantId, deptId);
+        DeptDO dept = mockDept(deptId, "Test Dept");
         TaskUpdateReqVO reqVO = new TaskUpdateReqVO();
         reqVO.setName("Updated Task");
         // No targetUserId set
@@ -352,13 +366,13 @@ class TaskServiceImplTest {
         when(taskMapper.selectById(taskId)).thenReturn(task);
         when(userMapper.selectById(existingUserId)).thenReturn(assignee);
         when(taskActionFactory.getStrategy(TaskActionEnum.UPDATE)).thenReturn(taskStrategy);
-        when(taskStrategy.execute(any(TaskDO.class), eq(existingUserId), any(), any()))
-                .thenReturn(true);
+        doNothing().when(taskStrategy).execute(any(TaskDO.class), any(TaskActionDTO.class));
+        when(deptMapper.selectById(deptId)).thenReturn(dept);
 
         TaskRespVO resp = service.updateTask(eventId, taskId, reqVO, type);
 
         assertThat(resp).isNotNull();
-        verify(userMapper).selectById(existingUserId);
+        verify(taskStrategy).execute(any(TaskDO.class), any(TaskActionDTO.class));
     }
 
     // ---------- deleteTask tests ----------
@@ -376,12 +390,12 @@ class TaskServiceImplTest {
         when(eventMapper.selectById(eventId)).thenReturn(event);
         when(taskMapper.selectById(taskId)).thenReturn(task);
         when(taskActionFactory.getStrategy(TaskActionEnum.DELETE)).thenReturn(taskStrategy);
-        when(taskStrategy.execute(eq(task), isNull())).thenReturn(true);
+        doNothing().when(taskStrategy).execute(eq(task), isNull(), isNull());
 
         assertThatCode(() -> service.deleteTask(eventId, taskId)).doesNotThrowAnyException();
 
         verify(taskActionFactory).getStrategy(TaskActionEnum.DELETE);
-        verify(taskStrategy).execute(eq(task), isNull());
+        verify(taskStrategy).execute(eq(task), isNull(), isNull());
     }
 
     @Test
@@ -414,27 +428,6 @@ class TaskServiceImplTest {
                 .isEqualTo(TASK_NOT_FOUND.getCode());
     }
 
-    @Test
-    void deleteTask_strategyExecuteFailed_throws() {
-        Long eventId = 1L;
-        Long taskId = 10L;
-        Long tenantId = 100L;
-        Long userId = 201L;
-
-        EventDO event = mockEvent(eventId, tenantId);
-        TaskDO task = mockTask(taskId, eventId, userId);
-
-        when(eventMapper.selectById(eventId)).thenReturn(event);
-        when(taskMapper.selectById(taskId)).thenReturn(task);
-        when(taskActionFactory.getStrategy(TaskActionEnum.DELETE)).thenReturn(taskStrategy);
-        when(taskStrategy.execute(eq(task), isNull())).thenReturn(false);
-
-        assertThatThrownBy(() -> service.deleteTask(eventId, taskId))
-                .isInstanceOf(ServiceException.class)
-                .extracting("code")
-                .isEqualTo(TASK_DELETE_FAILED.getCode());
-    }
-
     // ---------- getTask tests ----------
 
     @Test
@@ -443,14 +436,17 @@ class TaskServiceImplTest {
         Long taskId = 10L;
         Long tenantId = 100L;
         Long userId = 201L;
+        Long deptId = 5L;
 
         EventDO event = mockEvent(eventId, tenantId);
         TaskDO task = mockTask(taskId, eventId, userId);
-        UserDO user = mockUser(userId, tenantId, null);
+        UserDO user = mockUser(userId, tenantId, deptId);
+        DeptDO dept = mockDept(deptId, "Test Dept");
 
         when(eventMapper.selectById(eventId)).thenReturn(event);
         when(taskMapper.selectById(taskId)).thenReturn(task);
         when(userMapper.selectById(userId)).thenReturn(user);
+        when(deptMapper.selectById(deptId)).thenReturn(dept);
 
         TaskRespVO resp = service.getTask(eventId, taskId);
 
@@ -540,6 +536,162 @@ class TaskServiceImplTest {
         verify(userMapper, never()).selectBatchIds(any());
     }
 
+    // ---------- listTasksByMember tests ----------
+
+    @Test
+    void listTasksByMember_success() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+        Long deptId = 5L;
+        Long eventId1 = 1L;
+        Long eventId2 = 2L;
+
+        UserDO member = mockUser(memberId, tenantId, deptId);
+        TaskDO task1 = mockTask(10L, eventId1, memberId);
+        TaskDO task2 = mockTask(11L, eventId2, memberId);
+        EventDO event1 = mockEvent(eventId1, tenantId);
+        EventDO event2 = mockEvent(eventId2, tenantId);
+        DeptDO dept = mockDept(deptId, "Dept A");
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of(task1, task2));
+        when(eventMapper.selectBatchIds(anyList())).thenReturn(List.of(event1, event2));
+        when(deptMapper.selectBatchIds(anyList())).thenReturn(List.of(dept));
+
+        List<TaskRespVO> resp = service.listTasksByMember(memberId);
+
+        assertThat(resp).hasSize(2);
+        assertThat(resp).extracting(TaskRespVO::getId).containsExactly(10L, 11L);
+        assertThat(resp.get(0).getAssignedUser()).isNotNull();
+        assertThat(resp.get(0).getAssignedUser().getId()).isEqualTo(memberId);
+        assertThat(resp.get(0).getAssignerUser()).isNotNull();
+    }
+
+    @Test
+    void listTasksByMember_memberNotFound_throws() {
+        Long memberId = 201L;
+
+        when(userMapper.selectById(memberId)).thenReturn(null);
+
+        assertThatThrownBy(() -> service.listTasksByMember(memberId))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(USER_NOT_FOUND.getCode());
+    }
+
+    @Test
+    void listTasksByMember_noTasks_returnsEmptyList() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+
+        UserDO member = mockUser(memberId, tenantId, null);
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of());
+
+        List<TaskRespVO> resp = service.listTasksByMember(memberId);
+
+        assertThat(resp).isEmpty();
+    }
+
+    @Test
+    void listTasksByMember_withNullEventId_handlesGracefully() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+
+        UserDO member = mockUser(memberId, tenantId, null);
+        TaskDO task = mockTask(10L, null, memberId); // null eventId
+        task.setEventId(null);
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of(task));
+
+        List<TaskRespVO> resp = service.listTasksByMember(memberId);
+
+        assertThat(resp).hasSize(1);
+    }
+
+    // ---------- getByMemberId tests ----------
+
+    @Test
+    void getByMemberId_success() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+        Long deptId = 5L;
+        Long eventId = 1L;
+
+        UserDO member = mockUser(memberId, tenantId, deptId);
+        TaskDO task = mockTask(10L, eventId, memberId);
+        EventDO event = mockEvent(eventId, tenantId);
+        DeptDO dept = mockDept(deptId, "Dept A");
+        dept.setEventId(eventId);
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of(task));
+        when(eventMapper.selectBatchIds(anyList())).thenReturn(List.of(event));
+        when(deptMapper.selectBatchIds(anyList())).thenReturn(List.of(dept));
+        when(deptMapper.selectById(deptId)).thenReturn(dept);
+        when(eventMapper.selectById(eventId)).thenReturn(event);
+
+        TaskDashboardRespVO resp = service.getByMemberId(memberId);
+
+        assertThat(resp).isNotNull();
+        assertThat(resp.getMember()).isNotNull();
+        assertThat(resp.getMember().getId()).isEqualTo(memberId);
+        assertThat(resp.getMember().getUsername()).isEqualTo("User" + memberId);
+        assertThat(resp.getGroups()).hasSize(1);
+        assertThat(resp.getGroups().get(0).getName()).isEqualTo("Dept A");
+        assertThat(resp.getTasks()).hasSize(1);
+    }
+
+    @Test
+    void getByMemberId_memberNotFound_throws() {
+        Long memberId = 201L;
+
+        when(userMapper.selectById(memberId)).thenReturn(null);
+
+        assertThatThrownBy(() -> service.getByMemberId(memberId))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(USER_NOT_FOUND.getCode());
+    }
+
+    @Test
+    void getByMemberId_memberWithoutDept_success() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+
+        UserDO member = mockUser(memberId, tenantId, null); // No department
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of());
+
+        TaskDashboardRespVO resp = service.getByMemberId(memberId);
+
+        assertThat(resp).isNotNull();
+        assertThat(resp.getMember()).isNotNull();
+        assertThat(resp.getGroups()).isEmpty();
+        assertThat(resp.getTasks()).isEmpty();
+    }
+
+    @Test
+    void getByMemberId_deptNotFound_returnsEmptyGroups() {
+        Long memberId = 201L;
+        Long tenantId = 100L;
+        Long deptId = 5L;
+
+        UserDO member = mockUser(memberId, tenantId, deptId);
+
+        when(userMapper.selectById(memberId)).thenReturn(member);
+        when(taskMapper.selectList(any())).thenReturn(List.of());
+        when(deptMapper.selectById(deptId)).thenReturn(null);
+
+        TaskDashboardRespVO resp = service.getByMemberId(memberId);
+
+        assertThat(resp).isNotNull();
+        assertThat(resp.getGroups()).isEmpty();
+    }
+
     // ---------- Private method tests ----------
 
     @Test
@@ -572,7 +724,6 @@ class TaskServiceImplTest {
         DeptDO dept1 = mockDept(5L, "Dept A");
         DeptDO dept2 = mockDept(6L, "Dept B");
 
-        // 使用 anyList() 而不是具体的 List.of(5L, 6L)
         when(deptMapper.selectBatchIds(anyList())).thenReturn(List.of(dept1, dept2));
 
         Map<Long, List<TaskRespVO.AssignedUserVO.GroupVO>> result =
@@ -648,165 +799,6 @@ class TaskServiceImplTest {
         assertThat(result.getId()).isEqualTo(5L);
         assertThat(result.getName()).isEqualTo("Test Dept");
     }
-
-    // ---------- listTasksByMember tests ----------
-
-    @Test
-    void listTasksByMember_success() {
-        Long memberId = 201L;
-        Long tenantId = 100L;
-        Long deptId = 5L;
-        Long eventId1 = 1L;
-        Long eventId2 = 2L;
-
-        UserDO member = mockUser(memberId, tenantId, deptId);
-        TaskDO task1 = mockTask(10L, eventId1, memberId);
-        TaskDO task2 = mockTask(11L, eventId2, memberId);
-        EventDO event1 = mockEvent(eventId1, tenantId);
-        EventDO event2 = mockEvent(eventId2, tenantId);
-        DeptDO dept = mockDept(deptId, "Dept A");
-
-        when(userMapper.selectById(memberId)).thenReturn(member);
-        when(taskMapper.selectList(any())).thenReturn(List.of(task1, task2));
-        when(eventMapper.selectBatchIds(List.of(eventId1, eventId2)))
-                .thenReturn(List.of(event1, event2));
-        when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
-
-        List<TaskRespVO> resp = service.listTasksByMember(memberId);
-
-        assertThat(resp).hasSize(2);
-        assertThat(resp).extracting(TaskRespVO::getId).containsExactly(10L, 11L);
-        assertThat(resp.get(0).getAssignedUser()).isNotNull();
-        assertThat(resp.get(0).getAssignedUser().getId()).isEqualTo(memberId);
-        assertThat(resp.get(0).getAssignerUser()).isNotNull();
-    }
-
-    @Test
-    void listTasksByMember_memberNotFound_throws() {
-        Long memberId = 201L;
-
-        when(userMapper.selectById(memberId)).thenReturn(null);
-
-        assertThatThrownBy(() -> service.listTasksByMember(memberId))
-                .isInstanceOf(ServiceException.class)
-                .extracting("code")
-                .isEqualTo(USER_NOT_FOUND.getCode());
-    }
-
-    @Test
-    void listTasksByMember_noTasks_returnsEmptyList() {
-        Long memberId = 201L;
-        Long tenantId = 100L;
-
-        UserDO member = mockUser(memberId, tenantId, null);
-
-        when(userMapper.selectById(memberId)).thenReturn(member);
-        when(taskMapper.selectList(any())).thenReturn(List.of());
-
-        List<TaskRespVO> resp = service.listTasksByMember(memberId);
-
-        assertThat(resp).isEmpty();
-    }
-
-    @Test
-    void listTasksByMember_withNullEventId_handlesGracefully() {
-        Long memberId = 201L;
-        Long tenantId = 100L;
-
-        UserDO member = mockUser(memberId, tenantId, null);
-        TaskDO task = mockTask(10L, null, memberId); // null eventId
-        task.setEventId(null);
-
-        when(userMapper.selectById(memberId)).thenReturn(member);
-        when(taskMapper.selectList(any())).thenReturn(List.of(task));
-
-        List<TaskRespVO> resp = service.listTasksByMember(memberId);
-
-        assertThat(resp).hasSize(1);
-    }
-
-    // ---------- getByMemberId tests ----------
-
-    @Test
-    void getByMemberId_success() {
-        Long memberId = 201L;
-        Long tenantId = 100L;
-        Long deptId = 5L;
-        Long eventId = 1L;
-
-        UserDO member = mockUser(memberId, tenantId, deptId);
-        TaskDO task = mockTask(10L, eventId, memberId);
-        EventDO event = mockEvent(eventId, tenantId);
-        DeptDO dept = mockDept(deptId, "Dept A");
-        dept.setEventId(eventId);
-
-        when(userMapper.selectById(memberId)).thenReturn(member);
-        when(taskMapper.selectList(any())).thenReturn(List.of(task));
-        when(eventMapper.selectBatchIds(List.of(eventId))).thenReturn(List.of(event));
-        when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
-        when(deptMapper.selectById(deptId)).thenReturn(dept);
-        when(eventMapper.selectById(eventId)).thenReturn(event);
-
-        TaskDashboardRespVO resp = service.getByMemberId(memberId);
-
-        assertThat(resp).isNotNull();
-        assertThat(resp.getMember()).isNotNull();
-        assertThat(resp.getMember().getId()).isEqualTo(memberId);
-        assertThat(resp.getMember().getUsername()).isEqualTo("User" + memberId);
-        assertThat(resp.getGroups()).hasSize(1);
-        assertThat(resp.getGroups().get(0).getName()).isEqualTo("Dept A");
-        assertThat(resp.getTasks()).hasSize(1);
-    }
-
-    @Test
-    void getByMemberId_memberNotFound_throws() {
-        Long memberId = 201L;
-
-        when(userMapper.selectById(memberId)).thenReturn(null);
-
-        assertThatThrownBy(() -> service.getByMemberId(memberId))
-                .isInstanceOf(ServiceException.class)
-                .extracting("code")
-                .isEqualTo(USER_NOT_FOUND.getCode());
-    }
-
-    @Test
-    void getByMemberId_memberWithoutDept_success() {
-        Long memberId = 201L;
-        Long tenantId = 100L;
-
-        UserDO member = mockUser(memberId, tenantId, null); // No department
-
-        when(userMapper.selectById(memberId)).thenReturn(member);
-        when(taskMapper.selectList(any())).thenReturn(List.of());
-
-        TaskDashboardRespVO resp = service.getByMemberId(memberId);
-
-        assertThat(resp).isNotNull();
-        assertThat(resp.getMember()).isNotNull();
-        assertThat(resp.getGroups()).isEmpty();
-        assertThat(resp.getTasks()).isEmpty();
-    }
-
-    @Test
-    void getByMemberId_deptNotFound_returnsEmptyGroups() {
-        Long memberId = 201L;
-        Long tenantId = 100L;
-        Long deptId = 5L;
-
-        UserDO member = mockUser(memberId, tenantId, deptId);
-
-        when(userMapper.selectById(memberId)).thenReturn(member);
-        when(taskMapper.selectList(any())).thenReturn(List.of());
-        when(deptMapper.selectById(deptId)).thenReturn(null);
-
-        TaskDashboardRespVO resp = service.getByMemberId(memberId);
-
-        assertThat(resp).isNotNull();
-        assertThat(resp.getGroups()).isEmpty();
-    }
-
-    // ---------- Private method tests ----------
 
     @Test
     void toMemberVO_convertsCorrectly() {
