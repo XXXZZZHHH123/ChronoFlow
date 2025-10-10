@@ -1,6 +1,8 @@
 package nus.edu.u.system.service.file;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -75,7 +77,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                 MultipartFile file = req.getFiles().get(i);
                 FileClient.FileUploadResult r = uploaded.get(i);
 
-                batchEntities.add(
+                FileDO fileDO =
                         FileDO.builder()
                                 .taskLogId(req.getTaskLogId())
                                 .eventId(req.getEventId())
@@ -84,7 +86,12 @@ public class FileStorageServiceImpl implements FileStorageService {
                                 .objectName(r.objectName())
                                 .type(r.contentType())
                                 .size(r.size())
-                                .build());
+                                .build();
+                fileDO.setCreator(StpUtil.getLoginId().toString());
+                fileDO.setUpdater(StpUtil.getLoginId().toString());
+                fileDO.setCreateTime(LocalDateTime.now());
+                fileDO.setUpdateTime(LocalDateTime.now());
+                batchEntities.add(fileDO);
             }
 
             if (!batchEntities.isEmpty()) {
@@ -147,8 +154,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                 fileMapper.selectList(
                         new LambdaQueryWrapper<FileDO>().eq(FileDO::getTaskLogId, taskLogId));
 
-        if (files.isEmpty())
-            throw new IllegalArgumentException("No files found for taskLogId: " + taskLogId);
+        if (files.isEmpty()) return Collections.emptyList();
 
         FileClient client = fileClientFactory.create(files.get(0).getProvider());
 

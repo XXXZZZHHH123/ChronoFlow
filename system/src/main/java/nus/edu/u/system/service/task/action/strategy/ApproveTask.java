@@ -1,7 +1,13 @@
 package nus.edu.u.system.service.task.action.strategy;
 
-import java.time.LocalDateTime;
+import static nus.edu.u.common.constant.PermissionConstants.UPDATE_TASK;
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.*;
+
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.util.ObjectUtil;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
+import nus.edu.u.system.domain.dto.TaskActionDTO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.service.task.action.AbstractTaskStrategy;
@@ -20,15 +26,28 @@ public class ApproveTask extends AbstractTaskStrategy {
     }
 
     @Override
-    public boolean execute(TaskDO task, Long targetUserId, Object... params) {
+    public void execute(TaskDO task, TaskActionDTO actionDTO, Object... params) {
+        StpUtil.checkPermission(UPDATE_TASK);
         validateTimeRange(
+                task,
                 task.getStartTime(),
                 task.getEndTime(),
-                (LocalDateTime) params[0],
-                (LocalDateTime) params[1]);
+                actionDTO.getEventStartTime(),
+                actionDTO.getEventEndTime());
+        if (!ObjectUtil.equals(task.getCreator(), StpUtil.getLoginId().toString())) {
+            throw exception(MODIFY_OTHER_TASK_ERROR);
+        }
+        if (!ObjectUtil.equals(task.getStatus(), TaskStatusEnum.PENDING_APPROVAL.getStatus())) {
+            throw exception(
+                    MODIFY_WRONG_TASK_STATUS,
+                    getType().getAction(),
+                    TaskStatusEnum.getEnum(task.getStatus()));
+        }
         task.setStatus(TaskStatusEnum.COMPLETED.getStatus());
         boolean isSuccess = taskMapper.updateById(task) > 0;
-        return isSuccess
-                && taskLogService.insertTaskLog(task.getId(), targetUserId, getType().getCode());
+        if (!isSuccess) {
+            throw exception(APPROVE_TASK_FAILED);
+        }
+        taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
     }
 }

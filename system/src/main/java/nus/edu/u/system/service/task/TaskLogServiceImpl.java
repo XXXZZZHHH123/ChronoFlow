@@ -1,5 +1,8 @@
 package nus.edu.u.system.service.task;
 
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.TASK_LOG_ERROR;
+
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -11,10 +14,13 @@ import java.util.stream.Collectors;
 import nus.edu.u.system.domain.dataobject.task.TaskLogDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.vo.auth.UserVO;
+import nus.edu.u.system.domain.vo.file.FileResultVO;
 import nus.edu.u.system.domain.vo.task.TaskLogRespVO;
 import nus.edu.u.system.mapper.task.TaskLogMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
+import nus.edu.u.system.service.file.FileStorageService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Lu Shuwen
@@ -27,15 +33,22 @@ public class TaskLogServiceImpl implements TaskLogService {
 
     @Resource private UserMapper userMapper;
 
+    @Resource private FileStorageService fileStorageService;
+
     @Override
-    public boolean insertTaskLog(Long taskId, Long targetUserId, Integer action) {
+    @Transactional
+    public Long insertTaskLog(Long taskId, Long targetUserId, Integer action) {
         TaskLogDO taskLogDO =
                 TaskLogDO.builder()
                         .taskId(taskId)
                         .targetUserId(targetUserId)
                         .action(action)
                         .build();
-        return taskLogMapper.insert(taskLogDO) > 0;
+        boolean isSuccess = taskLogMapper.insert(taskLogDO) > 0;
+        if (!isSuccess) {
+            throw exception(TASK_LOG_ERROR);
+        }
+        return taskLogDO.getId();
     }
 
     @Override
@@ -74,12 +87,15 @@ public class TaskLogServiceImpl implements TaskLogService {
                                 sourceUserVO.setName(sourceUser.getUsername());
                                 sourceUserVO.setEmail(sourceUser.getEmail());
                             }
+                            List<FileResultVO> fileResults =
+                                    fileStorageService.downloadFilesByTaskLogId(taskLog.getId());
                             return TaskLogRespVO.builder()
                                     .id(taskLog.getId())
                                     .action(taskLog.getAction())
                                     .createTime(taskLog.getCreateTime())
                                     .targetUser(targetUserVO)
                                     .sourceUser(sourceUserVO)
+                                    .fileResults(fileResults)
                                     .build();
                         })
                 .toList();
