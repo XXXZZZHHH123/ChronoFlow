@@ -15,9 +15,7 @@ import org.apache.ibatis.annotations.Update;
 @Mapper
 public interface UserGroupMapper extends BaseMapper<UserGroupDO> {
 
-    /**
-     * Restore logically deleted user-group relations for a given event.
-     */
+    /** Restore logically deleted user-group relations for a given event. */
     @Update(
             "UPDATE sys_user_group "
                     + "SET deleted = 0, update_time = NOW() "
