@@ -18,7 +18,6 @@ import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dataobject.user.UserGroupDO;
 import nus.edu.u.system.domain.vo.event.*;
-import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.enums.ErrorCodeConstants;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.mapper.dept.DeptMapper;
@@ -63,15 +62,15 @@ class EventServiceImplTest {
     private EventDO persistedEvent(Long id) {
         EventDO event =
                 EventDO.builder()
-                .id(id)
-                .userId(111L)
-                .name("NUS Hackathon")
-                .description("Annual hackathon for students")
-                .location("UTown Hall")
-                .startTime(LocalDateTime.of(2025, 11, 15, 9, 0))
-                .endTime(LocalDateTime.of(2025, 11, 15, 17, 0))
-                .status(EventStatusEnum.ACTIVE.getCode())
-                .build();
+                        .id(id)
+                        .userId(111L)
+                        .name("NUS Hackathon")
+                        .description("Annual hackathon for students")
+                        .location("UTown Hall")
+                        .startTime(LocalDateTime.of(2025, 11, 15, 9, 0))
+                        .endTime(LocalDateTime.of(2025, 11, 15, 17, 0))
+                        .status(EventStatusEnum.ACTIVE.getCode())
+                        .build();
         event.setCreateTime(LocalDateTime.of(2025, 1, 1, 0, 0).plusMinutes(id));
         return event;
     }
@@ -437,16 +436,14 @@ class EventServiceImplTest {
         long userId = 321L;
         when(userMapper.selectById(userId)).thenReturn(UserDO.builder().id(userId).build());
 
-        EventDO ownedLater =
-                persistedEvent(400L).toBuilder().userId(userId).build();
+        EventDO ownedLater = persistedEvent(400L).toBuilder().userId(userId).build();
         ownedLater.setCreateTime(LocalDateTime.of(2025, 2, 1, 0, 0));
         when(eventMapper.selectList(any())).thenReturn(List.of(ownedLater));
 
         when(userGroupMapper.selectList(any()))
                 .thenReturn(List.of(UserGroupDO.builder().userId(userId).eventId(50L).build()));
 
-        EventDO joinedEarlier =
-                persistedEvent(50L).toBuilder().userId(999L).build();
+        EventDO joinedEarlier = persistedEvent(50L).toBuilder().userId(999L).build();
         joinedEarlier.setCreateTime(LocalDateTime.of(2024, 12, 31, 0, 0));
         when(eventMapper.selectBatchIds(anyCollection())).thenReturn(List.of(joinedEarlier));
 

@@ -25,8 +25,8 @@ import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.TaskMapper;
-import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.mapper.user.UserGroupMapper;
+import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.event.validation.EventValidationContext;
 import nus.edu.u.system.service.event.validation.EventValidationHandler;
 import nus.edu.u.system.service.group.GroupService;
@@ -111,7 +111,8 @@ public class EventServiceImpl implements EventService {
 
         List<UserGroupDO> memberships =
                 userGroupMapper.selectList(
-                        Wrappers.<UserGroupDO>lambdaQuery().eq(UserGroupDO::getUserId, organizerId));
+                        Wrappers.<UserGroupDO>lambdaQuery()
+                                .eq(UserGroupDO::getUserId, organizerId));
 
         if ((organizerEvents == null || organizerEvents.isEmpty())
                 && (memberships == null || memberships.isEmpty())) {
@@ -223,8 +224,7 @@ public class EventServiceImpl implements EventService {
             throw exception(EVENT_DELETE_FAILED);
         }
 
-        userGroupMapper.delete(
-                Wrappers.<UserGroupDO>lambdaQuery().eq(UserGroupDO::getEventId, id));
+        userGroupMapper.delete(Wrappers.<UserGroupDO>lambdaQuery().eq(UserGroupDO::getEventId, id));
 
         return true;
     }
@@ -424,7 +424,8 @@ public class EventServiceImpl implements EventService {
             return List.of();
         }
 
-        return userGroupMapper.selectList(
+        return userGroupMapper
+                .selectList(
                         Wrappers.<UserGroupDO>lambdaQuery().eq(UserGroupDO::getEventId, eventId))
                 .stream()
                 .map(UserGroupDO::getUserId)
