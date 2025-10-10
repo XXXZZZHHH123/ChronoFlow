@@ -61,6 +61,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                                         .attendeeMobile(attendee.getAttendeeMobile())
                                         .attendeeName(attendee.getAttendeeName())
                                         .checkInToken(attendee.getCheckInToken())
+                                        .checkInStatus(attendee.getCheckInStatus())
                                         .build())
                 .toList();
     }
@@ -77,6 +78,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                 .attendeeMobile(attendee.getAttendeeMobile())
                 .attendeeName(attendee.getAttendeeName())
                 .checkInToken(attendee.getCheckInToken())
+                .checkInStatus(attendee.getCheckInStatus())
                 .build();
     }
 
@@ -94,6 +96,9 @@ public class AttendeeServiceImpl implements AttendeeService {
         EventAttendeeDO attendee = attendeeMapper.selectById(attendeeId);
         if (ObjectUtil.isEmpty(attendee)) {
             throw exception(ATTENDEE_NOT_EXIST);
+        }
+        if (ObjectUtil.equals(attendee.getCheckInStatus(), 1)) {
+            throw exception(UPDATE_ATTENDEE_FAILED);
         }
         EventDO event = eventMapper.selectById(attendee.getEventId());
         if (ObjectUtil.isEmpty(event)) {
@@ -132,6 +137,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                 .checkInToken(token)
                 .qrCodeBase64(qrCode.getBase64Image())
                 .qrCodeUrl(qrCodeUrl)
+                .checkInStatus(attendee.getCheckInStatus())
                 .build();
     }
 
@@ -267,6 +273,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                             .checkInToken(token)
                             .qrCodeBase64(qrCode.getBase64Image())
                             .qrCodeUrl(qrCodeUrl)
+                            .checkInStatus(attendee.getCheckInStatus())
                             .build();
 
             attendeeQrCodes.add(attendeeQr);
