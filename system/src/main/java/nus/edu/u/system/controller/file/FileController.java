@@ -1,4 +1,4 @@
-package nus.edu.u.system.controller.FileTest;
+package nus.edu.u.system.controller.file;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
 @Validated
-public class FileTestController {
+public class FileController {
 
     private final FileStorageService fileStorageService;
 

@@ -6,7 +6,6 @@ import static nus.edu.u.system.enums.task.TaskActionEnum.getUpdateTaskAction;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,6 +19,7 @@ import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dto.TaskActionDTO;
 import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
 import nus.edu.u.system.domain.vo.task.TaskDashboardRespVO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
@@ -72,18 +72,16 @@ public class TaskServiceImpl implements TaskService {
         task.setStartTime(reqVO.getStartTime());
         task.setEndTime(reqVO.getEndTime());
 
-        boolean isSuccess =
-                taskActionFactory
-                        .getStrategy(TaskActionEnum.CREATE)
-                        .execute(
-                                task,
-                                reqVO.getTargetUserId(),
-                                event.getStartTime(),
-                                event.getEndTime());
-
-        if (!isSuccess) {
-            throw exception(TASK_CREATE_FAILED);
-        }
+        TaskActionDTO actionDTO =
+                TaskActionDTO.builder()
+                        .startTime(reqVO.getStartTime())
+                        .endTime(reqVO.getEndTime())
+                        .files(reqVO.getFiles())
+                        .targetUserId(reqVO.getTargetUserId())
+                        .eventStartTime(event.getStartTime())
+                        .eventEndTime(event.getEndTime())
+                        .build();
+        taskActionFactory.getStrategy(TaskActionEnum.CREATE).execute(task, actionDTO);
 
         UserDO assigner = fetchUser(event.getUserId());
 
@@ -117,12 +115,9 @@ public class TaskServiceImpl implements TaskService {
             throw exception(TASK_NOT_FOUND);
         }
 
-        Long targetUserId =
-                reqVO.getTargetUserId() != null ? reqVO.getTargetUserId() : task.getUserId();
-
         UserDO assignee = null;
-        if (targetUserId != null) {
-            assignee = userMapper.selectById(targetUserId);
+        if (reqVO.getTargetUserId() != null) {
+            assignee = userMapper.selectById(reqVO.getTargetUserId());
             if (assignee == null) {
                 throw exception(TASK_ASSIGNEE_NOT_FOUND);
             }
@@ -132,31 +127,22 @@ public class TaskServiceImpl implements TaskService {
             }
         }
 
-        LocalDateTime start =
-                reqVO.getStartTime() != null ? reqVO.getStartTime() : task.getStartTime();
-        LocalDateTime end = reqVO.getEndTime() != null ? reqVO.getEndTime() : task.getEndTime();
-
-        if (reqVO.getName() != null) {
-            task.setName(reqVO.getName());
-        }
-        if (reqVO.getDescription() != null) {
-            task.setDescription(reqVO.getDescription());
-        }
-        task.setStartTime(start);
-        task.setEndTime(end);
-        task.setUserId(targetUserId);
-        task.setTenantId(event.getTenantId());
-
         if (!Arrays.asList(getUpdateTaskAction()).contains(type)) {
             throw exception(WRONG_TASK_ACTION_TYPE);
         }
-        boolean isSuccess =
-                taskActionFactory
-                        .getStrategy(TaskActionEnum.getEnum(type))
-                        .execute(task, targetUserId, event.getStartTime(), event.getEndTime());
-        if (!isSuccess) {
-            throw exception(UPDATE_FAILURE);
-        }
+        TaskActionDTO actionDTO =
+                TaskActionDTO.builder()
+                        .name(reqVO.getName())
+                        .description(reqVO.getDescription())
+                        .startTime(reqVO.getStartTime())
+                        .endTime(reqVO.getEndTime())
+                        .eventStartTime(event.getStartTime())
+                        .eventEndTime(event.getEndTime())
+                        .targetUserId(reqVO.getTargetUserId())
+                        .files(reqVO.getFiles())
+                        .build();
+
+        taskActionFactory.getStrategy(TaskActionEnum.getEnum(type)).execute(task, actionDTO);
 
         UserDO assigner = fetchUser(event.getUserId());
 
@@ -189,11 +175,7 @@ public class TaskServiceImpl implements TaskService {
         if (task == null || !Objects.equals(task.getEventId(), eventId)) {
             throw exception(TASK_NOT_FOUND);
         }
-        boolean isSuccess =
-                taskActionFactory.getStrategy(TaskActionEnum.DELETE).execute(task, null);
-        if (!isSuccess) {
-            throw exception(TASK_DELETE_FAILED);
-        }
+        taskActionFactory.getStrategy(TaskActionEnum.DELETE).execute(task, null, null);
     }
 
     @Override

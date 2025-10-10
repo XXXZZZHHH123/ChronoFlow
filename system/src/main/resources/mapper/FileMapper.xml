@@ -7,12 +7,13 @@
 
     <insert id="insertBatch">
         INSERT INTO file (
-        id, task_log_id, event_id, name, object_name, provider, type, size
+        id, task_log_id, event_id, name, object_name, provider, type, size, creator, create_time, updater, update_time
         )
         VALUES
         <foreach collection="list" item="f" separator=",">
             (#{f.id}, #{f.taskLogId}, #{f.eventId}, #{f.name},
-            #{f.objectName}, #{f.provider}, #{f.type}, #{f.size})
+            #{f.objectName}, #{f.provider}, #{f.type}, #{f.size},
+            #{f.creator}, #{f.createTime}, #{f.updater}, #{f.updateTime})
         </foreach>
     </insert>
 

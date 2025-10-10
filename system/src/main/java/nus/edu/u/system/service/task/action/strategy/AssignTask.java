@@ -1,7 +1,12 @@
 package nus.edu.u.system.service.task.action.strategy;
 
-import java.time.LocalDateTime;
+import static nus.edu.u.common.constant.PermissionConstants.ASSIGN_TASK;
+import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
+import static nus.edu.u.system.enums.ErrorCodeConstants.ASSIGN_TASK_FAILED;
+
+import cn.dev33.satoken.stp.StpUtil;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
+import nus.edu.u.system.domain.dto.TaskActionDTO;
 import nus.edu.u.system.enums.task.TaskActionEnum;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.service.task.action.AbstractTaskStrategy;
@@ -20,16 +25,23 @@ public class AssignTask extends AbstractTaskStrategy {
     }
 
     @Override
-    public boolean execute(TaskDO task, Long targetUserId, Object... params) {
+    public void execute(TaskDO task, TaskActionDTO actionDTO, Object... params) {
+        StpUtil.checkPermission(ASSIGN_TASK);
         validateTimeRange(
+                task,
                 task.getStartTime(),
                 task.getEndTime(),
-                (LocalDateTime) params[0],
-                (LocalDateTime) params[1]);
+                actionDTO.getEventStartTime(),
+                actionDTO.getEventEndTime());
         task.setStatus(TaskStatusEnum.PENDING.getStatus());
-        task.setUserId(targetUserId);
+        task.setUserId(actionDTO.getTargetUserId());
         boolean isSuccess = taskMapper.updateById(task) > 0;
-        return isSuccess
-                && taskLogService.insertTaskLog(task.getId(), targetUserId, getType().getCode());
+        if (!isSuccess) {
+            throw exception(ASSIGN_TASK_FAILED);
+        }
+        Long taskLogId =
+                taskLogService.insertTaskLog(
+                        task.getId(), actionDTO.getTargetUserId(), getType().getCode());
+        uploadFiles(taskLogId, task.getEventId(), actionDTO.getFiles());
     }
 }
