@@ -672,7 +672,6 @@ class TaskServiceImplTest {
         when(taskMapper.selectList(any())).thenReturn(List.of(task));
         when(eventMapper.selectBatchIds(anyList())).thenReturn(List.of(event));
         when(deptMapper.selectBatchIds(anyList())).thenReturn(List.of(dept));
-        when(deptMapper.selectById(deptId)).thenReturn(dept);
         when(eventMapper.selectBatchIds(List.of(eventId))).thenReturn(List.of(event));
         when(userGroupMapper.selectList(any())).thenReturn(List.of(userGroup));
         when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
@@ -906,7 +905,7 @@ class TaskServiceImplTest {
         UserGroupDO userGroup =
                 mockUserGroup(memberId, deptId, eventId, LocalDateTime.of(2025, 1, 1, 8, 0));
 
-        EventDO event = mockEvent(eventId, tenantId);
+        EventDO event = mockEvent(eventId, tenantId, memberId);
 
         when(userGroupMapper.selectList(any())).thenReturn(List.of(userGroup));
         when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
@@ -957,10 +956,11 @@ class TaskServiceImplTest {
 
     @Test
     void toGroupEvent_validEventId_convertsCorrectly() {
+        Long memberId = 201L;
         Long eventId = 1L;
         Long tenantId = 100L;
 
-        EventDO event = mockEvent(eventId, tenantId);
+        EventDO event = mockEvent(eventId, tenantId, memberId);
         event.setName("Test Event");
         event.setDescription("Test Description");
         event.setLocation("Test Location");
