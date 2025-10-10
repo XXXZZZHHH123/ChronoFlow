@@ -7,9 +7,12 @@ import static nus.edu.u.system.enums.task.TaskActionEnum.getUpdateTaskAction;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,6 +23,7 @@ import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dataobject.user.UserGroupDO;
 import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
 import nus.edu.u.system.domain.vo.task.TaskDashboardRespVO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
@@ -29,6 +33,7 @@ import nus.edu.u.system.enums.task.TaskActionEnum;
 import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.TaskMapper;
+import nus.edu.u.system.mapper.user.UserGroupMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.task.action.TaskActionFactory;
 import nus.edu.u.system.service.task.builder.TaskRespVOBuilder;
@@ -44,6 +49,8 @@ public class TaskServiceImpl implements TaskService {
     @Resource private EventMapper eventMapper;
 
     @Resource private UserMapper userMapper;
+
+    @Resource private UserGroupMapper userGroupMapper;
 
     @Resource private DeptMapper deptMapper;
 
@@ -585,25 +592,66 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private List<TaskDashboardRespVO.GroupVO> resolveMemberGroups(UserDO member) {
-        Long deptId = member.getDeptId();
-        if (deptId == null) {
+        if (member == null || member.getId() == null) {
             return List.of();
         }
 
-        DeptDO dept = deptMapper.selectById(deptId);
-        if (dept == null) {
+        List<UserGroupDO> userGroups =
+                userGroupMapper.selectList(
+                        Wrappers.<UserGroupDO>lambdaQuery()
+                                .eq(UserGroupDO::getUserId, member.getId()));
+
+        if (userGroups == null || userGroups.isEmpty()) {
             return List.of();
         }
 
-        TaskDashboardRespVO.GroupVO groupVO = new TaskDashboardRespVO.GroupVO();
-        groupVO.setId(dept.getId());
-        groupVO.setName(dept.getName());
-        groupVO.setSort(dept.getSort());
-        groupVO.setLeadUserId(dept.getLeadUserId());
-        groupVO.setRemark(dept.getRemark());
-        groupVO.setStatus(dept.getStatus());
-        groupVO.setEvent(toGroupEvent(dept.getEventId()));
-        return List.of(groupVO);
+        List<UserGroupDO> orderedGroups =
+                userGroups.stream()
+                        .filter(group -> group.getDeptId() != null)
+                        .sorted(
+                                Comparator.comparing(
+                                        UserGroupDO::getJoinTime,
+                                        Comparator.nullsLast(Comparator.naturalOrder())))
+                        .toList();
+
+        if (orderedGroups.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, UserGroupDO> groupByDept = new LinkedHashMap<>();
+        for (UserGroupDO userGroup : orderedGroups) {
+            groupByDept.putIfAbsent(userGroup.getDeptId(), userGroup);
+        }
+
+        if (groupByDept.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> deptIds = new ArrayList<>(groupByDept.keySet());
+        Map<Long, DeptDO> deptById =
+                deptMapper.selectBatchIds(deptIds).stream()
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toMap(DeptDO::getId, Function.identity()));
+
+        return groupByDept.keySet().stream()
+                .map(
+                        deptId -> {
+                            DeptDO dept = deptById.get(deptId);
+                            if (dept == null) {
+                                return null;
+                            }
+                            TaskDashboardRespVO.GroupVO groupVO = new TaskDashboardRespVO.GroupVO();
+                            groupVO.setId(dept.getId());
+                            groupVO.setName(dept.getName());
+                            groupVO.setSort(dept.getSort());
+                            groupVO.setLeadUserId(dept.getLeadUserId());
+                            groupVO.setRemark(dept.getRemark());
+                            groupVO.setStatus(dept.getStatus());
+                            groupVO.setEvent(toGroupEvent(dept.getEventId()));
+                            return groupVO;
+                        })
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     private TaskDashboardRespVO.GroupVO.EventVO toGroupEvent(Long eventId) {

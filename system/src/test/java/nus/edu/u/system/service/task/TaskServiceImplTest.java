@@ -13,6 +13,7 @@ import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dataobject.user.UserGroupDO;
 import nus.edu.u.system.domain.vo.task.TaskCreateReqVO;
 import nus.edu.u.system.domain.vo.task.TaskDashboardRespVO;
 import nus.edu.u.system.domain.vo.task.TaskRespVO;
@@ -23,6 +24,7 @@ import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.TaskMapper;
+import nus.edu.u.system.mapper.user.UserGroupMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.task.action.TaskActionFactory;
 import nus.edu.u.system.service.task.action.TaskStrategy;
@@ -39,6 +41,7 @@ class TaskServiceImplTest {
     @Mock private TaskMapper taskMapper;
     @Mock private EventMapper eventMapper;
     @Mock private UserMapper userMapper;
+    @Mock private UserGroupMapper userGroupMapper;
     @Mock private DeptMapper deptMapper;
     @Mock private TaskActionFactory taskActionFactory;
     @Mock private TaskStrategy taskStrategy;
@@ -90,6 +93,16 @@ class TaskServiceImplTest {
 
     private DeptDO mockDept(Long deptId, String name) {
         return DeptDO.builder().id(deptId).name(name).build();
+    }
+
+    private UserGroupDO mockUserGroup(
+            Long userId, Long deptId, Long eventId, LocalDateTime joinTime) {
+        return UserGroupDO.builder()
+                .userId(userId)
+                .deptId(deptId)
+                .eventId(eventId)
+                .joinTime(joinTime)
+                .build();
     }
 
     // ---------- createTask tests ----------
@@ -882,12 +895,14 @@ class TaskServiceImplTest {
         event.setUserId(organizerId);
         DeptDO dept = mockDept(deptId, "Dept A");
         dept.setEventId(eventId);
+        UserGroupDO userGroup =
+                mockUserGroup(memberId, deptId, eventId, LocalDateTime.of(2025, 1, 1, 8, 0));
 
         when(userMapper.selectById(memberId)).thenReturn(member);
         when(taskMapper.selectList(any())).thenReturn(List.of(task));
         when(eventMapper.selectBatchIds(List.of(eventId))).thenReturn(List.of(event));
+        when(userGroupMapper.selectList(any())).thenReturn(List.of(userGroup));
         when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
-        when(deptMapper.selectById(deptId)).thenReturn(dept);
         when(eventMapper.selectById(eventId)).thenReturn(event);
         when(userMapper.selectById(memberId)).thenReturn(member);
 
@@ -926,6 +941,7 @@ class TaskServiceImplTest {
 
         when(userMapper.selectById(memberId)).thenReturn(member);
         when(taskMapper.selectList(any())).thenReturn(List.of());
+        when(userGroupMapper.selectList(any())).thenReturn(List.of());
 
         TaskDashboardRespVO resp = service.getByMemberId(memberId);
 
@@ -942,10 +958,13 @@ class TaskServiceImplTest {
         Long deptId = 5L;
 
         UserDO member = mockUser(memberId, tenantId, deptId);
+        UserGroupDO userGroup =
+                mockUserGroup(memberId, deptId, null, LocalDateTime.of(2025, 1, 1, 8, 0));
 
         when(userMapper.selectById(memberId)).thenReturn(member);
         when(taskMapper.selectList(any())).thenReturn(List.of());
-        when(deptMapper.selectById(deptId)).thenReturn(null);
+        when(userGroupMapper.selectList(any())).thenReturn(List.of(userGroup));
+        when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of());
 
         TaskDashboardRespVO resp = service.getByMemberId(memberId);
 
@@ -993,10 +1012,13 @@ class TaskServiceImplTest {
         dept.setRemark("Test Remark");
         dept.setStatus(1);
         dept.setSort(1);
+        UserGroupDO userGroup =
+                mockUserGroup(memberId, deptId, eventId, LocalDateTime.of(2025, 1, 1, 8, 0));
 
         EventDO event = mockEvent(eventId, tenantId);
 
-        when(deptMapper.selectById(deptId)).thenReturn(dept);
+        when(userGroupMapper.selectList(any())).thenReturn(List.of(userGroup));
+        when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of(dept));
         when(eventMapper.selectById(eventId)).thenReturn(event);
 
         List<TaskDashboardRespVO.GroupVO> result =
@@ -1016,6 +1038,8 @@ class TaskServiceImplTest {
 
         UserDO member = mockUser(memberId, tenantId, null); // No department
 
+        when(userGroupMapper.selectList(any())).thenReturn(List.of());
+
         List<TaskDashboardRespVO.GroupVO> result =
                 ReflectionTestUtils.invokeMethod(service, "resolveMemberGroups", member);
 
@@ -1031,7 +1055,11 @@ class TaskServiceImplTest {
 
         UserDO member = mockUser(memberId, tenantId, deptId);
 
-        when(deptMapper.selectById(deptId)).thenReturn(null);
+        UserGroupDO userGroup =
+                mockUserGroup(memberId, deptId, null, LocalDateTime.of(2025, 1, 1, 8, 0));
+
+        when(userGroupMapper.selectList(any())).thenReturn(List.of(userGroup));
+        when(deptMapper.selectBatchIds(List.of(deptId))).thenReturn(List.of());
 
         List<TaskDashboardRespVO.GroupVO> result =
                 ReflectionTestUtils.invokeMethod(service, "resolveMemberGroups", member);
