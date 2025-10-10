@@ -61,6 +61,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                                         .attendeeMobile(attendee.getAttendeeMobile())
                                         .attendeeName(attendee.getAttendeeName())
                                         .checkInToken(attendee.getCheckInToken())
+                                        .checkInStatus(attendee.getCheckInStatus())
                                         .build())
                 .toList();
     }
@@ -77,6 +78,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                 .attendeeMobile(attendee.getAttendeeMobile())
                 .attendeeName(attendee.getAttendeeName())
                 .checkInToken(attendee.getCheckInToken())
+                .checkInStatus(attendee.getCheckInStatus())
                 .build();
     }
 
@@ -132,6 +134,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                 .checkInToken(token)
                 .qrCodeBase64(qrCode.getBase64Image())
                 .qrCodeUrl(qrCodeUrl)
+                .checkInStatus(attendee.getCheckInStatus())
                 .build();
     }
 

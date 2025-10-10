@@ -25,4 +25,6 @@ public class AttendeeQrCodeRespVO {
     private String qrCodeBase64;
 
     private String qrCodeUrl;
+
+    private Integer checkInStatus;
 }
