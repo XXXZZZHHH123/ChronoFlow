@@ -97,6 +97,9 @@ public class AttendeeServiceImpl implements AttendeeService {
         if (ObjectUtil.isEmpty(attendee)) {
             throw exception(ATTENDEE_NOT_EXIST);
         }
+        if (ObjectUtil.equals(attendee.getCheckInStatus(), 1)) {
+            throw exception(UPDATE_ATTENDEE_FAILED);
+        }
         EventDO event = eventMapper.selectById(attendee.getEventId());
         if (ObjectUtil.isEmpty(event)) {
             throw exception(EVENT_NOT_FOUND);
@@ -270,6 +273,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                             .checkInToken(token)
                             .qrCodeBase64(qrCode.getBase64Image())
                             .qrCodeUrl(qrCodeUrl)
+                            .checkInStatus(attendee.getCheckInStatus())
                             .build();
 
             attendeeQrCodes.add(attendeeQr);
