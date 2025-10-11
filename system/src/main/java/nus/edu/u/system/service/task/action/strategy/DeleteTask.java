@@ -27,6 +27,7 @@ public class DeleteTask extends AbstractTaskStrategy {
         if (!isSuccess) {
             throw exception(TASK_DELETE_FAILED);
         }
-        taskLogService.insertTaskLog(task.getId(), null, getType().getCode(), actionDTO.getRemark());
+        taskLogService.insertTaskLog(
+                task.getId(), null, getType().getCode(), actionDTO.getRemark());
     }
 }
