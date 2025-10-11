@@ -186,6 +186,7 @@ public class EventServiceImpl implements EventService {
             } else {
                 event.setStatus(EventStatusEnum.ACTIVE.getCode());
             }
+            eventMapper.updateById(event);
         }
 
         return orderedEvents.stream()
