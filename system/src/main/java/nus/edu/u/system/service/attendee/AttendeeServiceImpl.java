@@ -162,7 +162,7 @@ public class AttendeeServiceImpl implements AttendeeService {
             throw exception(EVENT_NOT_FOUND);
         }
 
-        if (!ObjectUtil.equal(event.getStatus(), EventStatusEnum.DOING.getStatus())) {
+        if (!ObjectUtil.equal(event.getStatus(), EventStatusEnum.ACTIVE.getCode())) {
             throw exception(EVENT_NOT_ACTIVE);
         }
 

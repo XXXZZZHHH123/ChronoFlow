@@ -25,13 +25,13 @@ public class AcceptTask extends AbstractTaskStrategy {
     }
 
     @Override
-    public void execute(TaskDO task, TaskActionDTO taskActionDTO, Object... params) {
+    public void execute(TaskDO task, TaskActionDTO actionDTO, Object... params) {
         validateTimeRange(
                 task,
-                taskActionDTO.getStartTime(),
-                taskActionDTO.getEndTime(),
-                taskActionDTO.getEventStartTime(),
-                taskActionDTO.getEventEndTime());
+                actionDTO.getStartTime(),
+                actionDTO.getEndTime(),
+                actionDTO.getEventStartTime(),
+                actionDTO.getEventEndTime());
         Long currentUserId = Long.parseLong(StpUtil.getLoginId().toString());
         if (!ObjectUtil.equals(currentUserId, task.getUserId())) {
             throw exception(MODIFY_OTHER_TASK_ERROR);
@@ -47,6 +47,7 @@ public class AcceptTask extends AbstractTaskStrategy {
         if (!isSuccess) {
             throw exception(ACCEPT_TASK_FAILED);
         }
-        taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
+        taskLogService.insertTaskLog(
+                task.getId(), null, getType().getCode(), actionDTO.getRemark());
     }
 }

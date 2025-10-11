@@ -37,12 +37,13 @@ public class TaskLogServiceImpl implements TaskLogService {
 
     @Override
     @Transactional
-    public Long insertTaskLog(Long taskId, Long targetUserId, Integer action) {
+    public Long insertTaskLog(Long taskId, Long targetUserId, Integer action, String remark) {
         TaskLogDO taskLogDO =
                 TaskLogDO.builder()
                         .taskId(taskId)
                         .targetUserId(targetUserId)
                         .action(action)
+                        .remark(remark)
                         .build();
         boolean isSuccess = taskLogMapper.insert(taskLogDO) > 0;
         if (!isSuccess) {
@@ -96,6 +97,7 @@ public class TaskLogServiceImpl implements TaskLogService {
                                     .targetUser(targetUserVO)
                                     .sourceUser(sourceUserVO)
                                     .fileResults(fileResults)
+                                    .remark(taskLog.getRemark())
                                     .build();
                         })
                 .toList();

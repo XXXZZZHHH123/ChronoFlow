@@ -32,5 +32,6 @@ public class EventCreateReqVO {
 
     private Integer status;
 
+    @JsonProperty("remark")
     private String remarks;
 }

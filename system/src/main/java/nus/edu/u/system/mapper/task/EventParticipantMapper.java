@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
 @Mapper
+@Deprecated
 public interface EventParticipantMapper extends BaseMapper<EventParticipantDO> {
 
     /**

@@ -428,12 +428,12 @@ class TaskServiceImplTest {
         when(eventMapper.selectById(eventId)).thenReturn(event);
         when(taskMapper.selectById(taskId)).thenReturn(task);
         when(taskActionFactory.getStrategy(TaskActionEnum.DELETE)).thenReturn(taskStrategy);
-        doNothing().when(taskStrategy).execute(eq(task), isNull(), isNull());
+        doNothing().when(taskStrategy).execute(eq(task), isNull());
 
         assertThatCode(() -> service.deleteTask(eventId, taskId)).doesNotThrowAnyException();
 
         verify(taskActionFactory).getStrategy(TaskActionEnum.DELETE);
-        verify(taskStrategy).execute(eq(task), isNull(), isNull());
+        verify(taskStrategy).execute(eq(task), isNull());
     }
 
     @Test

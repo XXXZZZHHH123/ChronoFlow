@@ -42,7 +42,9 @@ public class BlockTask extends AbstractTaskStrategy {
         if (!isSuccess) {
             throw exception(BLOCK_TASK_FAILED);
         }
-        Long taskLogId = taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
+        Long taskLogId =
+                taskLogService.insertTaskLog(
+                        task.getId(), null, getType().getCode(), actionDTO.getRemark());
         uploadFiles(taskLogId, task.getEventId(), actionDTO.getFiles());
     }
 }
