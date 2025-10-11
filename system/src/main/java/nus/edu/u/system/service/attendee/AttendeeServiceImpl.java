@@ -210,26 +210,35 @@ public class AttendeeServiceImpl implements AttendeeService {
             throw exception(EVENT_NOT_FOUND);
         }
 
-        // 2. Generate tokens and QR codes for each attendee
-        List<AttendeeQrCodeRespVO> attendeeQrCodes = new ArrayList<>();
+        // 2. Process each attendee
+        List<AttendeeQrCodeRespVO> successList = new ArrayList<>();
+        List<String> failedList = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
 
         for (AttendeeReqVO info : attendeeInfos) {
-            if (info.getEmail() == null || info.getEmail().isBlank()) {
-                log.warn("Skipping attendee with empty email");
-                continue;
-            }
+            try {
+                // 验证邮箱
+                if (info.getEmail() == null || info.getEmail().isBlank()) {
+                    failedList.add("email can't be empty");
+                    continue;
+                }
 
-            // Check if attendee already exists
-            EventAttendeeDO attendee =
-                    attendeeMapper.selectByEventAndEmail(eventId, info.getEmail());
+                // 检查是否已存在
+                EventAttendeeDO existing =
+                        attendeeMapper.selectByEventAndEmail(eventId, info.getEmail());
 
-            String token;
-            if (ObjectUtil.isNull(attendee)) {
-                // Create new attendee with unique token
-                token = UUID.randomUUID().toString();
+                if (ObjectUtil.isNotNull(existing)) {
+                    failedList.add(info.getEmail() + " - already exist in this event");
+                    log.warn(
+                            "Attendee already exists: email={}, eventId={}",
+                            info.getEmail(),
+                            eventId);
+                    continue;
+                }
 
-                attendee =
+                // 创建新参与者
+                String token = UUID.randomUUID().toString();
+                EventAttendeeDO attendee =
                         EventAttendeeDO.builder()
                                 .eventId(eventId)
                                 .attendeeEmail(info.getEmail())
@@ -241,51 +250,59 @@ public class AttendeeServiceImpl implements AttendeeService {
                                 .build();
 
                 attendeeMapper.insert(attendee);
-                log.info("Created attendee record: email={}, eventId={}", info.getEmail(), eventId);
-            } else {
-                // Use existing token or generate new one if null
-                if (ObjectUtil.isNull(attendee.getCheckInToken())) {
-                    token = UUID.randomUUID().toString();
-                    attendee.setCheckInToken(token);
-                    attendee.setQrCodeGeneratedTime(now);
-                    attendeeMapper.updateById(attendee);
-                    log.info(
-                            "Generated new token for existing attendee: email={}", info.getEmail());
-                } else {
-                    token = attendee.getCheckInToken();
-                    log.info("Using existing token for attendee: email={}", info.getEmail());
+
+                // 生成二维码
+                QrCodeRespVO qrCode = qrCodeService.generateEventCheckInQrWithToken(token);
+                String qrCodeUrl = baseUrl + "/system/attendee/scan?token=" + token;
+
+                // 发送邮件（失败不影响创建）
+                try {
+                    sendEmail(attendee, event, qrCode);
+                } catch (Exception e) {
+                    log.error("Failed to send email to {}: {}", info.getEmail(), e.getMessage());
                 }
+
+                // 添加到成功列表
+                successList.add(
+                        AttendeeQrCodeRespVO.builder()
+                                .id(attendee.getId())
+                                .attendeeEmail(attendee.getAttendeeEmail())
+                                .attendeeName(attendee.getAttendeeName())
+                                .attendeeMobile(attendee.getAttendeeMobile())
+                                .checkInToken(token)
+                                .qrCodeBase64(qrCode.getBase64Image())
+                                .qrCodeUrl(qrCodeUrl)
+                                .checkInStatus(0)
+                                .build());
+
+            } catch (Exception e) {
+                log.error("Error processing attendee {}: {}", info.getEmail(), e.getMessage(), e);
+                failedList.add(info.getEmail() + " - System error");
             }
-
-            // Generate QR code
-            QrCodeRespVO qrCode = qrCodeService.generateEventCheckInQrWithToken(token);
-            String qrCodeUrl = baseUrl + "/system/attendee/scan?token=" + token;
-
-            // Send email
-            sendEmail(attendee, event, qrCode);
-
-            AttendeeQrCodeRespVO attendeeQr =
-                    AttendeeQrCodeRespVO.builder()
-                            .id(attendee.getId())
-                            .attendeeEmail(attendee.getAttendeeEmail())
-                            .attendeeName(attendee.getAttendeeName())
-                            .attendeeMobile(attendee.getAttendeeMobile())
-                            .checkInToken(token)
-                            .qrCodeBase64(qrCode.getBase64Image())
-                            .qrCodeUrl(qrCodeUrl)
-                            .checkInStatus(attendee.getCheckInStatus())
-                            .build();
-
-            attendeeQrCodes.add(attendeeQr);
         }
 
-        log.info("Generated {} QR codes for event {}", attendeeQrCodes.size(), eventId);
+        log.info(
+                "Event {}: {} succeeded, {} failed",
+                eventId,
+                successList.size(),
+                failedList.size());
 
+        if (!failedList.isEmpty()) {
+            log.warn("Failed attendees: {}", failedList);
+        }
+
+        // ✅ 核心：如果全部失败，抛出异常
+        if (successList.isEmpty()) {
+            String errorMsg = String.join("; ", failedList);
+            throw exception(ATTENDEE_CREATION_FAILED, "Fail to create" + errorMsg);
+        }
+
+        // ✅ 如果部分失败，记录在响应中但不抛异常
         return GenerateQrCodesRespVO.builder()
                 .eventId(eventId)
                 .eventName(event.getName())
-                .totalCount(attendeeQrCodes.size())
-                .attendees(attendeeQrCodes)
+                .totalCount(successList.size())
+                .attendees(successList)
                 .build();
     }
 

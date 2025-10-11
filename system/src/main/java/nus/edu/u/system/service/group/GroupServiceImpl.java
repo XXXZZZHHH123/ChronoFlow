@@ -17,14 +17,17 @@ import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
+import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dataobject.user.UserGroupDO;
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
 import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
 import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
+import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
+import nus.edu.u.system.mapper.task.TaskMapper;
 import nus.edu.u.system.mapper.user.UserGroupMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.service.user.UserService;
@@ -51,6 +54,8 @@ public class GroupServiceImpl implements GroupService {
     @Resource private UserService userService;
 
     @Resource private UserGroupMapper userGroupMapper;
+
+    @Resource private TaskMapper taskMapper;
 
     @Override
     @Transactional
@@ -232,7 +237,8 @@ public class GroupServiceImpl implements GroupService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void removeMemberFromGroup(Long groupId, Long userId) {
-        // 1. 验证关联关系存在
+        log.info("Attempting to remove user {} from group {}", userId, groupId);
+
         LambdaQueryWrapper<UserGroupDO> queryWrapper =
                 new LambdaQueryWrapper<UserGroupDO>()
                         .eq(UserGroupDO::getUserId, userId)
@@ -240,18 +246,40 @@ public class GroupServiceImpl implements GroupService {
 
         UserGroupDO userGroup = userGroupMapper.selectOne(queryWrapper);
         if (ObjectUtil.isNull(userGroup)) {
+            log.warn("User {} is not in group {}", userId, groupId);
             throw exception(USER_NOT_IN_GROUP);
         }
 
-        // 2. 检查是否是组长
+        log.info(
+                "Found user-group relation: id={}, joinTime={}",
+                userGroup.getId(),
+                userGroup.getJoinTime());
+
         DeptDO group = deptMapper.selectById(groupId);
+        log.info(
+                "Group lead_user_id: {}, trying to remove user: {}", group.getLeadUserId(), userId);
+
         if (ObjectUtil.isNotNull(group) && ObjectUtil.equal(group.getLeadUserId(), userId)) {
+            log.warn("Cannot remove group leader {} from group {}", userId, groupId);
             throw exception(CANNOT_REMOVE_GROUP_LEADER);
         }
 
-        // 3. 删除关联关系
-        userGroupMapper.deleteById(userGroup.getId());
-        log.info("Removed user {} from group {}", userId, groupId);
+        Long eventId = userGroup.getEventId();
+        LambdaQueryWrapper<TaskDO> taskQueryWrapper =
+                new LambdaQueryWrapper<TaskDO>()
+                        .eq(TaskDO::getUserId, userId)
+                        .eq(TaskDO::getEventId, eventId)
+                        .ne(TaskDO::getStatus, TaskStatusEnum.COMPLETED.getStatus());
+
+        long pendingTaskCount = taskMapper.selectCount(taskQueryWrapper);
+
+        if (pendingTaskCount > 0) {
+            log.warn("User {} has {} pending tasks in event {}", userId, pendingTaskCount, eventId);
+            throw exception(CANNOT_REMOVE_MEMBER_WITH_PENDING_TASKS);
+        }
+
+        int deletedRows = userGroupMapper.deleteById(userGroup.getId());
+        log.info("Removed user {} from group {}, affected rows: {}", userId, groupId, deletedRows);
     }
 
     @Override
@@ -344,6 +372,7 @@ public class GroupServiceImpl implements GroupService {
 
         List<Long> successIds = new ArrayList<>();
         List<Long> failedIds = new ArrayList<>();
+        Exception firstException = null;
 
         GroupService proxy = (GroupService) AopContext.currentProxy();
 
@@ -352,7 +381,16 @@ public class GroupServiceImpl implements GroupService {
                 proxy.removeMemberFromGroup(groupId, userId);
                 successIds.add(userId);
             } catch (Exception e) {
+                log.error(
+                        "Failed to remove user {} from group {}: {}",
+                        userId,
+                        groupId,
+                        e.getMessage(),
+                        e);
                 failedIds.add(userId);
+                if (firstException == null) {
+                    firstException = e;
+                }
             }
         }
 
@@ -364,6 +402,9 @@ public class GroupServiceImpl implements GroupService {
 
         if (!failedIds.isEmpty()) {
             log.warn("failed to remove members from group: failedUserIds={}", failedIds);
+            throw firstException instanceof RuntimeException
+                    ? (RuntimeException) firstException
+                    : new RuntimeException(firstException);
         }
     }
 

@@ -22,6 +22,7 @@ import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
 import nus.edu.u.system.enums.ErrorCodeConstants;
 import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
+import nus.edu.u.system.mapper.task.TaskMapper;
 import nus.edu.u.system.mapper.user.UserGroupMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -44,11 +46,13 @@ class GroupServiceImplTest {
 
     @Mock private EventMapper eventMapper;
 
+    @Mock private TaskMapper taskMapper;
+
     @Mock private UserGroupMapper userGroupMapper;
 
     @Mock private GroupService groupServiceProxy;
 
-    @InjectMocks private GroupServiceImpl groupService;
+    @Spy @InjectMocks private GroupServiceImpl groupService;
 
     private CreateGroupReqVO createGroupReqVO;
     private UpdateGroupReqVO updateGroupReqVO;
@@ -334,6 +338,9 @@ class GroupServiceImplTest {
 
         when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(userGroup);
         when(deptMapper.selectById(groupId)).thenReturn(group);
+
+        when(taskMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+
         when(userGroupMapper.deleteById(10L)).thenReturn(1);
 
         // When
@@ -342,6 +349,7 @@ class GroupServiceImplTest {
         // Then
         verify(userGroupMapper).selectOne(any(LambdaQueryWrapper.class));
         verify(deptMapper).selectById(groupId);
+        verify(taskMapper).selectCount(any(LambdaQueryWrapper.class));
         verify(userGroupMapper).deleteById(10L);
     }
 
@@ -510,15 +518,17 @@ class GroupServiceImplTest {
 
         when(deptMapper.selectById(groupId)).thenReturn(deptDO);
 
-        // Mock AopContext to return the service itself
         try (MockedStatic<AopContext> mockedAopContext = mockStatic(AopContext.class)) {
             mockedAopContext.when(AopContext::currentProxy).thenReturn(groupService);
+
+            doNothing().when(groupService).removeMemberFromGroup(eq(groupId), anyLong());
 
             // When
             assertDoesNotThrow(() -> groupService.removeMembersToGroup(groupId, userIds));
 
             // Then
             verify(deptMapper).selectById(groupId);
+            verify(groupService, times(3)).removeMemberFromGroup(eq(groupId), anyLong());
         }
     }
 
