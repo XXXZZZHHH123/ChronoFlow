@@ -13,6 +13,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
+import nus.edu.u.system.domain.vo.attendee.AttendeeInfoRespVO;
 import nus.edu.u.system.domain.vo.attendee.AttendeeQrCodeRespVO;
 import nus.edu.u.system.domain.vo.attendee.AttendeeReqVO;
 import nus.edu.u.system.domain.vo.checkin.CheckInReqVO;
@@ -90,22 +91,23 @@ public class AttendeeController {
     }
 
     @SaIgnore
-    @PostMapping("/scan")
+    @GetMapping("/scan")
+    public CommonResult<AttendeeInfoRespVO> attendeePreview(@RequestParam String token) {
+        log.info(
+                "Attendee preview request with token: {}",
+                token.substring(0, Math.min(8, token.length())) + "...");
+
+        AttendeeInfoRespVO info = attendeeService.getAttendeeInfo(token);
+        info.setMessage("please show this QR code to the on-site staff for scanning");
+        return success(info);
+    }
+
+    @PostMapping("/staff-scan")
     public CommonResult<CheckInRespVO> checkIn(@RequestBody @Valid CheckInReqVO reqVO) {
         log.info(
                 "Check-in request with token: {}",
                 reqVO.getToken().substring(0, Math.min(8, reqVO.getToken().length())) + "...");
         CheckInRespVO response = attendeeService.checkIn(reqVO.getToken());
-        return success(response);
-    }
-
-    @SaIgnore
-    @GetMapping("/scan")
-    public CommonResult<CheckInRespVO> checkInByGet(@RequestParam String token) {
-        log.info(
-                "Check-in request (GET) with token: {}",
-                token.substring(0, Math.min(8, token.length())) + "...");
-        CheckInRespVO response = attendeeService.checkIn(token);
         return success(response);
     }
 }

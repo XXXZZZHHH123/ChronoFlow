@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.system.domain.dataobject.attendee.EventAttendeeDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.tenant.TenantDO;
+import nus.edu.u.system.domain.vo.attendee.AttendeeInfoRespVO;
 import nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO;
 import nus.edu.u.system.domain.vo.attendee.AttendeeQrCodeRespVO;
 import nus.edu.u.system.domain.vo.attendee.AttendeeReqVO;
@@ -217,13 +218,11 @@ public class AttendeeServiceImpl implements AttendeeService {
 
         for (AttendeeReqVO info : attendeeInfos) {
             try {
-                // 验证邮箱
                 if (info.getEmail() == null || info.getEmail().isBlank()) {
                     failedList.add("email can't be empty");
                     continue;
                 }
 
-                // 检查是否已存在
                 EventAttendeeDO existing =
                         attendeeMapper.selectByEventAndEmail(eventId, info.getEmail());
 
@@ -236,7 +235,6 @@ public class AttendeeServiceImpl implements AttendeeService {
                     continue;
                 }
 
-                // 创建新参与者
                 String token = UUID.randomUUID().toString();
                 EventAttendeeDO attendee =
                         EventAttendeeDO.builder()
@@ -251,18 +249,15 @@ public class AttendeeServiceImpl implements AttendeeService {
 
                 attendeeMapper.insert(attendee);
 
-                // 生成二维码
                 QrCodeRespVO qrCode = qrCodeService.generateEventCheckInQrWithToken(token);
                 String qrCodeUrl = baseUrl + "/system/attendee/scan?token=" + token;
 
-                // 发送邮件（失败不影响创建）
                 try {
                     sendEmail(attendee, event, qrCode);
                 } catch (Exception e) {
                     log.error("Failed to send email to {}: {}", info.getEmail(), e.getMessage());
                 }
 
-                // 添加到成功列表
                 successList.add(
                         AttendeeQrCodeRespVO.builder()
                                 .id(attendee.getId())
@@ -291,13 +286,11 @@ public class AttendeeServiceImpl implements AttendeeService {
             log.warn("Failed attendees: {}", failedList);
         }
 
-        // ✅ 核心：如果全部失败，抛出异常
         if (successList.isEmpty()) {
             String errorMsg = String.join("; ", failedList);
             throw exception(ATTENDEE_CREATION_FAILED, "Fail to create" + errorMsg);
         }
 
-        // ✅ 如果部分失败，记录在响应中但不抛异常
         return GenerateQrCodesRespVO.builder()
                 .eventId(eventId)
                 .eventName(event.getName())
@@ -358,5 +351,39 @@ public class AttendeeServiceImpl implements AttendeeService {
                         .organizationName(ObjectUtil.isNotNull(tenant) ? tenant.getName() : null)
                         .build();
         attendeeEmailService.sendAttendeeInvite(emailReq);
+    }
+
+    @Override
+    public AttendeeInfoRespVO getAttendeeInfo(String token) {
+        if (token == null || token.isBlank()) {
+            throw exception(INVALID_CHECKIN_TOKEN);
+        }
+
+        EventAttendeeDO attendee = attendeeMapper.selectByToken(token);
+        if (ObjectUtil.isNull(attendee)) {
+            throw exception(INVALID_CHECKIN_TOKEN);
+        }
+
+        EventDO event = eventMapper.selectById(attendee.getEventId());
+        if (ObjectUtil.isNull(event)) {
+            throw exception(EVENT_NOT_FOUND);
+        }
+
+        AttendeeInfoRespVO respVO =
+                AttendeeInfoRespVO.builder()
+                        .eventName(event.getName())
+                        .attendeeName(attendee.getAttendeeName())
+                        .attendeeEmail(attendee.getAttendeeEmail())
+                        .checkInStatus(attendee.getCheckInStatus())
+                        .checkInTime(attendee.getCheckInTime())
+                        .build();
+
+        log.info(
+                "Attendee info retrieved: name={}, email={}, checkInStatus={}",
+                attendee.getAttendeeName(),
+                attendee.getAttendeeEmail(),
+                attendee.getCheckInStatus());
+
+        return respVO;
     }
 }
