@@ -250,12 +250,14 @@ public class GroupServiceImpl implements GroupService {
             throw exception(USER_NOT_IN_GROUP);
         }
 
-        log.info("Found user-group relation: id={}, joinTime={}",
-                userGroup.getId(), userGroup.getJoinTime());
+        log.info(
+                "Found user-group relation: id={}, joinTime={}",
+                userGroup.getId(),
+                userGroup.getJoinTime());
 
         DeptDO group = deptMapper.selectById(groupId);
-        log.info("Group lead_user_id: {}, trying to remove user: {}",
-                group.getLeadUserId(), userId);
+        log.info(
+                "Group lead_user_id: {}, trying to remove user: {}", group.getLeadUserId(), userId);
 
         if (ObjectUtil.isNotNull(group) && ObjectUtil.equal(group.getLeadUserId(), userId)) {
             log.warn("Cannot remove group leader {} from group {}", userId, groupId);
@@ -272,14 +274,12 @@ public class GroupServiceImpl implements GroupService {
         long pendingTaskCount = taskMapper.selectCount(taskQueryWrapper);
 
         if (pendingTaskCount > 0) {
-            log.warn("User {} has {} pending tasks in event {}",
-                    userId, pendingTaskCount, eventId);
+            log.warn("User {} has {} pending tasks in event {}", userId, pendingTaskCount, eventId);
             throw exception(CANNOT_REMOVE_MEMBER_WITH_PENDING_TASKS);
         }
 
         int deletedRows = userGroupMapper.deleteById(userGroup.getId());
-        log.info("Removed user {} from group {}, affected rows: {}",
-                userId, groupId, deletedRows);
+        log.info("Removed user {} from group {}, affected rows: {}", userId, groupId, deletedRows);
     }
 
     @Override
@@ -381,8 +381,12 @@ public class GroupServiceImpl implements GroupService {
                 proxy.removeMemberFromGroup(groupId, userId);
                 successIds.add(userId);
             } catch (Exception e) {
-                log.error("Failed to remove user {} from group {}: {}",
-                        userId, groupId, e.getMessage(), e);
+                log.error(
+                        "Failed to remove user {} from group {}: {}",
+                        userId,
+                        groupId,
+                        e.getMessage(),
+                        e);
                 failedIds.add(userId);
                 if (firstException == null) {
                     firstException = e;

@@ -9,7 +9,6 @@ import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
-import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.attendee.EventAttendeeDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.tenant.TenantDO;
@@ -199,96 +198,98 @@ public class AttendeeServiceImpl implements AttendeeService {
                 .build();
     }
 
-//    @Override
-//    @Transactional
-//    public GenerateQrCodesRespVO generateQrCodesForAttendees(GenerateQrCodesReqVO reqVO) {
-//        Long eventId = reqVO.getEventId();
-//        List<AttendeeReqVO> attendeeInfos = reqVO.getAttendees();
-//
-//        // 1. Validate event
-//        EventDO event = eventMapper.selectById(eventId);
-//        if (ObjectUtil.isNull(event)) {
-//            throw exception(EVENT_NOT_FOUND);
-//        }
-//
-//        // 2. Generate tokens and QR codes for each attendee
-//        List<AttendeeQrCodeRespVO> attendeeQrCodes = new ArrayList<>();
-//        LocalDateTime now = LocalDateTime.now();
-//
-//        for (AttendeeReqVO info : attendeeInfos) {
-//            if (info.getEmail() == null || info.getEmail().isBlank()) {
-//                log.warn("Skipping attendee with empty email");
-//                continue;
-//            }
-//
-//            // Check if attendee already exists
-//            EventAttendeeDO attendee =
-//                    attendeeMapper.selectByEventAndEmail(eventId, info.getEmail());
-//
-//            String token;
-//            if (ObjectUtil.isNull(attendee)) {
-//                // Create new attendee with unique token
-//                token = UUID.randomUUID().toString();
-//
-//                attendee =
-//                        EventAttendeeDO.builder()
-//                                .eventId(eventId)
-//                                .attendeeEmail(info.getEmail())
-//                                .attendeeName(info.getName())
-//                                .attendeeMobile(info.getMobile())
-//                                .checkInToken(token)
-//                                .checkInStatus(0)
-//                                .qrCodeGeneratedTime(now)
-//                                .build();
-//
-//                attendeeMapper.insert(attendee);
-//                log.info("Created attendee record: email={}, eventId={}", info.getEmail(), eventId);
-//            } else {
-//                // Use existing token or generate new one if null
-//                if (ObjectUtil.isNull(attendee.getCheckInToken())) {
-//                    token = UUID.randomUUID().toString();
-//                    attendee.setCheckInToken(token);
-//                    attendee.setQrCodeGeneratedTime(now);
-//                    attendeeMapper.updateById(attendee);
-//                    log.info(
-//                            "Generated new token for existing attendee: email={}", info.getEmail());
-//                } else {
-//                    token = attendee.getCheckInToken();
-//                    log.info("Using existing token for attendee: email={}", info.getEmail());
-//                }
-//            }
-//
-//            // Generate QR code
-//            QrCodeRespVO qrCode = qrCodeService.generateEventCheckInQrWithToken(token);
-//            String qrCodeUrl = baseUrl + "/system/attendee/scan?token=" + token;
-//
-//            // Send email
-//            sendEmail(attendee, event, qrCode);
-//
-//            AttendeeQrCodeRespVO attendeeQr =
-//                    AttendeeQrCodeRespVO.builder()
-//                            .id(attendee.getId())
-//                            .attendeeEmail(attendee.getAttendeeEmail())
-//                            .attendeeName(attendee.getAttendeeName())
-//                            .attendeeMobile(attendee.getAttendeeMobile())
-//                            .checkInToken(token)
-//                            .qrCodeBase64(qrCode.getBase64Image())
-//                            .qrCodeUrl(qrCodeUrl)
-//                            .checkInStatus(attendee.getCheckInStatus())
-//                            .build();
-//
-//            attendeeQrCodes.add(attendeeQr);
-//        }
-//
-//        log.info("Generated {} QR codes for event {}", attendeeQrCodes.size(), eventId);
-//
-//        return GenerateQrCodesRespVO.builder()
-//                .eventId(eventId)
-//                .eventName(event.getName())
-//                .totalCount(attendeeQrCodes.size())
-//                .attendees(attendeeQrCodes)
-//                .build();
-//    }
+    //    @Override
+    //    @Transactional
+    //    public GenerateQrCodesRespVO generateQrCodesForAttendees(GenerateQrCodesReqVO reqVO) {
+    //        Long eventId = reqVO.getEventId();
+    //        List<AttendeeReqVO> attendeeInfos = reqVO.getAttendees();
+    //
+    //        // 1. Validate event
+    //        EventDO event = eventMapper.selectById(eventId);
+    //        if (ObjectUtil.isNull(event)) {
+    //            throw exception(EVENT_NOT_FOUND);
+    //        }
+    //
+    //        // 2. Generate tokens and QR codes for each attendee
+    //        List<AttendeeQrCodeRespVO> attendeeQrCodes = new ArrayList<>();
+    //        LocalDateTime now = LocalDateTime.now();
+    //
+    //        for (AttendeeReqVO info : attendeeInfos) {
+    //            if (info.getEmail() == null || info.getEmail().isBlank()) {
+    //                log.warn("Skipping attendee with empty email");
+    //                continue;
+    //            }
+    //
+    //            // Check if attendee already exists
+    //            EventAttendeeDO attendee =
+    //                    attendeeMapper.selectByEventAndEmail(eventId, info.getEmail());
+    //
+    //            String token;
+    //            if (ObjectUtil.isNull(attendee)) {
+    //                // Create new attendee with unique token
+    //                token = UUID.randomUUID().toString();
+    //
+    //                attendee =
+    //                        EventAttendeeDO.builder()
+    //                                .eventId(eventId)
+    //                                .attendeeEmail(info.getEmail())
+    //                                .attendeeName(info.getName())
+    //                                .attendeeMobile(info.getMobile())
+    //                                .checkInToken(token)
+    //                                .checkInStatus(0)
+    //                                .qrCodeGeneratedTime(now)
+    //                                .build();
+    //
+    //                attendeeMapper.insert(attendee);
+    //                log.info("Created attendee record: email={}, eventId={}", info.getEmail(),
+    // eventId);
+    //            } else {
+    //                // Use existing token or generate new one if null
+    //                if (ObjectUtil.isNull(attendee.getCheckInToken())) {
+    //                    token = UUID.randomUUID().toString();
+    //                    attendee.setCheckInToken(token);
+    //                    attendee.setQrCodeGeneratedTime(now);
+    //                    attendeeMapper.updateById(attendee);
+    //                    log.info(
+    //                            "Generated new token for existing attendee: email={}",
+    // info.getEmail());
+    //                } else {
+    //                    token = attendee.getCheckInToken();
+    //                    log.info("Using existing token for attendee: email={}", info.getEmail());
+    //                }
+    //            }
+    //
+    //            // Generate QR code
+    //            QrCodeRespVO qrCode = qrCodeService.generateEventCheckInQrWithToken(token);
+    //            String qrCodeUrl = baseUrl + "/system/attendee/scan?token=" + token;
+    //
+    //            // Send email
+    //            sendEmail(attendee, event, qrCode);
+    //
+    //            AttendeeQrCodeRespVO attendeeQr =
+    //                    AttendeeQrCodeRespVO.builder()
+    //                            .id(attendee.getId())
+    //                            .attendeeEmail(attendee.getAttendeeEmail())
+    //                            .attendeeName(attendee.getAttendeeName())
+    //                            .attendeeMobile(attendee.getAttendeeMobile())
+    //                            .checkInToken(token)
+    //                            .qrCodeBase64(qrCode.getBase64Image())
+    //                            .qrCodeUrl(qrCodeUrl)
+    //                            .checkInStatus(attendee.getCheckInStatus())
+    //                            .build();
+    //
+    //            attendeeQrCodes.add(attendeeQr);
+    //        }
+    //
+    //        log.info("Generated {} QR codes for event {}", attendeeQrCodes.size(), eventId);
+    //
+    //        return GenerateQrCodesRespVO.builder()
+    //                .eventId(eventId)
+    //                .eventName(event.getName())
+    //                .totalCount(attendeeQrCodes.size())
+    //                .attendees(attendeeQrCodes)
+    //                .build();
+    //    }
 
     @Override
     @Transactional
@@ -321,21 +322,25 @@ public class AttendeeServiceImpl implements AttendeeService {
 
                 if (ObjectUtil.isNotNull(existing)) {
                     failedList.add(info.getEmail() + " - 该参与者已存在于此活动中");
-                    log.warn("Attendee already exists: email={}, eventId={}", info.getEmail(), eventId);
+                    log.warn(
+                            "Attendee already exists: email={}, eventId={}",
+                            info.getEmail(),
+                            eventId);
                     continue;
                 }
 
                 // 创建新参与者
                 String token = UUID.randomUUID().toString();
-                EventAttendeeDO attendee = EventAttendeeDO.builder()
-                        .eventId(eventId)
-                        .attendeeEmail(info.getEmail())
-                        .attendeeName(info.getName())
-                        .attendeeMobile(info.getMobile())
-                        .checkInToken(token)
-                        .checkInStatus(0)
-                        .qrCodeGeneratedTime(now)
-                        .build();
+                EventAttendeeDO attendee =
+                        EventAttendeeDO.builder()
+                                .eventId(eventId)
+                                .attendeeEmail(info.getEmail())
+                                .attendeeName(info.getName())
+                                .attendeeMobile(info.getMobile())
+                                .checkInToken(token)
+                                .checkInStatus(0)
+                                .qrCodeGeneratedTime(now)
+                                .build();
 
                 attendeeMapper.insert(attendee);
 
@@ -351,16 +356,17 @@ public class AttendeeServiceImpl implements AttendeeService {
                 }
 
                 // 添加到成功列表
-                successList.add(AttendeeQrCodeRespVO.builder()
-                        .id(attendee.getId())
-                        .attendeeEmail(attendee.getAttendeeEmail())
-                        .attendeeName(attendee.getAttendeeName())
-                        .attendeeMobile(attendee.getAttendeeMobile())
-                        .checkInToken(token)
-                        .qrCodeBase64(qrCode.getBase64Image())
-                        .qrCodeUrl(qrCodeUrl)
-                        .checkInStatus(0)
-                        .build());
+                successList.add(
+                        AttendeeQrCodeRespVO.builder()
+                                .id(attendee.getId())
+                                .attendeeEmail(attendee.getAttendeeEmail())
+                                .attendeeName(attendee.getAttendeeName())
+                                .attendeeMobile(attendee.getAttendeeMobile())
+                                .checkInToken(token)
+                                .qrCodeBase64(qrCode.getBase64Image())
+                                .qrCodeUrl(qrCodeUrl)
+                                .checkInStatus(0)
+                                .build());
 
             } catch (Exception e) {
                 log.error("Error processing attendee {}: {}", info.getEmail(), e.getMessage(), e);
@@ -368,7 +374,11 @@ public class AttendeeServiceImpl implements AttendeeService {
             }
         }
 
-        log.info("Event {}: {} succeeded, {} failed", eventId, successList.size(), failedList.size());
+        log.info(
+                "Event {}: {} succeeded, {} failed",
+                eventId,
+                successList.size(),
+                failedList.size());
 
         if (!failedList.isEmpty()) {
             log.warn("Failed attendees: {}", failedList);
@@ -377,8 +387,7 @@ public class AttendeeServiceImpl implements AttendeeService {
         // ✅ 核心：如果全部失败，抛出异常
         if (successList.isEmpty()) {
             String errorMsg = String.join("; ", failedList);
-            throw exception(ATTENDEE_CREATION_FAILED,
-                    "Fail to create" + errorMsg);
+            throw exception(ATTENDEE_CREATION_FAILED, "Fail to create" + errorMsg);
         }
 
         // ✅ 如果部分失败，记录在响应中但不抛异常
@@ -389,6 +398,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                 .attendees(successList)
                 .build();
     }
+
     @Override
     @Transactional
     public String getCheckInToken(Long eventId, String email) {
