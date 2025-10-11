@@ -97,6 +97,7 @@ public class TaskLogServiceImpl implements TaskLogService {
                                     .targetUser(targetUserVO)
                                     .sourceUser(sourceUserVO)
                                     .fileResults(fileResults)
+                                    .remark(taskLog.getRemark())
                                     .build();
                         })
                 .toList();

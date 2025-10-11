@@ -26,4 +26,6 @@ public class TaskLogRespVO {
     private LocalDateTime createTime;
 
     private List<FileResultVO> fileResults;
+
+    private String remark;
 }
