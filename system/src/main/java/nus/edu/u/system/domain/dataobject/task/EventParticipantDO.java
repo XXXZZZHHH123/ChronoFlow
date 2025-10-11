@@ -13,6 +13,7 @@ import nus.edu.u.common.core.domain.base.TenantBaseDO;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Deprecated
 public class EventParticipantDO extends TenantBaseDO implements Serializable {
 
     @Serial private static final long serialVersionUID = 1L;

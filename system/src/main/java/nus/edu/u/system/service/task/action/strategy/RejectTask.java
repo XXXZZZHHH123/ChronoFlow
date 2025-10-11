@@ -47,6 +47,6 @@ public class RejectTask extends AbstractTaskStrategy {
         if (!isSuccess) {
             throw exception(REJECT_TASK_FAILED);
         }
-        taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
+        taskLogService.insertTaskLog(task.getId(), null, getType().getCode(), actionDTO.getRemark());
     }
 }

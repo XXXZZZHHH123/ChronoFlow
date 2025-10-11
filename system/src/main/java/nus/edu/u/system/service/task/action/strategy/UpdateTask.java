@@ -63,7 +63,7 @@ public class UpdateTask extends AbstractTaskStrategy {
         if (!isSuccess) {
             throw exception(TASK_UPDATE_FAILED);
         }
-        Long taskLogId = taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
+        Long taskLogId = taskLogService.insertTaskLog(task.getId(), null, getType().getCode(), actionDTO.getRemark());
         uploadFiles(taskLogId, task.getEventId(), actionDTO.getFiles());
     }
 }

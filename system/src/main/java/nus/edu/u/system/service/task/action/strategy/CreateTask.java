@@ -38,7 +38,7 @@ public class CreateTask extends AbstractTaskStrategy {
         }
         Long taskLogId =
                 taskLogService.insertTaskLog(
-                        task.getId(), actionDTO.getTargetUserId(), getType().getCode());
+                        task.getId(), actionDTO.getTargetUserId(), getType().getCode(), actionDTO.getRemark());
         uploadFiles(taskLogId, task.getEventId(), actionDTO.getFiles());
     }
 }

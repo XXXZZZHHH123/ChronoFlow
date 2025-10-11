@@ -9,7 +9,7 @@ import nus.edu.u.system.domain.vo.task.TaskLogRespVO;
  */
 public interface TaskLogService {
 
-    Long insertTaskLog(Long taskId, Long targetUserId, Integer action);
+    Long insertTaskLog(Long taskId, Long targetUserId, Integer action, String remark);
 
     List<TaskLogRespVO> getTaskLog(Long taskId);
 }

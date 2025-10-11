@@ -1,34 +1,35 @@
 package nus.edu.u.system.enums.event;
 
-import java.util.Arrays;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nus.edu.u.common.core.ArrayValuable;
 
-/**
- * Event status enum class
- *
- * @author Lu Shuwen
- * @date 2025-08-28
- */
 @Getter
 @AllArgsConstructor
 public enum EventStatusEnum implements ArrayValuable<Integer> {
-    WAITING(1, "Waiting"),
-    DOING(2, "Doing"),
-    SUSPENDED(3, "Suspended"),
-    DELAYED(4, "Delayed"),
-    CLOSED(5, "Closed");
+    NOT_STARTED(0, "Not Started"),
+    ACTIVE(1, "Active"),
+    COMPLETED(2, "Completed");
 
-    private final Integer status;
+    public static final Integer[] ARRAYS = new Integer[] {0, 1, 2};
 
-    private final String name;
-
-    private static final Integer[] ARRAYS =
-            Arrays.stream(values()).map(EventStatusEnum::getStatus).toArray(Integer[]::new);
+    private final int code;
+    private final String description;
 
     @Override
     public Integer[] array() {
         return ARRAYS;
+    }
+
+    public static EventStatusEnum fromCode(Integer code) {
+        if (code == null) {
+            return null;
+        }
+        for (EventStatusEnum status : values()) {
+            if (status.getCode() == code) {
+                return status;
+            }
+        }
+        throw new IllegalArgumentException("Unknow event status code: " + code);
     }
 }

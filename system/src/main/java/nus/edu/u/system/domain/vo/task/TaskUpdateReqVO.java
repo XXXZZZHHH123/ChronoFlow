@@ -27,4 +27,6 @@ public class TaskUpdateReqVO {
     private LocalDateTime endTime;
 
     private List<MultipartFile> files;
+
+    private String remark;
 }

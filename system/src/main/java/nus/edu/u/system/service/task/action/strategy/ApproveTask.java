@@ -48,6 +48,6 @@ public class ApproveTask extends AbstractTaskStrategy {
         if (!isSuccess) {
             throw exception(APPROVE_TASK_FAILED);
         }
-        taskLogService.insertTaskLog(task.getId(), null, getType().getCode());
+        taskLogService.insertTaskLog(task.getId(), null, getType().getCode(), actionDTO.getRemark());
     }
 }

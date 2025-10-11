@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import nus.edu.u.common.enums.CommonStatusEnum;
-import nus.edu.u.common.enums.EventStatusEnum;
+import nus.edu.u.system.enums.event.EventStatusEnum;
 import nus.edu.u.common.exception.ErrorCode;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;

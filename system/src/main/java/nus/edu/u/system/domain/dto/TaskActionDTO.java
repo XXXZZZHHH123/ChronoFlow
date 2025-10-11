@@ -33,4 +33,6 @@ public class TaskActionDTO {
     private LocalDateTime eventStartTime;
 
     private LocalDateTime eventEndTime;
+
+    private String remark;
 }

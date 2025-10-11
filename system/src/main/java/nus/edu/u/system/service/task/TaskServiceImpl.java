@@ -147,6 +147,7 @@ public class TaskServiceImpl implements TaskService {
                         .eventEndTime(event.getEndTime())
                         .targetUserId(reqVO.getTargetUserId())
                         .files(reqVO.getFiles())
+                        .remark(reqVO.getRemark())
                         .build();
 
         taskActionFactory.getStrategy(TaskActionEnum.getEnum(type)).execute(task, actionDTO);
@@ -183,7 +184,7 @@ public class TaskServiceImpl implements TaskService {
         if (task == null || !Objects.equals(task.getEventId(), eventId)) {
             throw exception(TASK_NOT_FOUND);
         }
-        taskActionFactory.getStrategy(TaskActionEnum.DELETE).execute(task, null, null);
+        taskActionFactory.getStrategy(TaskActionEnum.DELETE).execute(task, null);
     }
 
     @Override
