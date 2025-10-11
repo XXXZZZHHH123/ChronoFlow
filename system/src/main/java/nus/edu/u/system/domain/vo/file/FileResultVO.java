@@ -13,6 +13,8 @@ public class FileResultVO {
 
     private String objectName;
 
+    private String name;
+
     private String contentType;
 
     private long size;

@@ -138,6 +138,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             String signedUrl = gcs.generateSignedUrl(file.getObjectName());
             return FileResultVO.builder()
                     .objectName(file.getObjectName())
+                    .name(file.getName())
                     .contentType(file.getType())
                     .size(file.getSize())
                     .signedUrl(signedUrl)
@@ -165,6 +166,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                                     FileResultVO.builder()
                                             .objectName(f.getObjectName())
                                             .contentType(f.getType())
+                                            .name(f.getName())
                                             .size(f.getSize())
                                             .signedUrl(gcs.generateSignedUrl(f.getObjectName()))
                                             .build())
