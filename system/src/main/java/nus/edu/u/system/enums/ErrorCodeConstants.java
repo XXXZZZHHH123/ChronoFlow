@@ -61,6 +61,8 @@ public interface ErrorCodeConstants {
     ErrorCode USER_NOT_IN_GROUP = new ErrorCode(1_002_015_001, "user not in this group");
     ErrorCode ADD_MEMBERS_FAILED =
             new ErrorCode(1_002_015_004, "Add failed: A user can only be in one group per event");
+    ErrorCode CANNOT_REMOVE_MEMBER_WITH_PENDING_TASKS =
+            new ErrorCode(1_002_015_005, "Cannot remove member with pending tasks. Please reassign all tasks to other members first.");
 
     // ========= Reg module 11-01-000 =============
     ErrorCode NO_SEARCH_RESULT = new ErrorCode(11_01_001, "No matching result found");
@@ -118,6 +120,7 @@ public interface ErrorCodeConstants {
     ErrorCode CHECKIN_NOT_STARTED = new ErrorCode(10_03_004, "Check-in has not started yet");
     ErrorCode CHECKIN_ENDED = new ErrorCode(10_03_005, "Check-in has ended");
     ErrorCode EVENT_NOT_ACTIVE = new ErrorCode(10_03_006, "Event is not active");
+    ErrorCode ATTENDEE_CREATION_FAILED = new ErrorCode(1_002_010_002, "Attendee already exists: This email address has been registered for this event");
 
     // ========= QR Code module 10-04-000 ============
     ErrorCode QRCODE_GENERATION_FAILED = new ErrorCode(10_04_001, "Failed to generate QR code");
