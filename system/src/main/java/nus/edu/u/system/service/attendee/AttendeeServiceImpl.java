@@ -219,7 +219,7 @@ public class AttendeeServiceImpl implements AttendeeService {
             try {
                 // 验证邮箱
                 if (info.getEmail() == null || info.getEmail().isBlank()) {
-                    failedList.add("空邮箱 - 邮箱不能为空");
+                    failedList.add("email can't be empty");
                     continue;
                 }
 
@@ -228,7 +228,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                         attendeeMapper.selectByEventAndEmail(eventId, info.getEmail());
 
                 if (ObjectUtil.isNotNull(existing)) {
-                    failedList.add(info.getEmail() + " - 该参与者已存在于此活动中");
+                    failedList.add(info.getEmail() + " - already exist in this event");
                     log.warn(
                             "Attendee already exists: email={}, eventId={}",
                             info.getEmail(),
