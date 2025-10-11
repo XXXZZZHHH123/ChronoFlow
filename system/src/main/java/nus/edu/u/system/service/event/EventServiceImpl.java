@@ -3,6 +3,7 @@ package nus.edu.u.system.service.event;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
@@ -11,7 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
-import nus.edu.u.common.enums.EventStatusEnum;
+import nus.edu.u.system.enums.event.EventStatusEnum;
 import nus.edu.u.system.convert.event.EventConvert;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
@@ -99,7 +100,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public List<EventRespVO> getByOrganizerId(Long organizerId) {
         if (userMapper.selectById(organizerId) == null) {
             throw exception(ORGANIZER_NOT_FOUND);
@@ -172,6 +173,20 @@ public class EventServiceImpl implements EventService {
         Map<Long, List<EventRespVO.GroupVO>> groupsByEventId = fetchGroupsByEventIds(eventIds);
         Map<Long, EventRespVO.TaskStatusVO> taskStatusByEventId =
                 fetchTaskStatusesByEventIds(eventIds);
+
+        // Active event
+        for (EventDO event : orderedEvents) {
+            if (ObjectUtil.isNull(event.getStartTime()) || ObjectUtil.isNull(event.getEndTime())) {
+                continue;
+            }
+            if (LocalDateTime.now().isBefore(event.getStartTime())) {
+                event.setStatus(EventStatusEnum.NOT_STARTED.getCode());
+            } else if (LocalDateTime.now().isAfter(event.getEndTime())) {
+                event.setStatus(EventStatusEnum.COMPLETED.getCode());
+            } else {
+                event.setStatus(EventStatusEnum.ACTIVE.getCode());
+            }
+        }
 
         return orderedEvents.stream()
                 .map(
