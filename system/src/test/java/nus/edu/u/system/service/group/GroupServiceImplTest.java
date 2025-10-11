@@ -52,8 +52,7 @@ class GroupServiceImplTest {
 
     @Mock private GroupService groupServiceProxy;
 
-    @Spy
-    @InjectMocks private GroupServiceImpl groupService;
+    @Spy @InjectMocks private GroupServiceImpl groupService;
 
     private CreateGroupReqVO createGroupReqVO;
     private UpdateGroupReqVO updateGroupReqVO;
@@ -330,12 +329,7 @@ class GroupServiceImplTest {
         Long groupId = 1L;
         Long userId = 2L;
         UserGroupDO userGroup =
-                UserGroupDO.builder()
-                        .id(10L)
-                        .userId(userId)
-                        .deptId(groupId)
-                        .eventId(1L)
-                        .build();
+                UserGroupDO.builder().id(10L).userId(userId).deptId(groupId).eventId(1L).build();
         DeptDO group =
                 DeptDO.builder()
                         .id(groupId)
