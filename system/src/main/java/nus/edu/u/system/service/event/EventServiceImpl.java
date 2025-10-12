@@ -241,7 +241,7 @@ public class EventServiceImpl implements EventService {
         }
 
         userGroupMapper.delete(Wrappers.<UserGroupDO>lambdaQuery().eq(UserGroupDO::getEventId, id));
-
+        taskMapper.delete(Wrappers.<TaskDO>lambdaQuery().eq(TaskDO::getEventId, id));
         return true;
     }
 

@@ -460,11 +460,13 @@ class EventServiceImplTest {
         when(eventMapper.selectById(10L)).thenReturn(persistedEvent(10L));
         when(eventMapper.deleteById(10L)).thenReturn(1);
         when(userGroupMapper.delete(any())).thenReturn(2);
+        when(taskMapper.delete(any())).thenReturn(1);
 
         boolean ok = service.deleteEvent(10L);
 
         assertThat(ok).isTrue();
         verify(userGroupMapper).delete(any());
+        verify(taskMapper).delete(any());
     }
 
     @Test
