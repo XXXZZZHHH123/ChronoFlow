@@ -28,6 +28,6 @@ public class DeleteTask extends AbstractTaskStrategy {
             throw exception(TASK_DELETE_FAILED);
         }
         taskLogService.insertTaskLog(
-                task.getId(), null, getType().getCode(), actionDTO.getRemark());
+                task.getId(), null, getType().getCode(), null);
     }
 }
