@@ -56,6 +56,15 @@ public interface ErrorCodeConstants {
             new ErrorCode(10_02_007, "Cannot remove group leader from group");
     ErrorCode GET_GROUP_ID_FAILED =
             new ErrorCode(10_02_008, "Failed to get group ID after insert ");
+    ErrorCode USER_ALREADY_IN_OTHER_GROUP_OF_EVENT =
+            new ErrorCode(1_002_015_000, "User already in other group at this event");
+    ErrorCode USER_NOT_IN_GROUP = new ErrorCode(1_002_015_001, "user not in this group");
+    ErrorCode ADD_MEMBERS_FAILED =
+            new ErrorCode(1_002_015_004, "Add failed: A user can only be in one group per event");
+    ErrorCode CANNOT_REMOVE_MEMBER_WITH_PENDING_TASKS =
+            new ErrorCode(
+                    1_002_015_005,
+                    "Cannot remove member with pending tasks. Please reassign all tasks to other members first.");
 
     // ========= Reg module 11-01-000 =============
     ErrorCode NO_SEARCH_RESULT = new ErrorCode(11_01_001, "No matching result found");
@@ -79,19 +88,53 @@ public interface ErrorCodeConstants {
     ErrorCode EVENT_NOT_DELETED = new ErrorCode(13_01_006, "Event not deleted");
     ErrorCode EVENT_RESTORE_FAILED = new ErrorCode(13_01_006, "Event restore failed");
 
-    // ========= Task module 13-02-000 ============
+    // ========= task module 13-02-000 ============
     ErrorCode TASK_STATUS_INVALID = new ErrorCode(13_02_001, "Illegal task status");
     ErrorCode TASK_ASSIGNEE_NOT_FOUND = new ErrorCode(13_02_002, "Assigned user does not exist");
     ErrorCode TASK_TIME_RANGE_INVALID =
             new ErrorCode(13_02_003, "The task start time must be earlier than the end time");
     ErrorCode TASK_ASSIGNEE_TENANT_MISMATCH =
             new ErrorCode(13_02_004, "The assigned user does not belong to this event");
-    ErrorCode TASK_NOT_FOUND = new ErrorCode(13_02_005, "Task does not exist");
+    ErrorCode TASK_NOT_FOUND = new ErrorCode(13_02_005, "task does not exist");
     ErrorCode TASK_TIME_OUTSIDE_EVENT =
             new ErrorCode(13_02_006, "The task timeframe must fall within the event timeframe");
-    ErrorCode TASK_CREATE_FAILED = new ErrorCode(13_02_007, "Task creation failed");
-    ErrorCode TASK_UPDATE_FAILED = new ErrorCode(13_02_008, "Task update failed");
-    ErrorCode TASK_DELETE_FAILED = new ErrorCode(13_02_009, "Task delete failed");
+    ErrorCode TASK_CREATE_FAILED = new ErrorCode(13_02_007, "task creation failed");
+    ErrorCode TASK_UPDATE_FAILED = new ErrorCode(13_02_008, "task update failed");
+    ErrorCode TASK_DELETE_FAILED = new ErrorCode(13_02_009, "task delete failed");
+    ErrorCode WRONG_TASK_ACTION_TYPE = new ErrorCode(13_02_010, "task action failed");
+    ErrorCode TASK_LOG_ERROR = new ErrorCode(13_02_011, "task log error");
+    ErrorCode TASK_LOG_FILE_FAILED = new ErrorCode(13_02_012, "task log files upload failed");
+    ErrorCode APPROVE_TASK_FAILED = new ErrorCode(13_02_013, "approve task failed");
+    ErrorCode ASSIGN_TASK_FAILED = new ErrorCode(13_02_014, "assign task failed");
+    ErrorCode BLOCK_TASK_FAILED = new ErrorCode(13_02_015, "block task failed");
+    ErrorCode REJECT_TASK_FAILED = new ErrorCode(13_02_016, "reject task failed");
+    ErrorCode SUBMIT_TASK_FAILED = new ErrorCode(13_02_017, "submit task failed");
+    ErrorCode ACCEPT_TASK_FAILED = new ErrorCode(13_02_018, "accept task failed");
+    ErrorCode MODIFY_OTHER_TASK_ERROR =
+            new ErrorCode(13_02_019, "You can only modify your own task");
+    ErrorCode MODIFY_WRONG_TASK_STATUS =
+            new ErrorCode(13_02_020, "You can't {} the task in {} status");
+
+    // ========= Check-in module 10-03-000 ============
+    ErrorCode EVENT_ATTENDEE_NOT_FOUND = new ErrorCode(10_03_001, "Attendee not found");
+    ErrorCode INVALID_CHECKIN_TOKEN = new ErrorCode(10_03_002, "Invalid check-in token");
+    ErrorCode ALREADY_CHECKED_IN = new ErrorCode(10_03_003, "Already checked in");
+    ErrorCode CHECKIN_NOT_STARTED = new ErrorCode(10_03_004, "Check-in has not started yet");
+    ErrorCode CHECKIN_ENDED = new ErrorCode(10_03_005, "Check-in has ended");
+    ErrorCode EVENT_NOT_ACTIVE = new ErrorCode(10_03_006, "Event is not active");
+    ErrorCode ATTENDEE_CREATION_FAILED =
+            new ErrorCode(
+                    1_002_010_002,
+                    "Attendee already exists: This email address has been registered for this event");
+
+    // ========= QR Code module 10-04-000 ============
+    ErrorCode QRCODE_GENERATION_FAILED = new ErrorCode(10_04_001, "Failed to generate QR code");
+    ErrorCode QRCODE_INVALID_CONTENT = new ErrorCode(10_04_002, "Invalid QR code content");
+    ErrorCode QRCODE_INVALID_SIZE = new ErrorCode(10_04_003, "Invalid QR code size");
+
+    // ========= Attendee module 10-05-000 ============
+    ErrorCode ATTENDEE_NOT_EXIST = new ErrorCode(10_05_001, "Attendee does not exist");
+    ErrorCode UPDATE_ATTENDEE_FAILED = new ErrorCode(10_05_002, "Update attendee failed");
 
     // ========= RolePermission module 14-01-000 ============
     ErrorCode CREATE_ROLE_FAILED = new ErrorCode(14_01_001, "Create role failed");

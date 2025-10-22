@@ -269,6 +269,11 @@ public class GlobalExceptionHandler {
                 BAD_REQUEST.getCode(), String.format("Request type error: %s", ex.getMessage()));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public CommonResult<?> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return CommonResult.error(BAD_REQUEST.getCode(), ex.getMessage());
+    }
+
     /**
      * 处理业务异常 ServiceException
      *

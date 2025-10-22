@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 import lombok.*;
 import nus.edu.u.common.core.domain.base.TenantBaseDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
-import nus.edu.u.system.enums.event.EventStatusEnum;
 
 /**
  * Event data object from table event

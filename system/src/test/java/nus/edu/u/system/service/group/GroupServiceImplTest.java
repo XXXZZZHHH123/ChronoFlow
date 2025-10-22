@@ -5,7 +5,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -14,12 +15,15 @@ import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dataobject.user.UserGroupDO;
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
 import nus.edu.u.system.domain.vo.group.GroupRespVO;
 import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
 import nus.edu.u.system.enums.ErrorCodeConstants;
 import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
+import nus.edu.u.system.mapper.task.TaskMapper;
+import nus.edu.u.system.mapper.user.UserGroupMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -41,9 +46,13 @@ class GroupServiceImplTest {
 
     @Mock private EventMapper eventMapper;
 
+    @Mock private TaskMapper taskMapper;
+
+    @Mock private UserGroupMapper userGroupMapper;
+
     @Mock private GroupService groupServiceProxy;
 
-    @InjectMocks private GroupServiceImpl groupService;
+    @Spy @InjectMocks private GroupServiceImpl groupService;
 
     private CreateGroupReqVO createGroupReqVO;
     private UpdateGroupReqVO updateGroupReqVO;
@@ -162,15 +171,16 @@ class GroupServiceImplTest {
     void deleteGroup_Success() {
         // Given
         when(deptMapper.selectById(1L)).thenReturn(deptDO);
-        lenient().when(groupService.getGroupMembers(1L)).thenReturn(Collections.emptyList());
-        when(deptMapper.update(isNull(), any())).thenReturn(1);
+        when(userGroupMapper.selectList(any(LambdaQueryWrapper.class)))
+                .thenReturn(Collections.emptyList());
+        when(deptMapper.update(isNull(), any(UpdateWrapper.class))).thenReturn(1);
 
         // When
         assertDoesNotThrow(() -> groupService.deleteGroup(1L));
 
         // Then
         verify(deptMapper).selectById(1L);
-        verify(deptMapper).update(isNull(), any());
+        verify(deptMapper).update(isNull(), any(UpdateWrapper.class));
     }
 
     @Test
@@ -183,35 +193,35 @@ class GroupServiceImplTest {
                 assertThrows(ServiceException.class, () -> groupService.deleteGroup(1L));
 
         assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
-        verify(deptMapper, never()).update(any(), any(LambdaUpdateWrapper.class));
+        verify(deptMapper, never()).update(any(), any());
     }
 
-    // TODO 报错修改
-    //    @Test
-    //    void addMemberToGroup_Success() {
-    //        // Given
-    //        Long groupId = 1L;
-    //        Long userId = 2L;
-    //        UserDO user =
-    //                UserDO.builder()
-    //                        .id(userId)
-    //                        .username("testuser2")
-    //                        .status(CommonStatusEnum.ENABLE.getStatus())
-    //                        .deptId(null) // Not in any group
-    //                        .build();
-    //
-    //        when(deptMapper.selectById(groupId)).thenReturn(deptDO);
-    //        when(userMapper.selectById(userId)).thenReturn(user);
-    //        when(userMapper.update(isNull(), any(LambdaUpdateWrapper.class))).thenReturn(1);
-    //
-    //        // When
-    //        assertDoesNotThrow(() -> groupService.addMemberToGroup(groupId, userId));
-    //
-    //        // Then
-    //        verify(deptMapper).selectById(groupId);
-    //        verify(userMapper).selectById(userId);
-    //        verify(userMapper).update(isNull(), any(LambdaUpdateWrapper.class));
-    //    }
+    @Test
+    void addMemberToGroup_Success() {
+        // Given
+        Long groupId = 1L;
+        Long userId = 2L;
+        UserDO user =
+                UserDO.builder()
+                        .id(userId)
+                        .username("testuser2")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
+
+        when(deptMapper.selectById(groupId)).thenReturn(deptDO);
+        when(userMapper.selectById(userId)).thenReturn(user);
+        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+        when(userGroupMapper.insert(any(UserGroupDO.class))).thenReturn(1);
+
+        // When
+        assertDoesNotThrow(() -> groupService.addMemberToGroup(groupId, userId));
+
+        // Then
+        verify(deptMapper).selectById(groupId);
+        verify(userMapper).selectById(userId);
+        verify(userGroupMapper).selectOne(any(LambdaQueryWrapper.class));
+        verify(userGroupMapper).insert(any(UserGroupDO.class));
+    }
 
     @Test
     void addMemberToGroup_GroupNotFound() {
@@ -244,14 +254,14 @@ class GroupServiceImplTest {
         Long groupId = 1L;
         Long userId = 2L;
         UserDO user =
-                UserDO.builder()
-                        .id(userId)
-                        .deptId(groupId) // Already in the group
-                        .status(CommonStatusEnum.ENABLE.getStatus())
-                        .build();
+                UserDO.builder().id(userId).status(CommonStatusEnum.ENABLE.getStatus()).build();
+
+        UserGroupDO existingRelation =
+                UserGroupDO.builder().id(1L).userId(userId).deptId(groupId).eventId(1L).build();
 
         when(deptMapper.selectById(groupId)).thenReturn(deptDO);
         when(userMapper.selectById(userId)).thenReturn(user);
+        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(existingRelation);
 
         // When & Then
         ServiceException exception =
@@ -260,6 +270,37 @@ class GroupServiceImplTest {
                         () -> groupService.addMemberToGroup(groupId, userId));
 
         assertEquals(ErrorCodeConstants.GROUP_MEMBER_ALREADY_EXISTS.getCode(), exception.getCode());
+    }
+
+    @Test
+    void addMemberToGroup_UserAlreadyInOtherGroup() {
+        // Given
+        Long groupId = 1L;
+        Long userId = 2L;
+        UserDO user =
+                UserDO.builder().id(userId).status(CommonStatusEnum.ENABLE.getStatus()).build();
+
+        UserGroupDO existingRelation =
+                UserGroupDO.builder()
+                        .id(1L)
+                        .userId(userId)
+                        .deptId(999L) // Different group
+                        .eventId(1L)
+                        .build();
+
+        when(deptMapper.selectById(groupId)).thenReturn(deptDO);
+        when(userMapper.selectById(userId)).thenReturn(user);
+        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(existingRelation);
+
+        // When & Then
+        ServiceException exception =
+                assertThrows(
+                        ServiceException.class,
+                        () -> groupService.addMemberToGroup(groupId, userId));
+
+        assertEquals(
+                ErrorCodeConstants.USER_ALREADY_IN_OTHER_GROUP_OF_EVENT.getCode(),
+                exception.getCode());
     }
 
     @Test
@@ -282,44 +323,43 @@ class GroupServiceImplTest {
         assertEquals(ErrorCodeConstants.USER_STATUS_INVALID.getCode(), exception.getCode());
     }
 
-    // TODO 报错修改
-    //    @Test
-    //    void removeMemberFromGroup_Success() {
-    //        // Given
-    //        Long groupId = 1L;
-    //        Long userId = 2L;
-    //        UserDO user = UserDO.builder().id(userId).deptId(groupId).build();
-    //        DeptDO group =
-    //                DeptDO.builder()
-    //                        .id(groupId)
-    //                        .leadUserId(3L) // Different user is leader
-    //                        .build();
-    //
-    //        when(userMapper.selectById(userId)).thenReturn(user);
-    //        when(deptMapper.selectById(groupId)).thenReturn(group);
-    //        when(userMapper.update(isNull(), any(LambdaUpdateWrapper.class))).thenReturn(1);
-    //
-    //        // When
-    //        assertDoesNotThrow(() -> groupService.removeMemberFromGroup(groupId, userId));
-    //
-    //        // Then
-    //        verify(userMapper).selectById(userId);
-    //        verify(deptMapper).selectById(groupId);
-    //        verify(userMapper).update(isNull(), any(LambdaUpdateWrapper.class));
-    //    }
+    @Test
+    void removeMemberFromGroup_Success() {
+        // Given
+        Long groupId = 1L;
+        Long userId = 2L;
+        UserGroupDO userGroup =
+                UserGroupDO.builder().id(10L).userId(userId).deptId(groupId).eventId(1L).build();
+        DeptDO group =
+                DeptDO.builder()
+                        .id(groupId)
+                        .leadUserId(3L) // Different user is leader
+                        .build();
+
+        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(userGroup);
+        when(deptMapper.selectById(groupId)).thenReturn(group);
+
+        when(taskMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+
+        when(userGroupMapper.deleteById(10L)).thenReturn(1);
+
+        // When
+        assertDoesNotThrow(() -> groupService.removeMemberFromGroup(groupId, userId));
+
+        // Then
+        verify(userGroupMapper).selectOne(any(LambdaQueryWrapper.class));
+        verify(deptMapper).selectById(groupId);
+        verify(taskMapper).selectCount(any(LambdaQueryWrapper.class));
+        verify(userGroupMapper).deleteById(10L);
+    }
 
     @Test
     void removeMemberFromGroup_UserNotInGroup() {
         // Given
         Long groupId = 1L;
         Long userId = 2L;
-        UserDO user =
-                UserDO.builder()
-                        .id(userId)
-                        .deptId(2L) // In different group
-                        .build();
 
-        when(userMapper.selectById(userId)).thenReturn(user);
+        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
 
         // When & Then
         ServiceException exception =
@@ -327,7 +367,7 @@ class GroupServiceImplTest {
                         ServiceException.class,
                         () -> groupService.removeMemberFromGroup(groupId, userId));
 
-        assertEquals(ErrorCodeConstants.USER_NOT_FOUND.getCode(), exception.getCode());
+        assertEquals(ErrorCodeConstants.USER_NOT_IN_GROUP.getCode(), exception.getCode());
     }
 
     @Test
@@ -335,14 +375,15 @@ class GroupServiceImplTest {
         // Given
         Long groupId = 1L;
         Long userId = 2L;
-        UserDO user = UserDO.builder().id(userId).deptId(groupId).build();
+        UserGroupDO userGroup =
+                UserGroupDO.builder().id(10L).userId(userId).deptId(groupId).eventId(1L).build();
         DeptDO group =
                 DeptDO.builder()
                         .id(groupId)
                         .leadUserId(userId) // User is the leader
                         .build();
 
-        when(userMapper.selectById(userId)).thenReturn(user);
+        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(userGroup);
         when(deptMapper.selectById(groupId)).thenReturn(group);
 
         // When & Then
@@ -358,6 +399,23 @@ class GroupServiceImplTest {
     void getGroupMembers_Success() {
         // Given
         Long groupId = 1L;
+        List<UserGroupDO> userGroups =
+                Arrays.asList(
+                        UserGroupDO.builder()
+                                .id(1L)
+                                .userId(1L)
+                                .deptId(groupId)
+                                .eventId(1L)
+                                .joinTime(LocalDateTime.now())
+                                .build(),
+                        UserGroupDO.builder()
+                                .id(2L)
+                                .userId(2L)
+                                .deptId(groupId)
+                                .eventId(1L)
+                                .joinTime(LocalDateTime.now())
+                                .build());
+
         List<UserDO> users =
                 Arrays.asList(
                         UserDO.builder()
@@ -365,7 +423,6 @@ class GroupServiceImplTest {
                                 .username("user1")
                                 .email("user1@example.com")
                                 .phone("12345678901")
-                                .deptId(groupId)
                                 .status(CommonStatusEnum.ENABLE.getStatus())
                                 .build(),
                         UserDO.builder()
@@ -373,11 +430,11 @@ class GroupServiceImplTest {
                                 .username("user2")
                                 .email("user2@example.com")
                                 .phone("12345678902")
-                                .deptId(groupId)
                                 .status(CommonStatusEnum.ENABLE.getStatus())
                                 .build());
 
-        when(userMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(users);
+        when(userGroupMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(userGroups);
+        when(userMapper.selectBatchIds(anyList())).thenReturn(users);
 
         // When
         List<GroupRespVO.MemberInfo> result = groupService.getGroupMembers(groupId);
@@ -386,7 +443,24 @@ class GroupServiceImplTest {
         assertEquals(2, result.size());
         assertEquals("user1", result.get(0).getUsername());
         assertEquals("user2", result.get(1).getUsername());
-        verify(userMapper).selectList(any(LambdaQueryWrapper.class));
+        verify(userGroupMapper).selectList(any(LambdaQueryWrapper.class));
+        verify(userMapper).selectBatchIds(anyList());
+    }
+
+    @Test
+    void getGroupMembers_EmptyResult() {
+        // Given
+        Long groupId = 1L;
+        when(userGroupMapper.selectList(any(LambdaQueryWrapper.class)))
+                .thenReturn(Collections.emptyList());
+
+        // When
+        List<GroupRespVO.MemberInfo> result = groupService.getGroupMembers(groupId);
+
+        // Then
+        assertTrue(result.isEmpty());
+        verify(userGroupMapper).selectList(any(LambdaQueryWrapper.class));
+        verify(userMapper, never()).selectBatchIds(anyList());
     }
 
     @Test
@@ -396,21 +470,21 @@ class GroupServiceImplTest {
         List<Long> userIds = Arrays.asList(1L, 2L, 3L);
 
         when(deptMapper.selectById(groupId)).thenReturn(deptDO);
-
-        lenient()
-                .when(userMapper.selectById(anyLong()))
+        when(userMapper.selectById(anyLong()))
                 .thenReturn(
                         UserDO.builder()
                                 .id(1L)
                                 .status(CommonStatusEnum.ENABLE.getStatus())
                                 .build());
-        lenient().when(userMapper.update(isNull(), any(LambdaUpdateWrapper.class))).thenReturn(1);
+        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+        when(userGroupMapper.insert(any(UserGroupDO.class))).thenReturn(1);
 
         // When
         assertDoesNotThrow(() -> groupService.addMembersToGroup(groupId, userIds));
 
         // Then
         verify(deptMapper, times(4)).selectById(groupId);
+        verify(userGroupMapper, times(3)).insert(any(UserGroupDO.class));
     }
 
     @Test
@@ -444,15 +518,17 @@ class GroupServiceImplTest {
 
         when(deptMapper.selectById(groupId)).thenReturn(deptDO);
 
-        // Mock AopContext to return the service itself
         try (MockedStatic<AopContext> mockedAopContext = mockStatic(AopContext.class)) {
             mockedAopContext.when(AopContext::currentProxy).thenReturn(groupService);
+
+            doNothing().when(groupService).removeMemberFromGroup(eq(groupId), anyLong());
 
             // When
             assertDoesNotThrow(() -> groupService.removeMembersToGroup(groupId, userIds));
 
             // Then
             verify(deptMapper).selectById(groupId);
+            verify(groupService, times(3)).removeMemberFromGroup(eq(groupId), anyLong());
         }
     }
 

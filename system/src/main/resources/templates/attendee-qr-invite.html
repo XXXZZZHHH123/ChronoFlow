@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${subject}">Your ChronoFlow QR Code</title>
+    <style>
+        body {
+            font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            color: #222;
+            background-color: #f7f8fa;
+            margin: 0;
+            padding: 25px 0;
+        }
+        .container {
+            max-width: 640px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-left: 18px;
+            text-align: left;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+        p {
+            line-height: 1.6;
+            margin: 10px 0 16px;
+        }
+        .box {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 20px 0;
+        }
+        .event-box {
+            background: #f0f7ff;
+            border: 1px solid #d0e4ff;
+            border-left: 4px solid #1a73e8;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin: 20px 0;
+        }
+        .event-box h3 {
+            color: #1a73e8;
+            margin: 0 0 12px 0;
+            font-size: 16px;
+        }
+        .event-detail {
+            margin: 8px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 24px 20px;
+            background: #fafafa;
+            border-radius: 10px;
+            margin: 24px 0;
+        }
+        .qr-section h3 {
+            color: #2c3e50;
+            margin: 0 0 8px 0;
+            font-size: 18px;
+        }
+        .qr-section p {
+            color: #666;
+            font-size: 14px;
+            margin: 0 0 16px 0;
+        }
+        .qr-container {
+            display: inline-block;
+            padding: 16px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .qr-container img {
+            display: block;
+            width: 280px;
+            height: 280px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+        }
+        .instructions {
+            background: #f0fdf4;
+            border: 1px solid #d1f4e0;
+            border-left: 4px solid #10b981;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin: 20px 0;
+        }
+        .instructions h4 {
+            color: #047857;
+            margin: 0 0 10px 0;
+            font-size: 15px;
+        }
+        .instructions ul {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .instructions li {
+            margin: 6px 0;
+        }
+        .warning {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 20px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .foot {
+            color: #777;
+            font-size: 12px;
+            margin-top: 32px;
+            text-align: center;
+            padding-top: 24px;
+            border-top: 1px solid #eee;
+        }
+        .foot img {
+            height: 40px;
+            margin-top: 12px;
+        }
+        .highlight {
+            font-weight: 600;
+            color: #1a73e8;
+        }
+    </style>
+</head>
+<body>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" align="left">
+    <tr>
+        <td align="left" style="padding-left:24px;">
+            <div class="container">
+
+                <h2 th:text="${subject}">Your ChronoFlow QR Code</h2>
+
+                <p>
+                    Hi <b th:text="${attendeeName}">Attendee</b>,<br/>
+                    You've been invited to attend the event organized by
+                    <b th:text="${organizationName}">Organization</b>.
+                </p>
+
+                <!-- Event Details -->
+                <div class="event-box" th:if="${eventName != null and eventName != ''}">
+                    <h3>📅 Event Details</h3>
+                    <div class="event-detail" th:if="${eventName != null and eventName != ''}">
+                        <strong>Event:</strong> <span th:text="${eventName}">Event Name</span>
+                    </div>
+                    <div class="event-detail" th:if="${eventDate != null and eventDate != ''}">
+                        <strong>Date:</strong> <span th:text="${eventDate}">Date</span>
+                    </div>
+                    <div class="event-detail" th:if="${eventLocation != null and eventLocation != ''}">
+                        <strong>Location:</strong> <span th:text="${eventLocation}">Location</span>
+                    </div>
+                    <div class="event-detail" th:if="${eventDescription != null and eventDescription != ''}" style="margin-top: 12px;">
+                        <span th:text="${eventDescription}">Description</span>
+                    </div>
+                </div>
+
+                <!-- QR Code Section -->
+                <div class="qr-section">
+                    <h3>🎫 Your Check-In QR Code</h3>
+                    <p>Present this QR code at the event check-in counter</p>
+                    <div class="qr-container">
+                        <img th:src="'cid:' + ${qrCodeCid}" alt="Check-in QR Code" />
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="instructions">
+                    <h4>📱 How to Use</h4>
+                    <ul>
+                        <li><strong>Save this email</strong> or take a screenshot of the QR code</li>
+                        <li><strong>At the event:</strong> Show it to staff at the check-in counter</li>
+                        <li><strong>Keep it private:</strong> This code is unique to you</li>
+                    </ul>
+                </div>
+
+                <!-- Security Warning -->
+                <div class="warning">
+                    <strong>⚠️ Important:</strong> This QR code is personal and should not be shared.
+                    Check-in can only start 2 hours before the event begins.
+                </div>
+
+                <p style="text-align: center; margin-top: 28px; font-size: 16px;">
+                    We're excited to have you join us! 🎉<br/>
+                    <span style="font-size: 14px; color: #666;">
+                        Stay tuned for updates from <b th:text="${organizationName}">Organization</b>
+                    </span>
+                </p>
+
+                <div class="foot">
+                    <p>
+                        Powered by <b class="highlight">ChronoFlow</b> – your trusted event management platform.<br/>
+                        If you weren't expecting this email, you can safely ignore it.<br/>
+                        Need help? Contact <a href="mailto:support@chronoflowse.xyz" style="color: #1a73e8;">support@chronoflowse.xyz</a>
+                    </p>
+                    <img th:src="'cid:' + ${logoCid}" alt="ChronoFlow Logo" />
+                </div>
+
+            </div>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

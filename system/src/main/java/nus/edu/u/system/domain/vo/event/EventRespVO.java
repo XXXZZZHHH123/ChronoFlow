@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Data;
-import nus.edu.u.common.annotation.InEnum;
-import nus.edu.u.system.enums.event.EventStatusEnum;
 
 @Data
 public class EventRespVO {
@@ -28,7 +26,6 @@ public class EventRespVO {
             timezone = "UTC")
     private LocalDateTime endTime;
 
-    @InEnum(value = EventStatusEnum.class, message = "Illegal event status")
     private Integer status;
 
     private String remark;

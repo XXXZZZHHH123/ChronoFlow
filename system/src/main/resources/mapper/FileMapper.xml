@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="nus.edu.u.system.mapper.file.FileMapper">
+
+    <insert id="insertBatch">
+        INSERT INTO file (
+        id, task_log_id, event_id, name, object_name, provider, type, size, creator, create_time, updater, update_time
+        )
+        VALUES
+        <foreach collection="list" item="f" separator=",">
+            (#{f.id}, #{f.taskLogId}, #{f.eventId}, #{f.name},
+            #{f.objectName}, #{f.provider}, #{f.type}, #{f.size},
+            #{f.creator}, #{f.createTime}, #{f.updater}, #{f.updateTime})
+        </foreach>
+    </insert>
+
+</mapper>

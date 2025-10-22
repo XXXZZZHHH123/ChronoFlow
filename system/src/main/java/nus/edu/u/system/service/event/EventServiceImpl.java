@@ -3,6 +3,7 @@ package nus.edu.u.system.service.event;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
@@ -11,39 +12,51 @@ import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
-import nus.edu.u.common.enums.EventStatusEnum;
 import nus.edu.u.system.convert.event.EventConvert;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
-import nus.edu.u.system.domain.dataobject.task.EventParticipantDO;
 import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
+import nus.edu.u.system.domain.dataobject.user.UserGroupDO;
 import nus.edu.u.system.domain.dto.EventDTO;
 import nus.edu.u.system.domain.vo.event.*;
+import nus.edu.u.system.domain.vo.group.GroupRespVO;
+import nus.edu.u.system.enums.event.EventStatusEnum;
 import nus.edu.u.system.enums.task.TaskStatusEnum;
 import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
-import nus.edu.u.system.mapper.task.EventParticipantMapper;
 import nus.edu.u.system.mapper.task.TaskMapper;
+import nus.edu.u.system.mapper.user.UserGroupMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
+import nus.edu.u.system.service.event.validation.EventValidationContext;
+import nus.edu.u.system.service.event.validation.EventValidationHandler;
+import nus.edu.u.system.service.group.GroupService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
 public class EventServiceImpl implements EventService {
+
+    @Resource private GroupService groupService;
+
     @Resource private EventMapper eventMapper;
-    @Resource private EventParticipantMapper eventParticipantMapper;
+
     @Resource private UserMapper userMapper;
+
     @Resource private DeptMapper deptMapper;
+
     @Resource private TaskMapper taskMapper;
+
+    @Resource private UserGroupMapper userGroupMapper;
+
+    @Autowired private List<EventValidationHandler> validationHandlers;
 
     @Override
     @Transactional
     public EventRespVO createEvent(EventCreateReqVO reqVO) {
-        validateTimeRange(reqVO.getStartTime(), reqVO.getEndTime());
-        validateOrganizerExists(reqVO.getOrganizerId());
-        validateParticipantsExist(reqVO.getParticipantUserIds());
+        runValidations(EventValidationContext.forCreate(reqVO));
 
         EventDTO dto = EventConvert.INSTANCE.convert(reqVO);
         EventDO event = EventConvert.INSTANCE.convert(dto);
@@ -52,21 +65,16 @@ public class EventServiceImpl implements EventService {
         }
         eventMapper.insert(event);
 
-        if (reqVO.getParticipantUserIds() != null) {
-            for (Long userId : reqVO.getParticipantUserIds()) {
-                EventParticipantDO relation = new EventParticipantDO();
-                relation.setEventId(event.getId());
-                relation.setUserId(userId);
-                eventParticipantMapper.insert(relation);
-            }
-        }
         EventRespVO resp = EventConvert.INSTANCE.DOconvertVO(event);
 
-        Long count =
-                eventParticipantMapper.selectCount(
-                        Wrappers.<EventParticipantDO>lambdaQuery()
-                                .eq(EventParticipantDO::getEventId, event.getId()));
-        resp.setJoiningParticipants(count.intValue());
+        Long eventId = event.getId();
+        if (eventId != null) {
+            Map<Long, Integer> participantCounts =
+                    fetchParticipantCountsByEventIds(List.of(eventId));
+            resp.setJoiningParticipants(participantCounts.getOrDefault(eventId, 0));
+        } else {
+            resp.setJoiningParticipants(0);
+        }
 
         return resp;
     }
@@ -80,11 +88,8 @@ public class EventServiceImpl implements EventService {
         }
         EventRespVO resp = EventConvert.INSTANCE.DOconvertVO(event);
 
-        Long count =
-                eventParticipantMapper.selectCount(
-                        Wrappers.<EventParticipantDO>lambdaQuery()
-                                .eq(EventParticipantDO::getEventId, eventId));
-        resp.setJoiningParticipants(count.intValue());
+        Map<Long, Integer> participantCounts = fetchParticipantCountsByEventIds(List.of(eventId));
+        resp.setJoiningParticipants(participantCounts.getOrDefault(eventId, 0));
 
         resp.setGroups(fetchGroupsByEventIds(List.of(eventId)).getOrDefault(eventId, List.of()));
         resp.setTaskStatus(
@@ -95,37 +100,96 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public List<EventRespVO> getByOrganizerId(Long organizerId) {
         if (userMapper.selectById(organizerId) == null) {
             throw exception(ORGANIZER_NOT_FOUND);
         }
 
-        List<EventDO> events =
+        List<EventDO> organizerEvents =
                 eventMapper.selectList(
                         new LambdaQueryWrapper<EventDO>().eq(EventDO::getUserId, organizerId));
-        if (events.isEmpty()) {
+
+        List<UserGroupDO> memberships =
+                userGroupMapper.selectList(
+                        Wrappers.<UserGroupDO>lambdaQuery()
+                                .eq(UserGroupDO::getUserId, organizerId));
+
+        if ((organizerEvents == null || organizerEvents.isEmpty())
+                && (memberships == null || memberships.isEmpty())) {
             return List.of();
         }
 
-        List<Long> eventIds = events.stream().map(EventDO::getId).toList();
-        List<EventParticipantDO> allRels =
-                eventParticipantMapper.selectList(
-                        new LambdaQueryWrapper<EventParticipantDO>()
-                                .in(EventParticipantDO::getEventId, eventIds));
+        Map<Long, EventDO> eventsById = new LinkedHashMap<>();
+        if (organizerEvents != null) {
+            organizerEvents.stream()
+                    .filter(Objects::nonNull)
+                    .forEach(event -> eventsById.put(event.getId(), event));
+        }
 
-        Map<Long, Integer> countsByEventId =
-                allRels.stream()
-                        .collect(
-                                Collectors.groupingBy(
-                                        EventParticipantDO::getEventId,
-                                        Collectors.summingInt(e -> 1)));
+        if (memberships != null && !memberships.isEmpty()) {
+            Set<Long> participantEventIds =
+                    memberships.stream()
+                            .map(UserGroupDO::getEventId)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toCollection(LinkedHashSet::new));
+
+            participantEventIds.removeAll(eventsById.keySet());
+
+            if (!participantEventIds.isEmpty()) {
+                List<EventDO> participantEvents = eventMapper.selectBatchIds(participantEventIds);
+                if (participantEvents != null) {
+                    participantEvents.stream()
+                            .filter(Objects::nonNull)
+                            .forEach(event -> eventsById.put(event.getId(), event));
+                }
+            }
+        }
+
+        if (eventsById.isEmpty()) {
+            return List.of();
+        }
+
+        Comparator<EventDO> byCreateTimeDesc =
+                Comparator.comparing(
+                        (EventDO event) ->
+                                Optional.ofNullable(event.getCreateTime())
+                                        .orElse(LocalDateTime.MIN),
+                        Comparator.reverseOrder());
+        Comparator<EventDO> byIdDesc =
+                Comparator.comparing(
+                        (EventDO event) ->
+                                Optional.ofNullable(event.getId()).orElse(Long.MIN_VALUE),
+                        Comparator.reverseOrder());
+
+        List<EventDO> orderedEvents =
+                eventsById.values().stream()
+                        .sorted(byCreateTimeDesc.thenComparing(byIdDesc))
+                        .toList();
+
+        List<Long> eventIds = orderedEvents.stream().map(EventDO::getId).toList();
+        Map<Long, Integer> countsByEventId = fetchParticipantCountsByEventIds(eventIds);
 
         Map<Long, List<EventRespVO.GroupVO>> groupsByEventId = fetchGroupsByEventIds(eventIds);
         Map<Long, EventRespVO.TaskStatusVO> taskStatusByEventId =
                 fetchTaskStatusesByEventIds(eventIds);
 
-        return events.stream()
+        // Active event
+        for (EventDO event : orderedEvents) {
+            if (ObjectUtil.isNull(event.getStartTime()) || ObjectUtil.isNull(event.getEndTime())) {
+                continue;
+            }
+            if (LocalDateTime.now().isBefore(event.getStartTime())) {
+                event.setStatus(EventStatusEnum.NOT_STARTED.getCode());
+            } else if (LocalDateTime.now().isAfter(event.getEndTime())) {
+                event.setStatus(EventStatusEnum.COMPLETED.getCode());
+            } else {
+                event.setStatus(EventStatusEnum.ACTIVE.getCode());
+            }
+            eventMapper.updateById(event);
+        }
+
+        return orderedEvents.stream()
                 .map(
                         event -> {
                             EventRespVO vo = EventConvert.INSTANCE.DOconvertVO(event);
@@ -148,72 +212,17 @@ public class EventServiceImpl implements EventService {
             throw exception(EVENT_NOT_FOUND);
         }
 
-        LocalDateTime start =
-                reqVO.getStartTime() != null ? reqVO.getStartTime() : db.getStartTime();
-        LocalDateTime end = reqVO.getEndTime() != null ? reqVO.getEndTime() : db.getEndTime();
-        validateTimeRange(start, end);
-
-        if (reqVO.getOrganizerId() != null) {
-            validateOrganizerExists(reqVO.getOrganizerId());
-        }
-        validateParticipantsExist(reqVO.getParticipantUserIds());
+        runValidations(EventValidationContext.forUpdate(reqVO, db));
 
         EventDO patch = new EventDO();
         patch.setId(id);
         EventConvert.INSTANCE.patch(patch, reqVO);
         eventMapper.updateById(patch);
 
-        if (reqVO.getParticipantUserIds() != null) {
-            List<Long> targetList =
-                    reqVO.getParticipantUserIds().stream()
-                            .filter(Objects::nonNull)
-                            .distinct()
-                            .toList();
-
-            List<EventParticipantDO> currentList =
-                    eventParticipantMapper.selectList(
-                            Wrappers.<EventParticipantDO>lambdaQuery()
-                                    .eq(EventParticipantDO::getEventId, id));
-            Set<Long> current =
-                    currentList.stream()
-                            .map(EventParticipantDO::getUserId)
-                            .collect(Collectors.toSet());
-
-            Set<Long> target = new HashSet<>(targetList);
-            Set<Long> toRemove = new HashSet<>(current);
-            toRemove.removeAll(target);
-            Set<Long> toAdd = new HashSet<>(target);
-            toAdd.removeAll(current);
-
-            if (!toRemove.isEmpty()) {
-                eventParticipantMapper.delete(
-                        Wrappers.<EventParticipantDO>lambdaQuery()
-                                .eq(EventParticipantDO::getEventId, id)
-                                .in(EventParticipantDO::getUserId, toRemove));
-            }
-
-            if (!toAdd.isEmpty()) {
-                for (Long uid : toAdd) {
-                    EventParticipantDO rel = new EventParticipantDO();
-                    rel.setEventId(id);
-                    rel.setUserId(uid);
-                    eventParticipantMapper.insert(rel);
-                }
-            }
-        }
-
         EventDO updated = eventMapper.selectById(id);
         UpdateEventRespVO resp = EventConvert.INSTANCE.toUpdateResp(updated);
 
-        List<Long> participantIds =
-                eventParticipantMapper
-                        .selectList(
-                                Wrappers.<EventParticipantDO>lambdaQuery()
-                                        .eq(EventParticipantDO::getEventId, id))
-                        .stream()
-                        .map(EventParticipantDO::getUserId)
-                        .toList();
-        resp.setParticipantUserIds(participantIds);
+        resp.setParticipantUserIds(fetchParticipantIdsByEventId(id));
 
         return resp;
     }
@@ -231,9 +240,8 @@ public class EventServiceImpl implements EventService {
             throw exception(EVENT_DELETE_FAILED);
         }
 
-        eventParticipantMapper.delete(
-                Wrappers.<EventParticipantDO>lambdaQuery().eq(EventParticipantDO::getEventId, id));
-
+        userGroupMapper.delete(Wrappers.<UserGroupDO>lambdaQuery().eq(UserGroupDO::getEventId, id));
+        taskMapper.delete(Wrappers.<TaskDO>lambdaQuery().eq(TaskDO::getEventId, id));
         return true;
     }
 
@@ -252,8 +260,56 @@ public class EventServiceImpl implements EventService {
         if (rows <= 0) {
             throw exception(EVENT_RESTORE_FAILED);
         }
-        eventParticipantMapper.restoreByEventId(id);
+        userGroupMapper.restoreByEventId(id);
         return true;
+    }
+
+    @Override
+    public List<EventGroupRespVO> assignableMember(Long eventId) {
+        List<DeptDO> groupList =
+                deptMapper.selectList(
+                        new LambdaQueryWrapper<DeptDO>().eq(DeptDO::getEventId, eventId));
+        if (groupList == null || groupList.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<EventGroupRespVO> groupRespVOList = new ArrayList<>();
+        groupList.forEach(
+                group -> {
+                    List<GroupRespVO.MemberInfo> memberInfoList =
+                            groupService.getGroupMembers(group.getId());
+                    List<EventGroupRespVO.Member> memberList = new ArrayList<>();
+                    memberInfoList.forEach(
+                            member ->
+                                    memberList.add(
+                                            new EventGroupRespVO.Member(
+                                                    member.getUserId(), member.getUsername())));
+                    groupRespVOList.add(
+                            new EventGroupRespVO(group.getId(), group.getName(), memberList));
+                });
+        return groupRespVOList;
+    }
+
+    private void runValidations(EventValidationContext context) {
+        if (validationHandlers == null || validationHandlers.isEmpty()) {
+            legacyValidate(context);
+            return;
+        }
+        for (EventValidationHandler handler : validationHandlers) {
+            if (handler.supports(context)) {
+                handler.validate(context);
+            }
+        }
+    }
+
+    private void legacyValidate(EventValidationContext context) {
+        validateTimeRange(context.getEffectiveStartTime(), context.getEffectiveEndTime());
+        if (context.shouldValidateOrganizer()) {
+            validateOrganizerExists(context.getRequestedOrganizerId());
+        }
+        List<Long> participantIds = context.getParticipantUserIds();
+        if (participantIds != null) {
+            validateParticipantsExist(participantIds);
+        }
     }
 
     private void validateTimeRange(LocalDateTime start, LocalDateTime end) {
@@ -269,7 +325,9 @@ public class EventServiceImpl implements EventService {
     }
 
     private void validateParticipantsExist(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) return;
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
 
         List<Long> distinct = ids.stream().filter(Objects::nonNull).distinct().toList();
         if (distinct.size() != ids.size()) {
@@ -346,7 +404,7 @@ public class EventServiceImpl implements EventService {
                                         task ->
                                                 Objects.equals(
                                                         task.getStatus(),
-                                                        TaskStatusEnum.DONE.getStatus()))
+                                                        TaskStatusEnum.COMPLETED.getStatus()))
                                 .count();
         statusVO.setTotal(total);
         statusVO.setCompleted(completed);
@@ -360,5 +418,34 @@ public class EventServiceImpl implements EventService {
         statusVO.setCompleted(0);
         statusVO.setRemaining(0);
         return statusVO;
+    }
+
+    private Map<Long, Integer> fetchParticipantCountsByEventIds(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<UserGroupDO> userGroups =
+                userGroupMapper.selectList(
+                        Wrappers.<UserGroupDO>lambdaQuery().in(UserGroupDO::getEventId, eventIds));
+
+        return userGroups.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                UserGroupDO::getEventId, Collectors.summingInt(item -> 1)));
+    }
+
+    private List<Long> fetchParticipantIdsByEventId(Long eventId) {
+        if (eventId == null) {
+            return List.of();
+        }
+
+        return userGroupMapper
+                .selectList(
+                        Wrappers.<UserGroupDO>lambdaQuery().eq(UserGroupDO::getEventId, eventId))
+                .stream()
+                .map(UserGroupDO::getUserId)
+                .distinct()
+                .toList();
     }
 }

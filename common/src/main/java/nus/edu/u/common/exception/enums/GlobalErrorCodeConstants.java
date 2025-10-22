@@ -41,4 +41,5 @@ public interface GlobalErrorCodeConstants {
     ErrorCode EXCEL_HEADER_MISSING = new ErrorCode(902, "Excel header missing");
     ErrorCode EXCEL_ROLEID_INVALID = new ErrorCode(903, "Excel roleId invalid");
     ErrorCode EXCEL_FORMAT_ERROR = new ErrorCode(904, "Excel format error");
+    ErrorCode EMPTY_EXCEL = new ErrorCode(905, "Excel is empty");
 }
