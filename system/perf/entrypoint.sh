@@ -105,8 +105,10 @@ else
   echo "GATLING_RESULT=failure"
 fi
 
-if [[ "${GATLING_KEEP_ALIVE:-true}" == "true" ]]; then
-  echo "Gatling finished with status ${status}. Keeping container alive (GATLING_KEEP_ALIVE=${GATLING_KEEP_ALIVE})."
+keep_alive="${GATLING_KEEP_ALIVE:-true}"
+
+if [[ "${keep_alive}" == "true" ]]; then
+  echo "Gatling finished with status ${status}. Keeping container alive (GATLING_KEEP_ALIVE=${keep_alive})."
   tail -f /dev/null &
   child=$!
   trap "kill ${child}" TERM INT
