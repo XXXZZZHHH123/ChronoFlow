@@ -15,8 +15,20 @@ echo "PWD=$(pwd)"
 echo "Listing modules at repo root:"
 ls -la || true
 
+REVISION_VALUE="${REVISION:-}"
+if [[ -z "${REVISION_VALUE}" ]]; then
+  echo "Resolving revision property from root pom..."
+  REVISION_VALUE="$(mvn -q -DforceStdout help:evaluate -Dexpression=revision 2>/dev/null | tail -n1)"
+  if [[ -z "${REVISION_VALUE}" ]]; then
+    echo "Failed to resolve revision property; defaulting to 1.0.0-SNAPSHOT" >&2
+    REVISION_VALUE="1.0.0-SNAPSHOT"
+  fi
+fi
+export REVISION="${REVISION_VALUE}"
+echo "Using revision=${REVISION}"
+
 echo "Preparing local Maven repository for system module..."
-mvn -B -U -DskipTests install
+mvn -B -U -Drevision="${REVISION}" -DskipTests install
 
 declare -a args
 args=(
@@ -24,6 +36,7 @@ args=(
     io.gatling:gatling-maven-plugin:4.20.6:test \
     -Dgatling.skip=false \
     -Dgatling.failOnAssertionFailure=false \
+    -Drevision="${REVISION}" \
     -DtaskService.baseUrl="${BASE_URL}"
 )
 
