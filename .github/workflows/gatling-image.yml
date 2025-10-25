@@ -13,11 +13,13 @@ permissions:
 jobs:
   gatling-image:
     runs-on: ubuntu-latest
-    env:
-      IMAGE_NAME: ghcr.io/${{ github.repository }}/gatling
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set image name
+        run: |
+          echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}/gatling" >> $GITHUB_ENV
 
       - name: Derive version tags
         run: |
