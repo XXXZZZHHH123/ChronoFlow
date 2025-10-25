@@ -16,7 +16,7 @@ echo "Listing modules at repo root:"
 ls -la || true
 
 echo "Preparing local Maven repository for system module..."
-mvn -B -U -pl system -am -DskipTests install
+mvn -B -U -DskipTests install
 
 declare -a args
 args=(
