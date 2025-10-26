@@ -19,6 +19,9 @@ class SystemTaskSimulation extends Simulation {
   private def resolve(key: String, envKeys: Seq[String]): Option[String] =
     sys.props.get(key).orElse(envKeys.view.flatMap(sys.env.get).headOption)
 
+  private def resolveInt(key: String, envKeys: Seq[String], default: Int): Int =
+    resolve(key, envKeys).flatMap(v => scala.util.Try(v.toInt).toOption).getOrElse(default)
+
   private val baseUrl = resolve("taskService.baseUrl", Seq("SYSTEM_PERF_BASE_URL", "TASK_SERVICE_BASE_URL"))
     .getOrElse("http://localhost:8080")
 
@@ -70,15 +73,23 @@ class SystemTaskSimulation extends Simulation {
           .check(status.in(200, 404))
       )
 
+  private val rampUsers = resolveInt("system.perf.rampUsers", Seq("SYSTEM_PERF_RAMP_USERS"), 100)
+  private val rampSeconds = resolveInt("system.perf.rampSeconds", Seq("SYSTEM_PERF_RAMP_SECONDS"), 30)
+  private val constantUsers = resolveInt("system.perf.constantUsers", Seq("SYSTEM_PERF_CONSTANT_USERS"), 100)
+  private val constantSeconds = resolveInt("system.perf.constantSeconds", Seq("SYSTEM_PERF_CONSTANT_SECONDS"), 60)
+  private val p95Ms = resolveInt("system.perf.p95Ms", Seq("SYSTEM_PERF_P95_MS"), 70000)
+  private val minSuccessPercent = resolveInt("system.perf.successPercent", Seq("SYSTEM_PERF_SUCCESS_PERCENT"), 80)
+  private val maxFailurePercent = resolveInt("system.perf.failurePercent", Seq("SYSTEM_PERF_FAILURE_PERCENT"), 5)
+
   setUp(
     scenarioBuilder.inject(
-      rampUsers(100).during(30.seconds),
-      constantUsersPerSec(100).during(60.seconds)
+      rampUsers(rampUsers).during(rampSeconds.seconds),
+      constantUsersPerSec(constantUsers).during(constantSeconds.seconds)
     )
   ).protocols(httpProtocol)
     .assertions(
-      global.responseTime.percentile3.lte(70000),
-      global.successfulRequests.percent.gte(80),
-      forAll.failedRequests.percent.lte(5)
+      global.responseTime.percentile3.lte(p95Ms),
+      global.successfulRequests.percent.gte(minSuccessPercent),
+      forAll.failedRequests.percent.lte(maxFailurePercent)
     )
 }
