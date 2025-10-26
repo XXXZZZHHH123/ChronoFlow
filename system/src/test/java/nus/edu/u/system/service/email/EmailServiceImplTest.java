@@ -9,6 +9,7 @@ import nus.edu.u.framework.notification.email.EmailLimitPropertiesConfig;
 import nus.edu.u.framework.notification.email.EmailProviderPropertiesConfig;
 import nus.edu.u.framework.notification.idempotency.IdempotencyKeyUtil;
 import nus.edu.u.framework.notification.idempotency.IdempotencyPropertiesConfig;
+import nus.edu.u.system.domain.dto.AttachmentDTO;
 import nus.edu.u.system.provider.email.EmailClientFactory;
 import nus.edu.u.system.provider.email.SesEmailClient;
 import nus.edu.u.system.provider.email.SesRawAttachmentEmailClient;
@@ -95,6 +96,26 @@ class EmailServiceImplTest {
         assertThat(result).doesNotContain("ALREADY_ACCEPTED");
     }
 
+    @Test
+    void send_withAttachments_routesToRawClient() {
+        AttachmentDTO attachment =
+                new AttachmentDTO("agenda.pdf", "application/pdf", new byte[] {1}, null, false, null);
+
+        String result =
+                emailService.send("user@example.com", "Subject", "<p>Hello</p>", List.of(attachment));
+
+        assertThat(result).isEqualTo("provider-raw");
+    }
+
+    @Test
+    void send_whenClientThrows_propagatesException() {
+        simpleSesClient.throwOnSend = true;
+
+        assertThatThrownBy(() -> emailService.send("user@example.com", "Subject", "<p>Hello</p>", null))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("simulated failure");
+    }
+
     private static final class RecordingRateLimiter implements RateLimiter {
         boolean allow = true;
         boolean wasCalled;
@@ -125,6 +146,7 @@ class EmailServiceImplTest {
 
     private static final class RecordingSesClient implements SesV2Client {
         String messageId;
+        boolean throwOnSend;
 
         private RecordingSesClient(String messageId) {
             this.messageId = messageId;
@@ -132,6 +154,9 @@ class EmailServiceImplTest {
 
         @Override
         public SendEmailResponse sendEmail(SendEmailRequest request) {
+            if (throwOnSend) {
+                throw new RuntimeException("simulated failure");
+            }
             return SendEmailResponse.builder().messageId(messageId).build();
         }
 
