@@ -13,6 +13,8 @@ permissions:
 jobs:
   gatling-image:
     runs-on: ubuntu-latest
+    env:
+      GCS_RESULTS_BUCKET: ${{ vars.GCS_RESULTS_BUCKET }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -51,3 +53,19 @@ jobs:
             ${{ env.TAG_LATEST }}
             ${{ env.TAG_SHA }}
             ${{ env.TAG_RUN }}
+
+      - name: Record default GCS results object
+        id: gcs-object
+        run: |
+          if [ -z "${GCS_RESULTS_BUCKET}" ]; then
+            echo "No GCS bucket configured in repository variable 'GCS_RESULTS_BUCKET'; skipping output."
+            exit 0
+          fi
+          OBJECT="gs://${GCS_RESULTS_BUCKET}/${GITHUB_REF_NAME}/${GITHUB_RUN_ID}-${GITHUB_SHA:0:12}.tgz"
+          echo "DEFAULT_RESULTS_OBJECT=${OBJECT}" >> "$GITHUB_ENV"
+          printf 'default-results-object=%s\n' "${OBJECT}" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Default GCS Results Object"
+            echo
+            echo "\`${OBJECT}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
