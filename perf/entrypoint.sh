@@ -44,6 +44,13 @@ set -e
 
 RESULTS_DIR="${WORKDIR}/target/gatling"
 
+ARCHIVE_ROOT="/opt/gatling/results"
+mkdir -p "${ARCHIVE_ROOT}"
+if [[ -d "${ARCHIVE_ROOT}" ]]; then
+  echo "Clearing previous local Gatling archives..."
+  rm -rf "${ARCHIVE_ROOT:?}/"*
+fi
+
 ARCHIVE_FILE="/tmp/gatling-results.tgz"
 if [[ -d "${RESULTS_DIR}" ]]; then
   echo "Archiving Gatling results..."
@@ -97,9 +104,6 @@ if [[ -d "${RESULTS_DIR}" ]]; then
 else
   echo "Results directory ${RESULTS_DIR} not found; skipping remote archive upload."
 fi
-
-ARCHIVE_ROOT="/opt/gatling/results"
-mkdir -p "${ARCHIVE_ROOT}"
 
 if [[ -d "${RESULTS_DIR}" ]]; then
   RUN_ID="$(date -u +"%Y%m%dT%H%M%SZ")"
