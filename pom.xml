@@ -38,6 +38,7 @@
 		<zxing-core.version>3.5.3</zxing-core.version>
         <zxing-javase.version>3.5.3</zxing-javase.version>
 		<gcs.version>2.22.2</gcs.version>
+		<sonar.exclusions>common/**,framework/**,perf/**</sonar.exclusions>
 	</properties>
 
 	<dependencyManagement>

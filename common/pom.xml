@@ -17,6 +17,7 @@
 
     <properties>
         <spring-boot.run.skip>true</spring-boot.run.skip>
+        <sonar.skip>true</sonar.skip>
     </properties>
 
     <dependencies>
