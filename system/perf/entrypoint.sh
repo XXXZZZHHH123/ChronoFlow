@@ -32,7 +32,7 @@ mvn -B -U -Drevision="${REVISION}" -DskipTests install
 
 declare -a args
 args=(
-  mvn -B -f system/pom.xml -am \
+  mvn -B -pl system -am \
     io.gatling:gatling-maven-plugin:4.20.6:test \
     -Dgatling.skip=false \
     -Dgatling.failOnAssertionFailure=false \
