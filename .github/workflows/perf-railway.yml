@@ -12,7 +12,6 @@ jobs:
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       RAILWAY_GATLING_SERVICE_ID: ${{ secrets.RAILWAY_GATLING_SERVICE_ID }}
-      SYSTEM_PERF_BASE_URL: ${{ secrets.SYSTEM_PERF_BASE_URL }}
     steps:
       - name: Validate configuration
         id: config
@@ -30,9 +29,6 @@ jobs:
             echo "should-run=true" >> "$GITHUB_OUTPUT"
           else
             echo "should-run=false" >> "$GITHUB_OUTPUT"
-          fi
-          if [ -z "${SYSTEM_PERF_BASE_URL}" ]; then
-            echo "::warning::SYSTEM_PERF_BASE_URL secret is not set. Ensure the Railway service defines the base URL."
           fi
 
       - name: Abort when configuration is incomplete
