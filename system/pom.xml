@@ -11,6 +11,10 @@
 
     <artifactId>system</artifactId>
 
+    <properties>
+        <sonar.exclusions>src/main/java/**/mapper/**,src/main/resources/**/mapper/**</sonar.exclusions>
+    </properties>
+
     <dependencies>
 
         <!-- META-INF.spring boot test -->
@@ -80,6 +84,7 @@
             <groupId>com.google.zxing</groupId>
             <artifactId>javase</artifactId>
         </dependency>
+
     </dependencies>
 
     <build>
