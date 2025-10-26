@@ -43,6 +43,10 @@ jobs:
         if: ${{ steps.config.outputs.should-run == 'true' }}
         run: npm install -g @railway/cli
 
+      - name: Authenticate Railway CLI
+        if: ${{ steps.config.outputs.should-run == 'true' }}
+        run: railway login --token "$RAILWAY_TOKEN"
+
       - name: Trigger Railway redeploy
         if: ${{ steps.config.outputs.should-run == 'true' }}
         run: |
