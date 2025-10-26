@@ -44,20 +44,58 @@ set -e
 
 RESULTS_DIR="${WORKDIR}/target/gatling"
 
-if [[ -n "${upload_url}" ]] && [[ -d "${RESULTS_DIR}" ]]; then
-  ARCHIVE="/tmp/gatling-results.tgz"
+ARCHIVE_FILE="/tmp/gatling-results.tgz"
+if [[ -d "${RESULTS_DIR}" ]]; then
   echo "Archiving Gatling results..."
-  tar -czf "${ARCHIVE}" -C "${RESULTS_DIR}" .
-  echo "Uploading Gatling results to signed URL..."
-  if curl -sS --fail -X PUT -T "${ARCHIVE}" -H "Content-Type:application/gzip" "${upload_url}"; then
-    echo "Upload succeeded."
+  tar -czf "${ARCHIVE_FILE}" -C "${RESULTS_DIR}" .
+  if [[ -n "${upload_url}" ]]; then
+    echo "Uploading Gatling results via signed URL..."
+    if curl -sS --fail -X PUT \
+        -H "Content-Type: application/gzip" \
+        -H "x-goog-content-sha256: UNSIGNED-PAYLOAD" \
+        --upload-file "${ARCHIVE_FILE}" \
+        "${upload_url}"; then
+      echo "Upload succeeded."
+    else
+      echo "Failed to upload Gatling results via signed URL." >&2
+      status=1
+    fi
+  elif [[ -n "${GCP_SA_KEY:-}" ]] && [[ -n "${results_object}" ]]; then
+    if ! command -v gcloud >/dev/null 2>&1; then
+      echo "gcloud CLI is not available in the container; skipping GCS upload." >&2
+      status=1
+    else
+      KEY_FILE="/tmp/gcp-sa.json"
+      if [[ "${GCP_SA_KEY}" == \{* ]]; then
+        printf '%s' "${GCP_SA_KEY}" > "${KEY_FILE}"
+      else
+        echo "${GCP_SA_KEY}" | base64 -d > "${KEY_FILE}"
+      fi
+      echo "Authenticating with provided GCP service account..."
+      if gcloud auth activate-service-account --key-file="${KEY_FILE}" >/dev/null 2>&1; then
+        TARGET_URI="${results_object}"
+        if [[ "${TARGET_URI}" != gs://* ]]; then
+          TARGET_URI="gs://${TARGET_URI}"
+        fi
+        echo "Uploading Gatling results to ${TARGET_URI}..."
+        if gcloud storage cp "${ARCHIVE_FILE}" "${TARGET_URI}"; then
+          echo "Upload to ${TARGET_URI} succeeded."
+        else
+          echo "Failed to upload Gatling results to ${TARGET_URI}." >&2
+          status=1
+        fi
+      else
+        echo "Failed to authenticate with provided GCP service account." >&2
+        status=1
+      fi
+      rm -f "${KEY_FILE}"
+    fi
   else
-    echo "Failed to upload Gatling results." >&2
-    echo "Response details (non-fatal dump below):" >&2
-    curl -sS -i -X PUT -T "${ARCHIVE}" -H "Content-Type:application/gzip" "${upload_url}" || true
-    status=1
+    echo "No upload target configured; skipping remote archive upload."
   fi
-  rm -f "${ARCHIVE}"
+  rm -f "${ARCHIVE_FILE}"
+else
+  echo "Results directory ${RESULTS_DIR} not found; skipping remote archive upload."
 fi
 
 ARCHIVE_ROOT="/opt/gatling/results"
