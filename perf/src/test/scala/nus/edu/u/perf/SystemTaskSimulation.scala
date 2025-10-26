@@ -73,9 +73,9 @@ class SystemTaskSimulation extends Simulation {
           .check(status.in(200, 404))
       )
 
-  private val rampUsers = resolveInt("system.perf.rampUsers", Seq("SYSTEM_PERF_RAMP_USERS"), 100)
+  private val rampUsersCount = resolveInt("system.perf.rampUsers", Seq("SYSTEM_PERF_RAMP_USERS"), 100)
   private val rampSeconds = resolveInt("system.perf.rampSeconds", Seq("SYSTEM_PERF_RAMP_SECONDS"), 30)
-  private val constantUsers = resolveInt("system.perf.constantUsers", Seq("SYSTEM_PERF_CONSTANT_USERS"), 100)
+  private val constantUsersRate = resolveInt("system.perf.constantUsers", Seq("SYSTEM_PERF_CONSTANT_USERS"), 100)
   private val constantSeconds = resolveInt("system.perf.constantSeconds", Seq("SYSTEM_PERF_CONSTANT_SECONDS"), 60)
   private val p95Ms = resolveInt("system.perf.p95Ms", Seq("SYSTEM_PERF_P95_MS"), 70000)
   private val minSuccessPercent = resolveInt("system.perf.successPercent", Seq("SYSTEM_PERF_SUCCESS_PERCENT"), 80)
@@ -83,8 +83,8 @@ class SystemTaskSimulation extends Simulation {
 
   setUp(
     scenarioBuilder.inject(
-      rampUsers(rampUsers).during(rampSeconds.seconds),
-      constantUsersPerSec(constantUsers).during(constantSeconds.seconds)
+      rampUsers(rampUsersCount).during(rampSeconds.seconds),
+      constantUsersPerSec(constantUsersRate).during(constantSeconds.seconds)
     )
   ).protocols(httpProtocol)
     .assertions(
