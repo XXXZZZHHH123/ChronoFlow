@@ -58,7 +58,7 @@ jobs:
           deadline=$((SECONDS + 900))
           while [ "${SECONDS}" -lt "${deadline}" ]; do
             tmp_log="$(mktemp)"
-            if railway logs --service "$RAILWAY_GATLING_SERVICE_ID" --instance latest --lines 200 > "${tmp_log}" 2>&1; then
+            if railway logs --service "$RAILWAY_GATLING_SERVICE_ID" --lines 200 > "${tmp_log}" 2>&1; then
               cat "${tmp_log}"
               cat "${tmp_log}" >> "${log_file}"
               if grep -q "GATLING_RESULT=" "${tmp_log}"; then
