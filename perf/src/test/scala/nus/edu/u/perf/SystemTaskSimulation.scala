@@ -72,8 +72,8 @@ class SystemTaskSimulation extends Simulation {
 
   setUp(
     scenarioBuilder.inject(
-      rampUsers(20).during(30.seconds),
-      constantUsersPerSec(20).during(60.seconds)
+      rampUsers(100).during(30.seconds),
+      constantUsersPerSec(100).during(60.seconds)
     )
   ).protocols(httpProtocol)
     .assertions(
