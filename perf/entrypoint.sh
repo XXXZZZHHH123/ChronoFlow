@@ -49,10 +49,12 @@ if [[ -n "${upload_url}" ]] && [[ -d "${RESULTS_DIR}" ]]; then
   echo "Archiving Gatling results..."
   tar -czf "${ARCHIVE}" -C "${RESULTS_DIR}" .
   echo "Uploading Gatling results to signed URL..."
-  if curl -sS --fail -X PUT -T "${ARCHIVE}" -H "Content-Type: application/gzip" "${upload_url}"; then
+  if curl -sS --fail -X PUT -T "${ARCHIVE}" -H "Content-Type:application/gzip" "${upload_url}"; then
     echo "Upload succeeded."
   else
     echo "Failed to upload Gatling results." >&2
+    echo "Response details (non-fatal dump below):" >&2
+    curl -sS -i -X PUT -T "${ARCHIVE}" -H "Content-Type:application/gzip" "${upload_url}" || true
     status=1
   fi
   rm -f "${ARCHIVE}"
