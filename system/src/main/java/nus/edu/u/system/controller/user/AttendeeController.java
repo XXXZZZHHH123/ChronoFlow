@@ -92,7 +92,7 @@ public class AttendeeController {
 
     @SaIgnore
     @GetMapping("/scan")
-    public CommonResult<AttendeeInfoRespVO> attendeePreview(@RequestParam String token) {
+    public CommonResult<AttendeeInfoRespVO> attendeePreview(@RequestParam("token") String token) {
         log.info(
                 "Attendee preview request with token: {}",
                 token.substring(0, Math.min(8, token.length())) + "...");

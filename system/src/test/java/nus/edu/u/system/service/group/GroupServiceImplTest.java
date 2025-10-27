@@ -1,557 +1,713 @@
 package nus.edu.u.system.service.group;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static nus.edu.u.system.enums.ErrorCodeConstants.*;
+import static org.assertj.core.api.Assertions.*;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.*;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.dataobject.dept.DeptDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
+import nus.edu.u.system.domain.dataobject.task.TaskDO;
 import nus.edu.u.system.domain.dataobject.user.UserDO;
 import nus.edu.u.system.domain.dataobject.user.UserGroupDO;
+import nus.edu.u.system.domain.dto.UserPermissionDTO;
+import nus.edu.u.system.domain.dto.UserRoleDTO;
 import nus.edu.u.system.domain.vo.group.CreateGroupReqVO;
 import nus.edu.u.system.domain.vo.group.GroupRespVO;
-import nus.edu.u.system.domain.vo.group.UpdateGroupReqVO;
-import nus.edu.u.system.enums.ErrorCodeConstants;
+import nus.edu.u.system.domain.vo.user.UserProfileRespVO;
 import nus.edu.u.system.mapper.dept.DeptMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.TaskMapper;
 import nus.edu.u.system.mapper.user.UserGroupMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
+import nus.edu.u.system.service.user.UserService;
+import org.apache.ibatis.session.ResultHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.aop.framework.AopContext;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.aop.framework.ProxyFactory;
 
-@EnableAspectJAutoProxy(exposeProxy = true)
-@ExtendWith(MockitoExtension.class)
 class GroupServiceImplTest {
 
-    @Mock private DeptMapper deptMapper;
+    private GroupServiceImpl target;
+    private GroupService proxy;
 
-    @Mock private UserMapper userMapper;
-
-    @Mock private EventMapper eventMapper;
-
-    @Mock private TaskMapper taskMapper;
-
-    @Mock private UserGroupMapper userGroupMapper;
-
-    @Mock private GroupService groupServiceProxy;
-
-    @Spy @InjectMocks private GroupServiceImpl groupService;
-
-    private CreateGroupReqVO createGroupReqVO;
-    private UpdateGroupReqVO updateGroupReqVO;
-    private DeptDO deptDO;
-    private UserDO userDO;
-    private EventDO eventDO;
+    private FakeDeptMapper deptMapper;
+    private FakeUserMapper userMapper;
+    private FakeEventMapper eventMapper;
+    private FakeUserGroupMapper userGroupMapper;
+    private FakeTaskMapper taskMapper;
+    private StubUserService userService;
 
     @BeforeEach
-    void setUp() {
-        createGroupReqVO = new CreateGroupReqVO();
-        createGroupReqVO.setName("Test Group");
-        createGroupReqVO.setEventId(1L);
-        createGroupReqVO.setLeadUserId(1L);
-        createGroupReqVO.setRemark("Test remark");
-        createGroupReqVO.setSort(1);
+    void setUp() throws Exception {
+        target = new GroupServiceImpl();
+        deptMapper = new FakeDeptMapper();
+        userMapper = new FakeUserMapper();
+        eventMapper = new FakeEventMapper();
+        userGroupMapper = new FakeUserGroupMapper();
+        taskMapper = new FakeTaskMapper();
+        userService = new StubUserService();
 
-        updateGroupReqVO = new UpdateGroupReqVO();
-        updateGroupReqVO.setId(1L);
-        updateGroupReqVO.setName("Updated Group");
+        inject("deptMapper", deptMapper);
+        inject("userMapper", userMapper);
+        inject("eventMapper", eventMapper);
+        inject("userService", userService);
+        inject("userGroupMapper", userGroupMapper);
+        inject("taskMapper", taskMapper);
 
-        deptDO =
-                DeptDO.builder()
-                        .id(1L)
-                        .name("Test Group")
-                        .eventId(1L)
-                        .leadUserId(1L)
-                        .status(CommonStatusEnum.ENABLE.getStatus())
-                        .build();
+        ProxyFactory factory = new ProxyFactory(target);
+        factory.setProxyTargetClass(true);
+        factory.setExposeProxy(true);
+        proxy = (GroupService) factory.getProxy();
+    }
 
-        userDO =
+    private void inject(String fieldName, Object value) throws Exception {
+        Field field = GroupServiceImpl.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
+    }
+
+    @Test
+    void createGroup_addsLeaderAsMember() {
+        EventDO event = EventDO.builder().id(10L).name("Summit").build();
+        event.setTenantId(77L);
+        eventMapper.put(event);
+        userMapper.put(
                 UserDO.builder()
-                        .id(1L)
-                        .username("testuser")
-                        .email("test@example.com")
+                        .id(5L)
                         .status(CommonStatusEnum.ENABLE.getStatus())
-                        .build();
+                        .username("Lead")
+                        .build());
 
-        eventDO = EventDO.builder().id(1L).name("Test Event").build();
+        CreateGroupReqVO req = new CreateGroupReqVO();
+        req.setEventId(10L);
+        req.setName("Ops");
+        req.setLeadUserId(5L);
+        req.setRemark("on-call");
+
+        Long groupId = proxy.createGroup(req);
+
+        assertThat(groupId).isNotNull();
+        assertThat(deptMapper.store().get(groupId).getName()).isEqualTo("Ops");
+        assertThat(userGroupMapper.relations())
+                .singleElement()
+                .extracting(UserGroupDO::getUserId)
+                .isEqualTo(5L);
     }
 
     @Test
-    void createGroup_EventNotFound() {
-        // Given
-        when(eventMapper.selectById(1L)).thenReturn(null);
+    void createGroup_whenEventMissing_throws() {
+        CreateGroupReqVO req = new CreateGroupReqVO();
+        req.setName("Ops");
+        req.setEventId(404L);
 
-        // When & Then
-        ServiceException exception =
-                assertThrows(
-                        ServiceException.class, () -> groupService.createGroup(createGroupReqVO));
-
-        assertEquals(ErrorCodeConstants.EVENT_NOT_FOUND.getCode(), exception.getCode());
-        verify(eventMapper).selectById(1L);
-        verify(deptMapper, never()).insert(any());
+        assertThatThrownBy(() -> proxy.createGroup(req))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(EVENT_NOT_FOUND.getCode());
     }
 
     @Test
-    void createGroup_GroupNameExists() {
-        // Given
-        when(eventMapper.selectById(1L)).thenReturn(eventDO);
-        when(deptMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(deptDO);
-
-        // When & Then
-        ServiceException exception =
-                assertThrows(
-                        ServiceException.class, () -> groupService.createGroup(createGroupReqVO));
-
-        assertEquals(ErrorCodeConstants.GROUP_NAME_EXISTS.getCode(), exception.getCode());
-        verify(deptMapper, never()).insert(any());
-    }
-
-    @Test
-    void createGroup_LeadUserNotFound() {
-        // Given
-        when(eventMapper.selectById(1L)).thenReturn(eventDO);
-        when(deptMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
-        when(userMapper.selectById(1L)).thenReturn(null);
-
-        // When & Then
-        ServiceException exception =
-                assertThrows(
-                        ServiceException.class, () -> groupService.createGroup(createGroupReqVO));
-
-        assertEquals(ErrorCodeConstants.USER_NOT_FOUND.getCode(), exception.getCode());
-        verify(deptMapper, never()).insert(any());
-    }
-
-    @Test
-    void updateGroup_Success() {
-        // Given
-        when(deptMapper.selectById(1L)).thenReturn(deptDO);
-        when(deptMapper.updateById(any(DeptDO.class))).thenReturn(1);
-
-        // When
-        assertDoesNotThrow(() -> groupService.updateGroup(updateGroupReqVO));
-
-        // Then
-        verify(deptMapper).selectById(1L);
-        verify(deptMapper).updateById(any(DeptDO.class));
-    }
-
-    @Test
-    void updateGroup_GroupNotFound() {
-        // Given
-        when(deptMapper.selectById(1L)).thenReturn(null);
-
-        // When & Then
-        ServiceException exception =
-                assertThrows(
-                        ServiceException.class, () -> groupService.updateGroup(updateGroupReqVO));
-
-        assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
-        verify(deptMapper, never()).updateById(any());
-    }
-
-    @Test
-    void deleteGroup_Success() {
-        // Given
-        when(deptMapper.selectById(1L)).thenReturn(deptDO);
-        when(userGroupMapper.selectList(any(LambdaQueryWrapper.class)))
-                .thenReturn(Collections.emptyList());
-        when(deptMapper.update(isNull(), any(UpdateWrapper.class))).thenReturn(1);
-
-        // When
-        assertDoesNotThrow(() -> groupService.deleteGroup(1L));
-
-        // Then
-        verify(deptMapper).selectById(1L);
-        verify(deptMapper).update(isNull(), any(UpdateWrapper.class));
-    }
-
-    @Test
-    void deleteGroup_GroupNotFound() {
-        // Given
-        when(deptMapper.selectById(1L)).thenReturn(null);
-
-        // When & Then
-        ServiceException exception =
-                assertThrows(ServiceException.class, () -> groupService.deleteGroup(1L));
-
-        assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
-        verify(deptMapper, never()).update(any(), any());
-    }
-
-    @Test
-    void addMemberToGroup_Success() {
-        // Given
-        Long groupId = 1L;
-        Long userId = 2L;
-        UserDO user =
+    void addMemberToGroup_rejectsUsersAlreadyInAnotherGroup() {
+        DeptDO dept = DeptDO.builder().id(1L).eventId(99L).name("Ops").build();
+        deptMapper.put(dept);
+        userMapper.put(
                 UserDO.builder()
-                        .id(userId)
-                        .username("testuser2")
+                        .id(8L)
                         .status(CommonStatusEnum.ENABLE.getStatus())
-                        .build();
+                        .username("member")
+                        .build());
+        userGroupMapper.enqueueSelectOne(
+                UserGroupDO.builder().id(3L).userId(8L).deptId(123L).eventId(99L).build());
 
-        when(deptMapper.selectById(groupId)).thenReturn(deptDO);
-        when(userMapper.selectById(userId)).thenReturn(user);
-        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
-        when(userGroupMapper.insert(any(UserGroupDO.class))).thenReturn(1);
-
-        // When
-        assertDoesNotThrow(() -> groupService.addMemberToGroup(groupId, userId));
-
-        // Then
-        verify(deptMapper).selectById(groupId);
-        verify(userMapper).selectById(userId);
-        verify(userGroupMapper).selectOne(any(LambdaQueryWrapper.class));
-        verify(userGroupMapper).insert(any(UserGroupDO.class));
+        assertThatThrownBy(() -> proxy.addMemberToGroup(1L, 8L))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(USER_ALREADY_IN_OTHER_GROUP_OF_EVENT.getCode());
     }
 
     @Test
-    void addMemberToGroup_GroupNotFound() {
-        // Given
-        when(deptMapper.selectById(1L)).thenReturn(null);
+    void removeMemberFromGroup_preventsRemovingLeader() {
+        DeptDO dept = DeptDO.builder().id(2L).eventId(50L).leadUserId(88L).name("Crew").build();
+        deptMapper.put(dept);
+        userGroupMapper.enqueueSelectOne(
+                UserGroupDO.builder().id(6L).userId(88L).deptId(2L).eventId(50L).build());
 
-        // When & Then
-        ServiceException exception =
-                assertThrows(ServiceException.class, () -> groupService.addMemberToGroup(1L, 2L));
-
-        assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
+        assertThatThrownBy(() -> proxy.removeMemberFromGroup(2L, 88L))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(CANNOT_REMOVE_GROUP_LEADER.getCode());
     }
 
     @Test
-    void addMemberToGroup_UserNotFound() {
-        // Given
-        when(deptMapper.selectById(1L)).thenReturn(deptDO);
-        when(userMapper.selectById(2L)).thenReturn(null);
+    void addMembersToGroup_whenOneFails_throwsAddMembersFailed() {
+        DeptDO dept = DeptDO.builder().id(3L).eventId(66L).name("Ops").build();
+        deptMapper.put(dept);
+        userMapper.put(
+                UserDO.builder()
+                        .id(101L)
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .username("alpha")
+                        .build());
 
-        // When & Then
-        ServiceException exception =
-                assertThrows(ServiceException.class, () -> groupService.addMemberToGroup(1L, 2L));
+        assertThatThrownBy(() -> proxy.addMembersToGroup(3L, List.of(101L, 202L)))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(ADD_MEMBERS_FAILED.getCode());
 
-        assertEquals(ErrorCodeConstants.USER_NOT_FOUND.getCode(), exception.getCode());
+        assertThat(userGroupMapper.relations())
+                .hasSize(1)
+                .first()
+                .extracting(UserGroupDO::getUserId)
+                .isEqualTo(101L);
     }
 
     @Test
-    void addMemberToGroup_UserAlreadyInGroup() {
-        // Given
-        Long groupId = 1L;
-        Long userId = 2L;
-        UserDO user =
-                UserDO.builder().id(userId).status(CommonStatusEnum.ENABLE.getStatus()).build();
+    void removeMembersToGroup_propagatesFirstFailure() {
+        DeptDO dept = DeptDO.builder().id(4L).eventId(70L).name("Ops").leadUserId(1L).build();
+        deptMapper.put(dept);
+        userGroupMapper.enqueueSelectOne(
+                UserGroupDO.builder().id(11L).userId(301L).deptId(4L).eventId(70L).build());
+        userGroupMapper.enqueueSelectOne(null);
+        taskMapper.queueSelectCount(0L);
 
-        UserGroupDO existingRelation =
-                UserGroupDO.builder().id(1L).userId(userId).deptId(groupId).eventId(1L).build();
+        assertThatThrownBy(() -> proxy.removeMembersToGroup(4L, List.of(301L, 302L)))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(USER_NOT_IN_GROUP.getCode());
 
-        when(deptMapper.selectById(groupId)).thenReturn(deptDO);
-        when(userMapper.selectById(userId)).thenReturn(user);
-        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(existingRelation);
-
-        // When & Then
-        ServiceException exception =
-                assertThrows(
-                        ServiceException.class,
-                        () -> groupService.addMemberToGroup(groupId, userId));
-
-        assertEquals(ErrorCodeConstants.GROUP_MEMBER_ALREADY_EXISTS.getCode(), exception.getCode());
+        assertThat(userGroupMapper.relations()).isEmpty();
     }
 
     @Test
-    void addMemberToGroup_UserAlreadyInOtherGroup() {
-        // Given
-        Long groupId = 1L;
-        Long userId = 2L;
-        UserDO user =
-                UserDO.builder().id(userId).status(CommonStatusEnum.ENABLE.getStatus()).build();
-
-        UserGroupDO existingRelation =
-                UserGroupDO.builder()
-                        .id(1L)
-                        .userId(userId)
-                        .deptId(999L) // Different group
-                        .eventId(1L)
-                        .build();
-
-        when(deptMapper.selectById(groupId)).thenReturn(deptDO);
-        when(userMapper.selectById(userId)).thenReturn(user);
-        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(existingRelation);
-
-        // When & Then
-        ServiceException exception =
-                assertThrows(
-                        ServiceException.class,
-                        () -> groupService.addMemberToGroup(groupId, userId));
-
-        assertEquals(
-                ErrorCodeConstants.USER_ALREADY_IN_OTHER_GROUP_OF_EVENT.getCode(),
-                exception.getCode());
-    }
-
-    @Test
-    void addMemberToGroup_UserDisabled() {
-        // Given
-        Long groupId = 1L;
-        Long userId = 2L;
-        UserDO user =
-                UserDO.builder().id(userId).status(CommonStatusEnum.DISABLE.getStatus()).build();
-
-        when(deptMapper.selectById(groupId)).thenReturn(deptDO);
-        when(userMapper.selectById(userId)).thenReturn(user);
-
-        // When & Then
-        ServiceException exception =
-                assertThrows(
-                        ServiceException.class,
-                        () -> groupService.addMemberToGroup(groupId, userId));
-
-        assertEquals(ErrorCodeConstants.USER_STATUS_INVALID.getCode(), exception.getCode());
-    }
-
-    @Test
-    void removeMemberFromGroup_Success() {
-        // Given
-        Long groupId = 1L;
-        Long userId = 2L;
-        UserGroupDO userGroup =
-                UserGroupDO.builder().id(10L).userId(userId).deptId(groupId).eventId(1L).build();
-        DeptDO group =
+    void getGroupsByEvent_returnsEnrichedInformation() {
+        EventDO event = EventDO.builder().id(90L).name("Expo").build();
+        event.setTenantId(1L);
+        eventMapper.put(event);
+        DeptDO first =
                 DeptDO.builder()
-                        .id(groupId)
-                        .leadUserId(3L) // Different user is leader
+                        .id(501L)
+                        .eventId(90L)
+                        .leadUserId(700L)
+                        .name("Crew A")
+                        .sort(1)
+                        .status(0)
                         .build();
-
-        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(userGroup);
-        when(deptMapper.selectById(groupId)).thenReturn(group);
-
-        when(taskMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
-
-        when(userGroupMapper.deleteById(10L)).thenReturn(1);
-
-        // When
-        assertDoesNotThrow(() -> groupService.removeMemberFromGroup(groupId, userId));
-
-        // Then
-        verify(userGroupMapper).selectOne(any(LambdaQueryWrapper.class));
-        verify(deptMapper).selectById(groupId);
-        verify(taskMapper).selectCount(any(LambdaQueryWrapper.class));
-        verify(userGroupMapper).deleteById(10L);
-    }
-
-    @Test
-    void removeMemberFromGroup_UserNotInGroup() {
-        // Given
-        Long groupId = 1L;
-        Long userId = 2L;
-
-        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
-
-        // When & Then
-        ServiceException exception =
-                assertThrows(
-                        ServiceException.class,
-                        () -> groupService.removeMemberFromGroup(groupId, userId));
-
-        assertEquals(ErrorCodeConstants.USER_NOT_IN_GROUP.getCode(), exception.getCode());
-    }
-
-    @Test
-    void removeMemberFromGroup_CannotRemoveLeader() {
-        // Given
-        Long groupId = 1L;
-        Long userId = 2L;
-        UserGroupDO userGroup =
-                UserGroupDO.builder().id(10L).userId(userId).deptId(groupId).eventId(1L).build();
-        DeptDO group =
+        first.setCreateTime(java.time.LocalDateTime.now());
+        first.setUpdateTime(java.time.LocalDateTime.now());
+        DeptDO second =
                 DeptDO.builder()
-                        .id(groupId)
-                        .leadUserId(userId) // User is the leader
+                        .id(502L)
+                        .eventId(90L)
+                        .leadUserId(null)
+                        .name("Crew B")
+                        .sort(2)
+                        .status(1)
                         .build();
+        deptMapper.setSelectListResult(List.of(first, second));
+        userMapper.put(UserDO.builder().id(700L).username("captain").status(0).build());
+        userGroupMapper.queueSelectCount(2L);
+        userGroupMapper.queueSelectCount(0L);
 
-        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(userGroup);
-        when(deptMapper.selectById(groupId)).thenReturn(group);
+        List<GroupRespVO> groups = proxy.getGroupsByEvent(90L);
 
-        // When & Then
-        ServiceException exception =
-                assertThrows(
-                        ServiceException.class,
-                        () -> groupService.removeMemberFromGroup(groupId, userId));
-
-        assertEquals(ErrorCodeConstants.CANNOT_REMOVE_GROUP_LEADER.getCode(), exception.getCode());
+        assertThat(groups).hasSize(2);
+        assertThat(groups.get(0).getLeadUserName()).isEqualTo("captain");
+        assertThat(groups.get(0).getMemberCount()).isEqualTo(2);
+        assertThat(groups.get(1).getMemberCount()).isZero();
     }
 
     @Test
-    void getGroupMembers_Success() {
-        // Given
-        Long groupId = 1L;
-        List<UserGroupDO> userGroups =
-                Arrays.asList(
-                        UserGroupDO.builder()
-                                .id(1L)
-                                .userId(1L)
-                                .deptId(groupId)
-                                .eventId(1L)
-                                .joinTime(LocalDateTime.now())
-                                .build(),
-                        UserGroupDO.builder()
-                                .id(2L)
-                                .userId(2L)
-                                .deptId(groupId)
-                                .eventId(1L)
-                                .joinTime(LocalDateTime.now())
-                                .build());
+    void getAllUserProfiles_delegatesToUserService() {
+        UserProfileRespVO profile = new UserProfileRespVO();
+        profile.setId(1L);
+        profile.setName("Alice");
+        userService.setProfiles(List.of(profile));
 
-        List<UserDO> users =
-                Arrays.asList(
-                        UserDO.builder()
-                                .id(1L)
-                                .username("user1")
-                                .email("user1@example.com")
-                                .phone("12345678901")
-                                .status(CommonStatusEnum.ENABLE.getStatus())
-                                .build(),
-                        UserDO.builder()
-                                .id(2L)
-                                .username("user2")
-                                .email("user2@example.com")
-                                .phone("12345678902")
-                                .status(CommonStatusEnum.ENABLE.getStatus())
-                                .build());
-
-        when(userGroupMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(userGroups);
-        when(userMapper.selectBatchIds(anyList())).thenReturn(users);
-
-        // When
-        List<GroupRespVO.MemberInfo> result = groupService.getGroupMembers(groupId);
-
-        // Then
-        assertEquals(2, result.size());
-        assertEquals("user1", result.get(0).getUsername());
-        assertEquals("user2", result.get(1).getUsername());
-        verify(userGroupMapper).selectList(any(LambdaQueryWrapper.class));
-        verify(userMapper).selectBatchIds(anyList());
+        assertThat(proxy.getAllUserProfiles()).containsExactly(profile);
     }
 
-    @Test
-    void getGroupMembers_EmptyResult() {
-        // Given
-        Long groupId = 1L;
-        when(userGroupMapper.selectList(any(LambdaQueryWrapper.class)))
-                .thenReturn(Collections.emptyList());
+    // ---------------------------------------------------------------------
+    // Helper stubs
+    // ---------------------------------------------------------------------
 
-        // When
-        List<GroupRespVO.MemberInfo> result = groupService.getGroupMembers(groupId);
+    private abstract static class BaseMapperAdapter<T> implements BaseMapper<T> {
+        protected RuntimeException unsupported() {
+            return new UnsupportedOperationException("Not implemented");
+        }
 
-        // Then
-        assertTrue(result.isEmpty());
-        verify(userGroupMapper).selectList(any(LambdaQueryWrapper.class));
-        verify(userMapper, never()).selectBatchIds(anyList());
-    }
+        @Override
+        public int deleteById(Serializable id) {
+            throw unsupported();
+        }
 
-    @Test
-    void addMembersToGroup_Success() {
-        // Given
-        Long groupId = 1L;
-        List<Long> userIds = Arrays.asList(1L, 2L, 3L);
+        @Override
+        public int deleteById(T entity) {
+            throw unsupported();
+        }
 
-        when(deptMapper.selectById(groupId)).thenReturn(deptDO);
-        when(userMapper.selectById(anyLong()))
-                .thenReturn(
-                        UserDO.builder()
-                                .id(1L)
-                                .status(CommonStatusEnum.ENABLE.getStatus())
-                                .build());
-        when(userGroupMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
-        when(userGroupMapper.insert(any(UserGroupDO.class))).thenReturn(1);
+        @Override
+        public int delete(Wrapper<T> queryWrapper) {
+            throw unsupported();
+        }
 
-        // When
-        assertDoesNotThrow(() -> groupService.addMembersToGroup(groupId, userIds));
+        @Override
+        public int deleteBatchIds(Collection<?> idList) {
+            throw unsupported();
+        }
 
-        // Then
-        verify(deptMapper, times(4)).selectById(groupId);
-        verify(userGroupMapper, times(3)).insert(any(UserGroupDO.class));
-    }
+        @Override
+        public int insert(T entity) {
+            throw unsupported();
+        }
 
-    @Test
-    void addMembersToGroup_GroupNotFound() {
-        // Given
-        when(deptMapper.selectById(1L)).thenReturn(null);
+        @Override
+        public int updateById(T entity) {
+            throw unsupported();
+        }
 
-        // When & Then
-        ServiceException exception =
-                assertThrows(
-                        ServiceException.class,
-                        () -> groupService.addMembersToGroup(1L, Arrays.asList(1L, 2L)));
+        @Override
+        public int update(T entity, Wrapper<T> updateWrapper) {
+            throw unsupported();
+        }
 
-        assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
-    }
+        @Override
+        public T selectById(Serializable id) {
+            throw unsupported();
+        }
 
-    @Test
-    void addMembersToGroup_EmptyUserIds() {
-        // Given & When
-        assertDoesNotThrow(() -> groupService.addMembersToGroup(1L, Collections.emptyList()));
+        @Override
+        public List<T> selectBatchIds(Collection<? extends Serializable> idList) {
+            throw unsupported();
+        }
 
-        // Then
-        verify(deptMapper, never()).selectById(any());
-    }
+        @Override
+        public void selectBatchIds(
+                Collection<? extends Serializable> idList, ResultHandler<T> resultHandler) {
+            throw unsupported();
+        }
 
-    @Test
-    void removeMembersToGroup_Success() {
-        // Given
-        Long groupId = 1L;
-        List<Long> userIds = Arrays.asList(1L, 2L, 3L);
+        @Override
+        public T selectOne(Wrapper<T> queryWrapper) {
+            throw unsupported();
+        }
 
-        when(deptMapper.selectById(groupId)).thenReturn(deptDO);
+        @Override
+        public Long selectCount(Wrapper<T> queryWrapper) {
+            throw unsupported();
+        }
 
-        try (MockedStatic<AopContext> mockedAopContext = mockStatic(AopContext.class)) {
-            mockedAopContext.when(AopContext::currentProxy).thenReturn(groupService);
+        @Override
+        public List<T> selectList(Wrapper<T> queryWrapper) {
+            throw unsupported();
+        }
 
-            doNothing().when(groupService).removeMemberFromGroup(eq(groupId), anyLong());
+        @Override
+        public void selectList(Wrapper<T> queryWrapper, ResultHandler<T> resultHandler) {
+            throw unsupported();
+        }
 
-            // When
-            assertDoesNotThrow(() -> groupService.removeMembersToGroup(groupId, userIds));
+        @Override
+        public List<T> selectList(IPage<T> page, Wrapper<T> queryWrapper) {
+            throw unsupported();
+        }
 
-            // Then
-            verify(deptMapper).selectById(groupId);
-            verify(groupService, times(3)).removeMemberFromGroup(eq(groupId), anyLong());
+        @Override
+        public void selectList(
+                IPage<T> page, Wrapper<T> queryWrapper, ResultHandler<T> resultHandler) {
+            throw unsupported();
+        }
+
+        @Override
+        public List<Map<String, Object>> selectMaps(Wrapper<T> queryWrapper) {
+            throw unsupported();
+        }
+
+        @Override
+        public void selectMaps(
+                Wrapper<T> queryWrapper, ResultHandler<Map<String, Object>> resultHandler) {
+            throw unsupported();
+        }
+
+        @Override
+        public List<Map<String, Object>> selectMaps(
+                IPage<? extends Map<String, Object>> page, Wrapper<T> queryWrapper) {
+            throw unsupported();
+        }
+
+        @Override
+        public void selectMaps(
+                IPage<? extends Map<String, Object>> page,
+                Wrapper<T> queryWrapper,
+                ResultHandler<Map<String, Object>> resultHandler) {
+            throw unsupported();
+        }
+
+        @Override
+        public <E> List<E> selectObjs(Wrapper<T> queryWrapper) {
+            throw unsupported();
+        }
+
+        @Override
+        public <E> void selectObjs(Wrapper<T> queryWrapper, ResultHandler<E> resultHandler) {
+            throw unsupported();
+        }
+
+        @Override
+        public <P extends IPage<T>> P selectPage(P page, Wrapper<T> queryWrapper) {
+            throw unsupported();
+        }
+
+        @Override
+        public <P extends IPage<Map<String, Object>>> P selectMapsPage(
+                P page, Wrapper<T> queryWrapper) {
+            throw unsupported();
         }
     }
 
-    @Test
-    void removeMembersToGroup_GroupNotFound() {
-        // Given
-        when(deptMapper.selectById(1L)).thenReturn(null);
+    private static final class FakeDeptMapper extends BaseMapperAdapter<DeptDO>
+            implements DeptMapper {
+        private final Map<Long, DeptDO> store = new LinkedHashMap<>();
+        private final Deque<DeptDO> selectOneQueue = new ArrayDeque<>();
+        private List<DeptDO> selectList = new ArrayList<>();
+        private long seq = 1;
 
-        // When & Then
-        ServiceException exception =
-                assertThrows(
-                        ServiceException.class,
-                        () -> groupService.removeMembersToGroup(1L, Arrays.asList(1L, 2L)));
+        Map<Long, DeptDO> store() {
+            return store;
+        }
 
-        assertEquals(ErrorCodeConstants.GROUP_NOT_FOUND.getCode(), exception.getCode());
+        void put(DeptDO dept) {
+            if (dept.getId() == null) {
+                dept.setId(seq++);
+            }
+            store.put(dept.getId(), dept);
+        }
+
+        void setSelectListResult(List<DeptDO> result) {
+            this.selectList = new ArrayList<>(result);
+        }
+
+        void enqueueSelectOne(DeptDO value) {
+            selectOneQueue.add(value);
+        }
+
+        @Override
+        public DeptDO selectById(Serializable id) {
+            return store.get(id);
+        }
+
+        @Override
+        public DeptDO selectOne(Wrapper<DeptDO> queryWrapper) {
+            return selectOneQueue.isEmpty() ? null : selectOneQueue.removeFirst();
+        }
+
+        @Override
+        public int insert(DeptDO entity) {
+            put(entity);
+            return 1;
+        }
+
+        @Override
+        public int updateById(DeptDO entity) {
+            store.put(entity.getId(), entity);
+            return 1;
+        }
+
+        @Override
+        public int update(DeptDO entity, Wrapper<DeptDO> updateWrapper) {
+            return 1;
+        }
+
+        @Override
+        public List<DeptDO> selectList(Wrapper<DeptDO> queryWrapper) {
+            return new ArrayList<>(selectList);
+        }
     }
 
-    @Test
-    void removeMembersToGroup_EmptyUserIds() {
-        // Given & When
-        assertDoesNotThrow(() -> groupService.removeMembersToGroup(1L, Collections.emptyList()));
+    private static final class FakeUserMapper extends BaseMapperAdapter<UserDO>
+            implements UserMapper {
+        private final Map<Long, UserDO> store = new LinkedHashMap<>();
+        private long seq = 1;
+        UpdateWrapper<UserDO> lastUpdateWrapper;
 
-        // Then
-        verify(deptMapper, never()).selectById(any());
+        void put(UserDO user) {
+            if (user.getId() == null) {
+                user.setId(seq++);
+            }
+            store.put(user.getId(), user);
+        }
+
+        @Override
+        public UserDO selectById(Serializable id) {
+            return store.get(id);
+        }
+
+        @Override
+        public List<UserDO> selectBatchIds(Collection<? extends Serializable> idList) {
+            List<UserDO> result = new ArrayList<>();
+            for (Serializable id : idList) {
+                UserDO user = store.get(id);
+                if (user != null) {
+                    result.add(user);
+                }
+            }
+            return result;
+        }
+
+        @Override
+        public int insert(UserDO entity) {
+            put(entity);
+            return 1;
+        }
+
+        @Override
+        public int update(UserDO entity, Wrapper<UserDO> updateWrapper) {
+            this.lastUpdateWrapper = (UpdateWrapper<UserDO>) updateWrapper;
+            return 1;
+        }
+
+        @Override
+        public UserRoleDTO selectUserWithRole(Long userId) {
+            return null;
+        }
+
+        @Override
+        public UserDO selectRawById(Long id) {
+            return store.get(id);
+        }
+
+        @Override
+        public List<UserRoleDTO> selectAllUsersWithRoles() {
+            throw unsupported();
+        }
+
+        @Override
+        public UserDO selectByUsername(String username) {
+            throw unsupported();
+        }
+
+        @Override
+        public List<UserPermissionDTO> selectUserWithPermission(Long userId) {
+            throw unsupported();
+        }
+
+        @Override
+        public UserDO selectByIdWithoutTenant(Long id) {
+            return selectById(id);
+        }
+
+        @Override
+        public Integer updateByIdWithoutTenant(UserDO userDO) {
+            return 1;
+        }
+    }
+
+    private static final class FakeEventMapper extends BaseMapperAdapter<EventDO>
+            implements EventMapper {
+        private final Map<Long, EventDO> store = new LinkedHashMap<>();
+        private long seq = 1;
+
+        void put(EventDO event) {
+            if (event.getId() == null) {
+                event.setId(seq++);
+            }
+            store.put(event.getId(), event);
+        }
+
+        @Override
+        public EventDO selectById(Serializable id) {
+            return store.get(id);
+        }
+
+        @Override
+        public int insert(EventDO entity) {
+            put(entity);
+            return 1;
+        }
+
+        @Override
+        public EventDO selectRawById(Long id) {
+            return store.get(id);
+        }
+
+        @Override
+        public int restoreById(Long id) {
+            return 0;
+        }
+    }
+
+    private static final class FakeUserGroupMapper extends BaseMapperAdapter<UserGroupDO>
+            implements UserGroupMapper {
+        private final Map<Long, UserGroupDO> store = new LinkedHashMap<>();
+        private final Deque<UserGroupDO> selectOneQueue = new ArrayDeque<>();
+        private final Deque<Long> selectCountQueue = new ArrayDeque<>();
+        private List<UserGroupDO> selectList = new ArrayList<>();
+        private long seq = 1;
+
+        Collection<UserGroupDO> relations() {
+            return store.values();
+        }
+
+        private int nullSelectOneCount = 0;
+
+        void enqueueSelectOne(UserGroupDO value) {
+            if (value == null) {
+                nullSelectOneCount++;
+            } else {
+                selectOneQueue.add(value);
+            }
+        }
+
+        void setSelectListResult(List<UserGroupDO> list) {
+            selectList = new ArrayList<>(list);
+        }
+
+        void queueSelectCount(long count) {
+            selectCountQueue.add(count);
+        }
+
+        @Override
+        public int insert(UserGroupDO entity) {
+            if (entity.getId() == null) {
+                entity.setId(seq++);
+            }
+            store.put(entity.getId(), entity);
+            return 1;
+        }
+
+        @Override
+        public UserGroupDO selectOne(Wrapper<UserGroupDO> queryWrapper) {
+            if (nullSelectOneCount > 0) {
+                nullSelectOneCount--;
+                return null;
+            }
+            return selectOneQueue.isEmpty() ? null : selectOneQueue.removeFirst();
+        }
+
+        @Override
+        public List<UserGroupDO> selectList(Wrapper<UserGroupDO> queryWrapper) {
+            return new ArrayList<>(selectList);
+        }
+
+        @Override
+        public Long selectCount(Wrapper<UserGroupDO> queryWrapper) {
+            return selectCountQueue.isEmpty() ? 0L : selectCountQueue.removeFirst();
+        }
+
+        @Override
+        public int deleteById(Serializable id) {
+            return store.remove(id) != null ? 1 : 0;
+        }
+
+        @Override
+        public int restoreByEventId(Long eventId) {
+            return 0;
+        }
+    }
+
+    private static final class FakeTaskMapper extends BaseMapperAdapter<TaskDO>
+            implements TaskMapper {
+        private final Deque<Long> selectCountQueue = new ArrayDeque<>();
+
+        void queueSelectCount(long value) {
+            selectCountQueue.add(value);
+        }
+
+        @Override
+        public Long selectCount(Wrapper<TaskDO> queryWrapper) {
+            return selectCountQueue.isEmpty() ? 0L : selectCountQueue.removeFirst();
+        }
+    }
+
+    private static final class StubUserService implements UserService {
+        private List<UserProfileRespVO> profiles = new ArrayList<>();
+
+        void setProfiles(List<UserProfileRespVO> profiles) {
+            this.profiles = new ArrayList<>(profiles);
+        }
+
+        @Override
+        public UserDO getUserByUsername(String username) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isPasswordMatch(String rawPassword, String encodedPassword) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public nus.edu.u.system.domain.dto.UserRoleDTO selectUserWithRole(Long userId) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public UserDO selectUserById(Long userId) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Long createUserWithRoleIds(nus.edu.u.system.domain.dto.CreateUserDTO dto) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public UserDO updateUserWithRoleIds(nus.edu.u.system.domain.dto.UpdateUserDTO dto) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void softDeleteUser(Long userId) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void restoreUser(Long id) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void disableUser(Long id) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void enableUser(Long id) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<UserProfileRespVO> getAllUserProfiles() {
+            return new ArrayList<>(profiles);
+        }
+
+        @Override
+        public nus.edu.u.system.domain.vo.user.BulkUpsertUsersRespVO bulkUpsertUsers(
+                List<nus.edu.u.system.domain.dto.CreateUserDTO> rawRows) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean tryCreateOrFallbackToUpdate(
+                String email, String remark, List<Long> roleIds) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<Long> getAliveRoleIdsByUserId(Long userId) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<UserProfileRespVO> getEnabledUserProfiles() {
+            return new ArrayList<>(profiles);
+        }
     }
 }

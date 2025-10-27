@@ -1,4 +1,4 @@
-package nus.edu.u.system.service.Event;
+package nus.edu.u.system.service.event;
 
 import static nus.edu.u.system.enums.ErrorCodeConstants.*;
 import static org.assertj.core.api.Assertions.*;
@@ -25,7 +25,6 @@ import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.task.TaskMapper;
 import nus.edu.u.system.mapper.user.UserGroupMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
-import nus.edu.u.system.service.event.EventServiceImpl;
 import nus.edu.u.system.service.group.GroupService;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
