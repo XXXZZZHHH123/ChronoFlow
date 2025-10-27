@@ -47,7 +47,15 @@ class EmailNotificationSenderTest {
                         .templateId("invite")
                         .locale(Locale.US)
                         .variables(Map.of("name", "User"))
-                        .attachments(List.of(new AttachmentDTO("attach.txt", "text/plain", new byte[0], null, false, null)))
+                        .attachments(
+                                List.of(
+                                        new AttachmentDTO(
+                                                "attach.txt",
+                                                "text/plain",
+                                                new byte[0],
+                                                null,
+                                                false,
+                                                null)))
                         .build();
 
         String result = sender.send(request);
@@ -85,7 +93,12 @@ class EmailNotificationSenderTest {
                         .attachments(
                                 List.of(
                                         new AttachmentDTO(
-                                                "qr.png", "image/png", new byte[0], null, true, "qr")))
+                                                "qr.png",
+                                                "image/png",
+                                                new byte[0],
+                                                null,
+                                                true,
+                                                "qr")))
                         .build();
 
         sender.send(request);
@@ -96,7 +109,11 @@ class EmailNotificationSenderTest {
     @Test
     void send_whenLocaleMissing_defaultsToEnglish() {
         templateService.rendered =
-                RenderedTemplateDTO.builder().subject("Subject").bodyHtml("Body").attachments(List.of()).build();
+                RenderedTemplateDTO.builder()
+                        .subject("Subject")
+                        .bodyHtml("Body")
+                        .attachments(List.of())
+                        .build();
 
         NotificationRequestDTO request =
                 NotificationRequestDTO.builder()
@@ -116,7 +133,8 @@ class EmailNotificationSenderTest {
         Locale lastLocale;
 
         @Override
-        public RenderedTemplateDTO render(String templateId, Map<String, Object> variables, Locale locale) {
+        public RenderedTemplateDTO render(
+                String templateId, Map<String, Object> variables, Locale locale) {
             lastLocale = locale;
             return rendered;
         }
@@ -129,7 +147,8 @@ class EmailNotificationSenderTest {
         List<AttachmentDTO> attachments;
 
         @Override
-        public String send(String to, String subject, String html, List<AttachmentDTO> attachments) {
+        public String send(
+                String to, String subject, String html, List<AttachmentDTO> attachments) {
             this.to = to;
             this.subject = subject;
             this.html = html;

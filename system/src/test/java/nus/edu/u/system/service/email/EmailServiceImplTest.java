@@ -99,10 +99,12 @@ class EmailServiceImplTest {
     @Test
     void send_withAttachments_routesToRawClient() {
         AttachmentDTO attachment =
-                new AttachmentDTO("agenda.pdf", "application/pdf", new byte[] {1}, null, false, null);
+                new AttachmentDTO(
+                        "agenda.pdf", "application/pdf", new byte[] {1}, null, false, null);
 
         String result =
-                emailService.send("user@example.com", "Subject", "<p>Hello</p>", List.of(attachment));
+                emailService.send(
+                        "user@example.com", "Subject", "<p>Hello</p>", List.of(attachment));
 
         assertThat(result).isEqualTo("provider-raw");
     }
@@ -111,7 +113,10 @@ class EmailServiceImplTest {
     void send_whenClientThrows_propagatesException() {
         simpleSesClient.throwOnSend = true;
 
-        assertThatThrownBy(() -> emailService.send("user@example.com", "Subject", "<p>Hello</p>", null))
+        assertThatThrownBy(
+                        () ->
+                                emailService.send(
+                                        "user@example.com", "Subject", "<p>Hello</p>", null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("simulated failure");
     }

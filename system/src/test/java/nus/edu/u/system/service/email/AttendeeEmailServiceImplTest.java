@@ -9,7 +9,6 @@ import nus.edu.u.system.domain.dto.NotificationRequestDTO;
 import nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO;
 import nus.edu.u.system.enums.email.NotificationChannel;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.ClassPathResource;
 
 class AttendeeEmailServiceImplTest {
 
@@ -35,10 +34,8 @@ class AttendeeEmailServiceImplTest {
 
         assertThat(result).isEqualTo("queued");
         assertThat(notificationService.lastRequest.to()).isEqualTo("user@example.com");
-        assertThat(notificationService.lastRequest.channel())
-                .isEqualTo(NotificationChannel.EMAIL);
-        assertThat(notificationService.lastRequest.templateId())
-                .isEqualTo("attendee-qr-invite");
+        assertThat(notificationService.lastRequest.channel()).isEqualTo(NotificationChannel.EMAIL);
+        assertThat(notificationService.lastRequest.templateId()).isEqualTo("attendee-qr-invite");
         assertThat(notificationService.lastRequest.locale()).isEqualTo(Locale.ENGLISH);
         assertThat(notificationService.lastRequest.variables().get("attendeeName"))
                 .isEqualTo("User");

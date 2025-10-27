@@ -14,8 +14,7 @@ class NotificationServiceImplTest {
     @Test
     void send_usesMatchingSender() {
         RecordingSender emailSender = new RecordingSender(NotificationChannel.EMAIL, "email-id");
-        NotificationSender pushSender =
-                new RecordingSender(NotificationChannel.PUSH, "push-id");
+        NotificationSender pushSender = new RecordingSender(NotificationChannel.PUSH, "push-id");
 
         NotificationServiceImpl service =
                 new NotificationServiceImpl(List.of(pushSender, emailSender));
@@ -38,7 +37,8 @@ class NotificationServiceImplTest {
     @Test
     void send_whenNoSenderThrows() {
         NotificationServiceImpl service =
-                new NotificationServiceImpl(List.of(new RecordingSender(NotificationChannel.PUSH, "push")));
+                new NotificationServiceImpl(
+                        List.of(new RecordingSender(NotificationChannel.PUSH, "push")));
 
         NotificationRequestDTO request =
                 NotificationRequestDTO.builder()

@@ -1,7 +1,11 @@
 package nus.edu.u.system.service.attendee;
 
+import static nus.edu.u.common.constant.Constants.SESSION_TENANT_ID;
 import static org.assertj.core.api.Assertions.*;
 
+import cn.dev33.satoken.session.SaSession;
+import cn.dev33.satoken.stp.StpLogic;
+import cn.dev33.satoken.stp.StpUtil;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -9,7 +13,10 @@ import nus.edu.u.system.domain.dataobject.attendee.EventAttendeeDO;
 import nus.edu.u.system.domain.dataobject.task.EventDO;
 import nus.edu.u.system.domain.dataobject.tenant.TenantDO;
 import nus.edu.u.system.domain.vo.attendee.AttendeeQrCodeRespVO;
+import nus.edu.u.system.domain.vo.attendee.AttendeeReqVO;
 import nus.edu.u.system.domain.vo.checkin.CheckInRespVO;
+import nus.edu.u.system.domain.vo.checkin.GenerateQrCodesReqVO;
+import nus.edu.u.system.domain.vo.checkin.GenerateQrCodesRespVO;
 import nus.edu.u.system.domain.vo.qrcode.QrCodeReqVO;
 import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
 import nus.edu.u.system.mapper.attendee.EventAttendeeMapper;
@@ -25,18 +32,23 @@ class AttendeeServiceImplTest {
     private AttendeeServiceImpl attendeeService;
     private InMemoryAttendeeMapper attendeeMapper;
     private InMemoryEventMapper eventMapper;
+    private RecordingQrCodeService qrCodeService;
+    private RecordingAttendeeEmailService emailService;
 
     @BeforeEach
     void setUp() throws Exception {
         attendeeService = new AttendeeServiceImpl();
         attendeeMapper = new InMemoryAttendeeMapper();
         eventMapper = new InMemoryEventMapper();
+        qrCodeService = new RecordingQrCodeService();
+        emailService = new RecordingAttendeeEmailService();
 
         setField("attendeeMapper", attendeeMapper);
         setField("eventMapper", eventMapper);
-        setField("qrCodeService", new NoopQrCodeService());
-        setField("attendeeEmailService", new NoopAttendeeEmailService());
+        setField("qrCodeService", qrCodeService);
+        setField("attendeeEmailService", emailService);
         setField("tenantMapper", new InMemoryTenantMapper());
+        setField("baseUrl", "http://test-host");
     }
 
     private void setField(String name, Object value) throws Exception {
@@ -71,6 +83,21 @@ class AttendeeServiceImplTest {
     }
 
     @Test
+    void delete_whenFoundRemoves() {
+        attendeeMapper.save(
+                EventAttendeeDO.builder()
+                        .id(10L)
+                        .eventId(1L)
+                        .attendeeEmail("del@example.com")
+                        .checkInToken("tok-del")
+                        .build());
+
+        attendeeService.delete(10L);
+
+        assertThat(attendeeMapper.selectById(10L)).isNull();
+    }
+
+    @Test
     void checkIn_updatesStatus() {
         eventMapper.save(
                 EventDO.builder()
@@ -94,6 +121,216 @@ class AttendeeServiceImplTest {
 
         assertThat(resp.getSuccess()).isTrue();
         assertThat(attendeeMapper.byId.get(2L).getCheckInStatus()).isEqualTo(1);
+    }
+
+    @Test
+    void update_generatesTokenAndQrCodeWhenMissing() {
+        eventMapper.save(
+                EventDO.builder()
+                        .id(400L)
+                        .name("Summit")
+                        .description("Desc")
+                        .location("Hall A")
+                        .startTime(LocalDateTime.now())
+                        .endTime(LocalDateTime.now().plusHours(3))
+                        .status(1)
+                        .build());
+        attendeeMapper.save(
+                EventAttendeeDO.builder()
+                        .id(20L)
+                        .eventId(400L)
+                        .attendeeEmail("old@example.com")
+                        .attendeeName("Old")
+                        .attendeeMobile("000")
+                        .checkInStatus(0)
+                        .build());
+
+        try (TenantSession ignored = new TenantSession(99L)) {
+            AttendeeReqVO req = attendee("new@example.com", "New User", "111");
+
+            AttendeeQrCodeRespVO resp = attendeeService.update(20L, req);
+
+            assertThat(resp.getAttendeeEmail()).isEqualTo("new@example.com");
+            assertThat(resp.getCheckInToken()).isNotBlank();
+            assertThat(resp.getQrCodeUrl())
+                    .isEqualTo(
+                            "http://test-host/system/attendee/scan?token="
+                                    + resp.getCheckInToken());
+            EventAttendeeDO stored = attendeeMapper.selectById(20L);
+            assertThat(stored.getCheckInToken()).isEqualTo(resp.getCheckInToken());
+            assertThat(stored.getQrCodeGeneratedTime()).isNotNull();
+            assertThat(emailService.requests()).hasSize(1);
+            assertThat(emailService.requests().get(0).getOrganizationName()).isEqualTo("Tenant");
+        }
+    }
+
+    @Test
+    void update_whenAlreadyCheckedIn_throws() {
+        attendeeMapper.save(
+                EventAttendeeDO.builder()
+                        .id(21L)
+                        .eventId(401L)
+                        .attendeeEmail("checked@example.com")
+                        .checkInStatus(1)
+                        .build());
+
+        assertThatThrownBy(() -> attendeeService.update(21L, attendee("x@y.com", "Name", "123")))
+                .isInstanceOf(nus.edu.u.common.exception.ServiceException.class);
+    }
+
+    @Test
+    void generateQrCodesForAttendees_partialSuccessReturnsList() {
+        eventMapper.save(
+                EventDO.builder()
+                        .id(500L)
+                        .name("Expo")
+                        .description("desc")
+                        .location("loc")
+                        .startTime(LocalDateTime.now())
+                        .endTime(LocalDateTime.now().plusHours(1))
+                        .status(1)
+                        .build());
+
+        GenerateQrCodesReqVO req = new GenerateQrCodesReqVO();
+        req.setEventId(500L);
+        req.setAttendees(
+                List.of(
+                        attendee("first@example.com", "First", "111"),
+                        attendee("first@example.com", "Duplicate", "222")));
+
+        try (TenantSession ignored = new TenantSession(1L)) {
+            GenerateQrCodesRespVO resp = attendeeService.generateQrCodesForAttendees(req);
+
+            assertThat(resp.getTotalCount()).isEqualTo(1);
+            assertThat(resp.getAttendees()).hasSize(1);
+            assertThat(emailService.requests()).hasSize(1);
+        }
+    }
+
+    @Test
+    void generateQrCodesForAttendees_whenAllFailThrows() {
+        eventMapper.save(
+                EventDO.builder()
+                        .id(501L)
+                        .name("Fail Event")
+                        .startTime(LocalDateTime.now())
+                        .endTime(LocalDateTime.now().plusHours(1))
+                        .status(1)
+                        .build());
+
+        GenerateQrCodesReqVO req = new GenerateQrCodesReqVO();
+        req.setEventId(501L);
+        req.setAttendees(List.of(attendee("", "No Email", "333")));
+
+        assertThatThrownBy(() -> attendeeService.generateQrCodesForAttendees(req))
+                .isInstanceOf(nus.edu.u.common.exception.ServiceException.class)
+                .hasMessageContaining("Attendee already exists");
+    }
+
+    @Test
+    void getCheckInToken_generatesWhenMissing() {
+        eventMapper.save(
+                EventDO.builder()
+                        .id(600L)
+                        .name("Token Event")
+                        .startTime(LocalDateTime.now())
+                        .endTime(LocalDateTime.now().plusHours(1))
+                        .status(1)
+                        .build());
+        attendeeMapper.save(
+                EventAttendeeDO.builder()
+                        .id(30L)
+                        .eventId(600L)
+                        .attendeeEmail("token@example.com")
+                        .checkInStatus(0)
+                        .build());
+
+        String token = attendeeService.getCheckInToken(600L, "token@example.com");
+
+        assertThat(token).isNotBlank();
+        assertThat(attendeeMapper.selectById(30L).getCheckInToken()).isEqualTo(token);
+    }
+
+    private AttendeeReqVO attendee(String email, String name, String mobile) {
+        AttendeeReqVO req = new AttendeeReqVO();
+        req.setEmail(email);
+        req.setName(name);
+        req.setMobile(mobile);
+        return req;
+    }
+
+    private static final class RecordingQrCodeService implements QrCodeService {
+        private final List<String> requestedTokens = new ArrayList<>();
+
+        @Override
+        public QrCodeRespVO generateQrCode(QrCodeReqVO reqVO) {
+            return null;
+        }
+
+        @Override
+        public byte[] generateQrCodeBytes(String content, int size, String format) {
+            return content.getBytes();
+        }
+
+        @Override
+        public QrCodeRespVO generateEventCheckInQrWithToken(String checkInToken) {
+            requestedTokens.add(checkInToken);
+            String base64 =
+                    Base64.getEncoder()
+                            .encodeToString(
+                                    ("qr:" + checkInToken)
+                                            .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return QrCodeRespVO.builder()
+                    .base64Image(base64)
+                    .contentType("image/png")
+                    .size(128)
+                    .build();
+        }
+    }
+
+    private static final class RecordingAttendeeEmailService implements AttendeeEmailService {
+        private final List<nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO> sent =
+                new ArrayList<>();
+
+        @Override
+        public String sendAttendeeInvite(
+                nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO req) {
+            sent.add(req);
+            return "sent";
+        }
+
+        List<nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO> requests() {
+            return sent;
+        }
+    }
+
+    private static final class TenantSession implements AutoCloseable {
+        private final StpLogic previous;
+
+        private TenantSession(Long tenantId) {
+            this.previous = StpUtil.getStpLogic();
+            StpUtil.setStpLogic(new StubTenantLogic(tenantId));
+        }
+
+        @Override
+        public void close() {
+            StpUtil.setStpLogic(previous);
+        }
+    }
+
+    private static final class StubTenantLogic extends StpLogic {
+        private final SaSession session;
+
+        private StubTenantLogic(Long tenantId) {
+            super(StpUtil.TYPE);
+            this.session = new SaSession("test");
+            this.session.set(SESSION_TENANT_ID, tenantId);
+        }
+
+        @Override
+        public SaSession getSession() {
+            return session;
+        }
     }
 
     @Test
@@ -122,38 +359,17 @@ class AttendeeServiceImplTest {
         assertThat(info.getAttendeeEmail()).isEqualTo("info@example.com");
     }
 
-    private static final class NoopQrCodeService implements QrCodeService {
-        @Override
-        public QrCodeRespVO generateQrCode(QrCodeReqVO reqVO) {
-            return null;
-        }
-
-        @Override
-        public byte[] generateQrCodeBytes(String content, int size, String format) {
-            return new byte[0];
-        }
-
-        @Override
-        public QrCodeRespVO generateEventCheckInQrWithToken(String checkInToken) {
-            return null;
-        }
-    }
-
-    private static final class NoopAttendeeEmailService implements AttendeeEmailService {
-        @Override
-        public String sendAttendeeInvite(
-                nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO req) {
-            return "sent";
-        }
-    }
-
     private static final class InMemoryAttendeeMapper implements EventAttendeeMapper {
         private final Map<Long, EventAttendeeDO> byId = new HashMap<>();
         private final Map<String, EventAttendeeDO> byToken = new HashMap<>();
 
         void save(EventAttendeeDO attendee) {
+            byToken.entrySet()
+                    .removeIf(e -> Objects.equals(e.getValue().getId(), attendee.getId()));
             byId.put(attendee.getId(), attendee);
-            byToken.put(attendee.getCheckInToken(), attendee);
+            if (attendee.getCheckInToken() != null) {
+                byToken.put(attendee.getCheckInToken(), attendee);
+            }
         }
 
         @Override

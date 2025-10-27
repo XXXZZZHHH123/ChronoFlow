@@ -2,19 +2,24 @@ package nus.edu.u.system.service.file;
 
 import static org.assertj.core.api.Assertions.*;
 
+import cn.dev33.satoken.stp.StpLogic;
+import cn.dev33.satoken.stp.StpUtil;
 import com.google.cloud.storage.Storage;
 import java.lang.reflect.Proxy;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import nus.edu.u.framework.file.FileProviderPropertiesConfig;
 import nus.edu.u.framework.file.GcsPropertiesConfig;
 import nus.edu.u.system.domain.dataobject.file.FileDO;
 import nus.edu.u.system.domain.vo.file.FileResultVO;
+import nus.edu.u.system.domain.vo.file.FileUploadReqVO;
 import nus.edu.u.system.mapper.file.FileMapper;
 import nus.edu.u.system.provider.file.FileClient;
 import nus.edu.u.system.provider.file.FileClientFactory;
 import nus.edu.u.system.provider.file.GcsFileClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 class FileStorageServiceImplTest {
@@ -32,6 +37,122 @@ class FileStorageServiceImplTest {
         fileClientFactory = new TestFileClientFactory(new StubGcsFileClient());
         fileStorageService =
                 new FileStorageServiceImpl(fileClientFactory, providerConfig, fileMapper);
+    }
+
+    @Test
+    void uploadToTaskLog_persistsMetadataAndReturnsSignedUrls() {
+        InMemoryFileMapper mapper = new InMemoryFileMapper();
+        RecordingGcsFileClient client = new RecordingGcsFileClient();
+        FileProviderPropertiesConfig config = new FileProviderPropertiesConfig();
+        config.setProvider("gcs");
+        FileStorageServiceImpl service =
+                new FileStorageServiceImpl(new TestFileClientFactory(client), config, mapper);
+
+        MockMultipartFile first =
+                new MockMultipartFile("files", "first.txt", "text/plain", "alpha".getBytes());
+        MockMultipartFile second =
+                new MockMultipartFile("files", "second.txt", "text/plain", "beta".getBytes());
+        FileUploadReqVO req = new FileUploadReqVO();
+        req.setTaskLogId(11L);
+        req.setEventId(22L);
+        req.setFiles(List.of(first, second));
+
+        client.respondWith(
+                "first.txt",
+                new FileClient.FileUploadResult("obj-1", "text/plain", first.getSize(), null));
+        client.respondWith(
+                "second.txt",
+                new FileClient.FileUploadResult("obj-2", "text/plain", second.getSize(), null));
+
+        try (StpLogicRestorer ignored = new StpLogicRestorer(123L)) {
+            List<FileResultVO> results = service.uploadToTaskLog(req);
+
+            assertThat(results).hasSize(2);
+            assertThat(results)
+                    .extracting(FileResultVO::getObjectName)
+                    .containsExactly("obj-1", "obj-2");
+            assertThat(results)
+                    .extracting(FileResultVO::getSignedUrl)
+                    .containsExactly("signed://obj-1", "signed://obj-2");
+        }
+
+        List<FileDO> stored = mapper.all();
+        assertThat(stored).hasSize(2);
+        FileDO firstEntity =
+                stored.stream()
+                        .filter(f -> "obj-1".equals(f.getObjectName()))
+                        .findFirst()
+                        .orElseThrow();
+        assertThat(firstEntity.getTaskLogId()).isEqualTo(11L);
+        assertThat(firstEntity.getEventId()).isEqualTo(22L);
+        assertThat(firstEntity.getProvider()).isEqualTo("gcs");
+        assertThat(firstEntity.getObjectName()).isEqualTo("obj-1");
+        assertThat(firstEntity.getName()).isEqualTo("first.txt");
+        assertThat(firstEntity.getType()).isEqualTo("text/plain");
+        assertThat(firstEntity.getSize()).isEqualTo(first.getSize());
+        assertThat(firstEntity.getCreator()).isEqualTo("123");
+        assertThat(firstEntity.getUpdater()).isEqualTo("123");
+    }
+
+    @Test
+    void uploadToTaskLog_rollsBackWhenPersistenceFails() {
+        InMemoryFileMapper mapper = new InMemoryFileMapper();
+        RecordingGcsFileClient client = new RecordingGcsFileClient();
+        FileProviderPropertiesConfig config = new FileProviderPropertiesConfig();
+        config.setProvider("gcs");
+        FileStorageServiceImpl service =
+                new FileStorageServiceImpl(new TestFileClientFactory(client), config, mapper);
+
+        MockMultipartFile first =
+                new MockMultipartFile("files", "first.txt", "text/plain", "alpha".getBytes());
+        MockMultipartFile second =
+                new MockMultipartFile("files", "second.txt", "text/plain", "beta".getBytes());
+        FileUploadReqVO req = new FileUploadReqVO();
+        req.setTaskLogId(33L);
+        req.setEventId(44L);
+        req.setFiles(List.of(first, second));
+
+        client.respondWith(
+                "first.txt", new FileClient.FileUploadResult("obj-1", "text/plain", 5L, null));
+        client.respondWith(
+                "second.txt", new FileClient.FileUploadResult("obj-2", "text/plain", 4L, null));
+
+        RuntimeException failure = new RuntimeException("database down");
+        mapper.failOnInsert(failure);
+
+        try (StpLogicRestorer ignored = new StpLogicRestorer(777L)) {
+            assertThatThrownBy(() -> service.uploadToTaskLog(req)).isSameAs(failure);
+        }
+
+        assertThat(client.deletedObjects()).containsExactlyInAnyOrder("obj-1", "obj-2");
+    }
+
+    private static final class FixedIdStpLogic extends StpLogic {
+        private final Object loginId;
+
+        private FixedIdStpLogic(Object loginId) {
+            super(StpUtil.TYPE);
+            this.loginId = loginId;
+        }
+
+        @Override
+        public Object getLoginId() {
+            return loginId;
+        }
+    }
+
+    private static final class StpLogicRestorer implements AutoCloseable {
+        private final StpLogic previous;
+
+        private StpLogicRestorer(Object loginId) {
+            this.previous = StpUtil.getStpLogic();
+            StpUtil.setStpLogic(new FixedIdStpLogic(loginId));
+        }
+
+        @Override
+        public void close() {
+            StpUtil.setStpLogic(previous);
+        }
     }
 
     @Test
@@ -110,20 +231,7 @@ class FileStorageServiceImplTest {
 
     private static final class StubGcsFileClient extends GcsFileClient {
         private StubGcsFileClient() {
-            super(
-                    (Storage)
-                            Proxy.newProxyInstance(
-                                    Storage.class.getClassLoader(),
-                                    new Class<?>[] {Storage.class},
-                                    (proxy, method, args) -> null),
-                    config());
-        }
-
-        private static GcsPropertiesConfig config() {
-            GcsPropertiesConfig config = new GcsPropertiesConfig();
-            config.setBucket("bucket");
-            config.setSignedUrlExpiryMinutes(5);
-            return config;
+            super(storageProxy(), defaultGcsConfig());
         }
 
         @Override
@@ -138,6 +246,59 @@ class FileStorageServiceImplTest {
 
         @Override
         public void deleteQuietly(String objectName) {}
+    }
+
+    private static final class RecordingGcsFileClient extends GcsFileClient {
+        private final Map<String, FileClient.FileUploadResult> responses =
+                new ConcurrentHashMap<>();
+        private final List<String> deleted = Collections.synchronizedList(new ArrayList<>());
+
+        private RecordingGcsFileClient() {
+            super(storageProxy(), defaultGcsConfig());
+        }
+
+        void respondWith(String fileName, FileClient.FileUploadResult result) {
+            responses.put(fileName, result);
+        }
+
+        List<String> deletedObjects() {
+            return deleted;
+        }
+
+        @Override
+        public FileUploadResult uploadFile(MultipartFile file) {
+            String name = file.getOriginalFilename();
+            FileClient.FileUploadResult result = responses.get(name);
+            if (result == null) {
+                throw new IllegalStateException("No upload result configured for " + name);
+            }
+            return result;
+        }
+
+        @Override
+        public String generateSignedUrl(String objectName) {
+            return "signed://" + objectName;
+        }
+
+        @Override
+        public void deleteQuietly(String objectName) {
+            deleted.add(objectName);
+        }
+    }
+
+    private static Storage storageProxy() {
+        return (Storage)
+                Proxy.newProxyInstance(
+                        Storage.class.getClassLoader(),
+                        new Class<?>[] {Storage.class},
+                        (proxy, method, args) -> null);
+    }
+
+    private static GcsPropertiesConfig defaultGcsConfig() {
+        GcsPropertiesConfig config = new GcsPropertiesConfig();
+        config.setBucket("bucket");
+        config.setSignedUrlExpiryMinutes(5);
+        return config;
     }
 
     private static final class NonGcsFileClient implements FileClient {
@@ -170,14 +331,23 @@ class FileStorageServiceImplTest {
     }
 
     private static final class InMemoryFileMapper implements FileMapper {
-        private final Map<Long, FileDO> store = new HashMap<>();
+        private final Map<Long, FileDO> store = new LinkedHashMap<>();
         private long idSeq = 1;
+        private RuntimeException insertFailure;
 
         void store(FileDO file) {
             if (file.getId() == null) {
                 file.setId(idSeq++);
             }
             store.put(file.getId(), file);
+        }
+
+        void failOnInsert(RuntimeException failure) {
+            this.insertFailure = failure;
+        }
+
+        List<FileDO> all() {
+            return new ArrayList<>(store.values());
         }
 
         @Override
@@ -194,6 +364,9 @@ class FileStorageServiceImplTest {
 
         @Override
         public int insertBatch(List<FileDO> list) {
+            if (insertFailure != null) {
+                throw insertFailure;
+            }
             list.forEach(this::store);
             return list.size();
         }
