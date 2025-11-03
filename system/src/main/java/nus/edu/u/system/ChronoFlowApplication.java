@@ -17,7 +17,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
  * Start application
  *
  * @author Lu Shuwen
- * @date 2025-08-25
+ * @date 2025-08-26
  */
 @MapperScan(basePackages = "nus.edu.u.system.mapper", annotationClass = Mapper.class)
 @SpringBootApplication(
