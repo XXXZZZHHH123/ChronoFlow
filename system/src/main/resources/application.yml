@@ -168,7 +168,7 @@ file:
   provider: gcs
 
 gcs:
-  bucket: chronoflow-file-service-2025
+  bucket: chronoflow
   signed-url-expiry-minutes: 15
 
 
