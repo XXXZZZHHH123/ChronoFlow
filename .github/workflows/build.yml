@@ -271,12 +271,3 @@ jobs:
             echo "ZAP scan failed with exit code $ZAP_EXIT" >&2
             exit "$ZAP_EXIT"
           fi
-
-      - name: Upload ZAP reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-dast-reports
-          path: |
-            zap-report.json
-            zap-report.xml
-            zap-report.html
