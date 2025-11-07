@@ -27,7 +27,7 @@ import nus.edu.u.system.mapper.role.RolePermissionMapper;
 import nus.edu.u.system.mapper.tenant.TenantMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.mapper.user.UserRoleMapper;
-import nus.edu.u.system.service.email.OrganizerEmailService;
+import nus.edu.u.system.service.notification.OrganizerEmailService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

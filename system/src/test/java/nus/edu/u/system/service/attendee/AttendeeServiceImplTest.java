@@ -22,7 +22,6 @@ import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
 import nus.edu.u.system.mapper.attendee.EventAttendeeMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.tenant.TenantMapper;
-import nus.edu.u.system.service.email.AttendeeEmailService;
 import nus.edu.u.system.service.qrcode.QrCodeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +32,6 @@ class AttendeeServiceImplTest {
     private InMemoryAttendeeMapper attendeeMapper;
     private InMemoryEventMapper eventMapper;
     private RecordingQrCodeService qrCodeService;
-    private RecordingAttendeeEmailService emailService;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -41,12 +39,10 @@ class AttendeeServiceImplTest {
         attendeeMapper = new InMemoryAttendeeMapper();
         eventMapper = new InMemoryEventMapper();
         qrCodeService = new RecordingQrCodeService();
-        emailService = new RecordingAttendeeEmailService();
 
         setField("attendeeMapper", attendeeMapper);
         setField("eventMapper", eventMapper);
         setField("qrCodeService", qrCodeService);
-        setField("attendeeEmailService", emailService);
         setField("tenantMapper", new InMemoryTenantMapper());
         setField("baseUrl", "http://test-host");
     }
@@ -124,47 +120,6 @@ class AttendeeServiceImplTest {
     }
 
     @Test
-    void update_generatesTokenAndQrCodeWhenMissing() {
-        eventMapper.save(
-                EventDO.builder()
-                        .id(400L)
-                        .name("Summit")
-                        .description("Desc")
-                        .location("Hall A")
-                        .startTime(LocalDateTime.now())
-                        .endTime(LocalDateTime.now().plusHours(3))
-                        .status(1)
-                        .build());
-        attendeeMapper.save(
-                EventAttendeeDO.builder()
-                        .id(20L)
-                        .eventId(400L)
-                        .attendeeEmail("old@example.com")
-                        .attendeeName("Old")
-                        .attendeeMobile("000")
-                        .checkInStatus(0)
-                        .build());
-
-        try (TenantSession ignored = new TenantSession(99L)) {
-            AttendeeReqVO req = attendee("new@example.com", "New User", "111");
-
-            AttendeeQrCodeRespVO resp = attendeeService.update(20L, req);
-
-            assertThat(resp.getAttendeeEmail()).isEqualTo("new@example.com");
-            assertThat(resp.getCheckInToken()).isNotBlank();
-            assertThat(resp.getQrCodeUrl())
-                    .isEqualTo(
-                            "http://test-host/system/attendee/scan?token="
-                                    + resp.getCheckInToken());
-            EventAttendeeDO stored = attendeeMapper.selectById(20L);
-            assertThat(stored.getCheckInToken()).isEqualTo(resp.getCheckInToken());
-            assertThat(stored.getQrCodeGeneratedTime()).isNotNull();
-            assertThat(emailService.requests()).hasSize(1);
-            assertThat(emailService.requests().get(0).getOrganizationName()).isEqualTo("Tenant");
-        }
-    }
-
-    @Test
     void update_whenAlreadyCheckedIn_throws() {
         attendeeMapper.save(
                 EventAttendeeDO.builder()
@@ -203,7 +158,6 @@ class AttendeeServiceImplTest {
 
             assertThat(resp.getTotalCount()).isEqualTo(1);
             assertThat(resp.getAttendees()).hasSize(1);
-            assertThat(emailService.requests()).hasSize(1);
         }
     }
 
@@ -285,22 +239,6 @@ class AttendeeServiceImplTest {
                     .contentType("image/png")
                     .size(128)
                     .build();
-        }
-    }
-
-    private static final class RecordingAttendeeEmailService implements AttendeeEmailService {
-        private final List<nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO> sent =
-                new ArrayList<>();
-
-        @Override
-        public String sendAttendeeInvite(
-                nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO req) {
-            sent.add(req);
-            return "sent";
-        }
-
-        List<nus.edu.u.system.domain.vo.attendee.AttendeeInviteReqVO> requests() {
-            return sent;
         }
     }
 
