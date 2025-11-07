@@ -27,7 +27,7 @@ import nus.edu.u.system.enums.user.UserStatusEnum;
 import nus.edu.u.system.mapper.role.RoleMapper;
 import nus.edu.u.system.mapper.user.UserMapper;
 import nus.edu.u.system.mapper.user.UserRoleMapper;
-import nus.edu.u.system.service.email.MemberEmailService;
+import nus.edu.u.system.service.notification.MemberEmailService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

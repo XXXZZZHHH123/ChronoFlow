@@ -1,10 +1,7 @@
 package nus.edu.u.system.provider.email;
 
-import java.util.List;
-import nus.edu.u.system.domain.dto.AttachmentDTO;
-import nus.edu.u.system.domain.dto.EmailSendResultDTO;
+import nus.edu.u.system.domain.dto.EmailRequestDTO;
 
 public interface EmailClient {
-    EmailSendResultDTO sendEmail(
-            String to, String subject, String html, List<AttachmentDTO> attachments);
+    void sendEmail(EmailRequestDTO emailRequestDTO);
 }
