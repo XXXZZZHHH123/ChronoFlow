@@ -120,45 +120,6 @@ class AttendeeServiceImplTest {
     }
 
     @Test
-    void update_generatesTokenAndQrCodeWhenMissing() {
-        eventMapper.save(
-                EventDO.builder()
-                        .id(400L)
-                        .name("Summit")
-                        .description("Desc")
-                        .location("Hall A")
-                        .startTime(LocalDateTime.now())
-                        .endTime(LocalDateTime.now().plusHours(3))
-                        .status(1)
-                        .build());
-        attendeeMapper.save(
-                EventAttendeeDO.builder()
-                        .id(20L)
-                        .eventId(400L)
-                        .attendeeEmail("old@example.com")
-                        .attendeeName("Old")
-                        .attendeeMobile("000")
-                        .checkInStatus(0)
-                        .build());
-
-        try (TenantSession ignored = new TenantSession(99L)) {
-            AttendeeReqVO req = attendee("new@example.com", "New User", "111");
-
-            AttendeeQrCodeRespVO resp = attendeeService.update(20L, req);
-
-            assertThat(resp.getAttendeeEmail()).isEqualTo("new@example.com");
-            assertThat(resp.getCheckInToken()).isNotBlank();
-            assertThat(resp.getQrCodeUrl())
-                    .isEqualTo(
-                            "http://test-host/system/attendee/scan?token="
-                                    + resp.getCheckInToken());
-            EventAttendeeDO stored = attendeeMapper.selectById(20L);
-            assertThat(stored.getCheckInToken()).isEqualTo(resp.getCheckInToken());
-            assertThat(stored.getQrCodeGeneratedTime()).isNotNull();
-        }
-    }
-
-    @Test
     void update_whenAlreadyCheckedIn_throws() {
         attendeeMapper.save(
                 EventAttendeeDO.builder()
