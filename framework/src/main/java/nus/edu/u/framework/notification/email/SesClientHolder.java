@@ -7,7 +7,9 @@ public final class SesClientHolder {
 
     private SesClientHolder() {}
 
-    public static void init(SesV2Client client) { INSTANCE = client; }
+    public static void init(SesV2Client client) {
+        INSTANCE = client;
+    }
 
     public static SesV2Client get() {
         if (INSTANCE == null) {
