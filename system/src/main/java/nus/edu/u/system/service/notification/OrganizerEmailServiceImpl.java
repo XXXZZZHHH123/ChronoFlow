@@ -58,7 +58,6 @@ public class OrganizerEmailServiceImpl implements OrganizerEmailService {
         } catch (Exception ignored) {
             // if logo missing, just proceed without it
         }
-
     }
 
     private static Map<String, Object> getOrganizerRequestVars(RegOrganizerReqVO req) {

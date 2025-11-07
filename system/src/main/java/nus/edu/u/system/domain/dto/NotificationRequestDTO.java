@@ -1,13 +1,12 @@
 package nus.edu.u.system.domain.dto;
 
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import lombok.*;
 import nus.edu.u.system.enums.email.EmailProvider;
 import nus.edu.u.system.enums.email.NotificationChannel;
 import nus.edu.u.system.enums.email.TemplateProvider;
-
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 @Data
 @Builder

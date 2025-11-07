@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-
 import nus.edu.u.system.domain.dto.TemplateRequestDTO;
 import nus.edu.u.system.domain.dto.TemplateResponseDTO;
 import nus.edu.u.system.enums.email.TemplateProvider;
@@ -38,15 +37,18 @@ class GeneralTemplateTest {
         AtomicReference<TemplateClient> clientRef = new AtomicReference<>();
 
         try (MockedConstruction<TemplateClientFactory> mocked =
-                     Mockito.mockConstruction(TemplateClientFactory.class,
-                             (mockFactory, context) -> {
-                                 TemplateClient client = mock(TemplateClient.class);
-                                 when(mockFactory.getClient(TemplateProvider.Thymeleaf)).thenReturn(client);
-                                 when(client.render(req)).thenReturn(expected);
-                                 clientRef.set(client);
-                             })) {
+                Mockito.mockConstruction(
+                        TemplateClientFactory.class,
+                        (mockFactory, context) -> {
+                            TemplateClient client = mock(TemplateClient.class);
+                            when(mockFactory.getClient(TemplateProvider.Thymeleaf))
+                                    .thenReturn(client);
+                            when(client.render(req)).thenReturn(expected);
+                            clientRef.set(client);
+                        })) {
 
-            GeneralTemplate sut = new GeneralTemplate(); // uses new TemplateClientFactory() internally
+            GeneralTemplate sut =
+                    new GeneralTemplate(); // uses new TemplateClientFactory() internally
 
             // Act
             TemplateResponseDTO actual = sut.process(req);
@@ -78,13 +80,15 @@ class GeneralTemplateTest {
         AtomicReference<TemplateClient> clientRef = new AtomicReference<>();
 
         try (MockedConstruction<TemplateClientFactory> mocked =
-                     Mockito.mockConstruction(TemplateClientFactory.class,
-                             (mockFactory, context) -> {
-                                 TemplateClient client = mock(TemplateClient.class);
-                                 when(mockFactory.getClient(TemplateProvider.Thymeleaf)).thenReturn(client);
-                                 when(client.render(req)).thenReturn(expected);
-                                 clientRef.set(client);
-                             })) {
+                Mockito.mockConstruction(
+                        TemplateClientFactory.class,
+                        (mockFactory, context) -> {
+                            TemplateClient client = mock(TemplateClient.class);
+                            when(mockFactory.getClient(TemplateProvider.Thymeleaf))
+                                    .thenReturn(client);
+                            when(client.render(req)).thenReturn(expected);
+                            clientRef.set(client);
+                        })) {
 
             GeneralTemplate sut = new GeneralTemplate();
 

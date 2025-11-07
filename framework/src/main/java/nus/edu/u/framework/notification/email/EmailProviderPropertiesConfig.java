@@ -14,14 +14,15 @@ public class EmailProviderPropertiesConfig {
     private static volatile EmailProviderPropertiesConfig INSTANCE;
 
     @PostConstruct
-    void init() { INSTANCE = this; }
+    void init() {
+        INSTANCE = this;
+    }
 
     public static EmailProviderPropertiesConfig current() {
         EmailProviderPropertiesConfig cfg = INSTANCE;
         if (cfg == null) {
             throw new IllegalStateException(
-                    "EmailProviderPropertiesConfig not initialized. Is Spring context up?"
-            );
+                    "EmailProviderPropertiesConfig not initialized. Is Spring context up?");
         }
         return cfg;
     }

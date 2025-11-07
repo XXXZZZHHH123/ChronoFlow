@@ -12,8 +12,7 @@ public class GeneralTemplate implements TemplateEngineImplementor {
     private final TemplateClientFactory templateClientFactory = new TemplateClientFactory();
 
     @Override
-    public TemplateResponseDTO process (TemplateRequestDTO templateRequestDTO)
-    {
+    public TemplateResponseDTO process(TemplateRequestDTO templateRequestDTO) {
         var variables = templateRequestDTO.getVariables();
         var templateProvider = templateRequestDTO.getTemplateProvider();
         var templateEngine = templateClientFactory.getClient(templateProvider);
@@ -25,5 +24,4 @@ public class GeneralTemplate implements TemplateEngineImplementor {
 
         return templateEngine.render(templateRequestDTO);
     }
-
 }

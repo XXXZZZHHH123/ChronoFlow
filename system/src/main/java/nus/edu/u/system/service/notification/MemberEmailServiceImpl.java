@@ -66,8 +66,6 @@ public class MemberEmailServiceImpl implements MemberEmailService {
         } catch (Exception ignored) {
 
         }
-
-
     }
 
     private static Map<String, Object> getMemberInviteVars(RegSearchReqVO req, String inviteUrl) {

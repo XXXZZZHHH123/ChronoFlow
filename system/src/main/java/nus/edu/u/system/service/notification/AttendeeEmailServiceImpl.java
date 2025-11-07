@@ -27,31 +27,29 @@ public class AttendeeEmailServiceImpl implements AttendeeEmailService {
     @Override
     public void sendAttendeeInvite(AttendeeInviteReqVO req) {
 
-       try {
-           Map<String, Object> vars = getAttendeeInviteTemplateVars(req);
+        try {
+            Map<String, Object> vars = getAttendeeInviteTemplateVars(req);
 
-           List<AttachmentDTO> attachments = new ArrayList<>();
-           attachments.addAll(getInlineQRCode(req));
-           attachments.addAll(getInlineLogoAttachment());
+            List<AttachmentDTO> attachments = new ArrayList<>();
+            attachments.addAll(getInlineQRCode(req));
+            attachments.addAll(getInlineLogoAttachment());
 
-           var request =
-                   NotificationRequestDTO.builder()
-                           .channel(NotificationChannel.EMAIL)
-                           .to(req.getToEmail())
-                           .templateId(ATTENDEE_INVITE_TEMPLATE_ID)
-                           .emailProvider(EmailProvider.AWS_SES)
-                           .templateProvider(TemplateProvider.Thymeleaf)
-                           .variables(vars)
-                           .locale(Locale.ENGLISH)
-                           .attachment(attachments)
-                           .build();
+            var request =
+                    NotificationRequestDTO.builder()
+                            .channel(NotificationChannel.EMAIL)
+                            .to(req.getToEmail())
+                            .templateId(ATTENDEE_INVITE_TEMPLATE_ID)
+                            .emailProvider(EmailProvider.AWS_SES)
+                            .templateProvider(TemplateProvider.Thymeleaf)
+                            .variables(vars)
+                            .locale(Locale.ENGLISH)
+                            .attachment(attachments)
+                            .build();
 
-           notificationService.send(request);
-       }
-       catch (Exception e) {
+            notificationService.send(request);
+        } catch (Exception e) {
 
-       }
-
+        }
     }
 
     private static Map<String, Object> getAttendeeInviteTemplateVars(AttendeeInviteReqVO req) {

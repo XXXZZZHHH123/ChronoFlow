@@ -1,5 +1,8 @@
 package nus.edu.u.system.service.notification;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.exception.RateLimitExceededException;
@@ -11,9 +14,6 @@ import nus.edu.u.system.domain.dto.NotificationRequestDTO;
 import nus.edu.u.system.provider.email.EmailClient;
 import nus.edu.u.system.provider.email.EmailClientFactory;
 import org.springframework.stereotype.Service;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
 
 @Service("emailTransport")
 @RequiredArgsConstructor
@@ -26,8 +26,7 @@ public class EmailTransport implements TransportImplementor {
     private final EmailLimitPropertiesConfig props;
     private final IdempotencyKeyUtil idempotencyKeys;
 
-    public void process (NotificationRequestDTO notificationRequestDTO)
-    {
+    public void process(NotificationRequestDTO notificationRequestDTO) {
         var to = notificationRequestDTO.getTo();
         var subject = notificationRequestDTO.getSubject();
         var html = notificationRequestDTO.getBody();
@@ -42,29 +41,30 @@ public class EmailTransport implements TransportImplementor {
 
         final String requestId = UUID.randomUUID().toString();
 
-        //rate limit
+        // rate limit
         if (!rateLimiter.allow(rateKey, rateLimit, rateWindow)) {
             throw new RateLimitExceededException("Rate limit exceeded for sending emails");
         }
 
-        //idempotency
+        // idempotency
         final String idemKey = idempotencyKeys.buildEmailKey(to, subject, html);
         if (!idempotency.tryClaim(idemKey, idempotencyTtl)) {
             log.info("Email idempotency hit for key={} (requestId={})", idemKey, requestId);
         }
 
         try {
-            EmailClient client = emailClientFactory.getClient(notificationRequestDTO.getEmailProvider());
-            EmailRequestDTO requestDTO = EmailRequestDTO.builder()
-                                                        .to(to)
-                                                        .subject(subject)
-                                                        .html(html)
-                                                        .attachments(attachments)
-                                                        .provider(notificationRequestDTO.getEmailProvider())
-                                                        .build();
+            EmailClient client =
+                    emailClientFactory.getClient(notificationRequestDTO.getEmailProvider());
+            EmailRequestDTO requestDTO =
+                    EmailRequestDTO.builder()
+                            .to(to)
+                            .subject(subject)
+                            .html(html)
+                            .attachments(attachments)
+                            .provider(notificationRequestDTO.getEmailProvider())
+                            .build();
             client.sendEmail(requestDTO);
-        }
-        catch(Exception ex) {
+        } catch (Exception ex) {
             log.warn(
                     "Email send failed (requestId={}): to={}, subject={}, error={}",
                     requestId,

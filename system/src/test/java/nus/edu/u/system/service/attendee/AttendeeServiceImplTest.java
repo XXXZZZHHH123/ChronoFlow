@@ -22,7 +22,6 @@ import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
 import nus.edu.u.system.mapper.attendee.EventAttendeeMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.tenant.TenantMapper;
-import nus.edu.u.system.service.notification.AttendeeEmailService;
 import nus.edu.u.system.service.qrcode.QrCodeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

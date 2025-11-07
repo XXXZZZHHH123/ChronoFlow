@@ -33,15 +33,11 @@ public class SESEmailClient implements EmailClient {
     }
 
     public static SESEmailClient defaultClient() {
-        return new SESEmailClient(
-                SesClientHolder.get(),
-                EmailProviderPropertiesConfig.current()
-        );
+        return new SESEmailClient(SesClientHolder.get(), EmailProviderPropertiesConfig.current());
     }
 
     @Override
-    public void sendEmail(
-            EmailRequestDTO dto) {
+    public void sendEmail(EmailRequestDTO dto) {
         try {
 
             var subject = dto.getSubject();

@@ -6,7 +6,6 @@ import nus.edu.u.system.domain.dto.TemplateResponseDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class EmailNotificationService extends NotificationService {
 
@@ -19,23 +18,24 @@ public class EmailNotificationService extends NotificationService {
     @Override
     public void send(NotificationRequestDTO dto) {
 
-        TemplateRequestDTO templateRequestDTO = TemplateRequestDTO
-                .builder()
-                .templateId(dto.getTemplateId())
-                .variables(dto.getVariables())
-                .locale(dto.getLocale())
-                .templateProvider(dto.getTemplateProvider())
-                .build();
+        TemplateRequestDTO templateRequestDTO =
+                TemplateRequestDTO.builder()
+                        .templateId(dto.getTemplateId())
+                        .variables(dto.getVariables())
+                        .locale(dto.getLocale())
+                        .templateProvider(dto.getTemplateProvider())
+                        .build();
 
         TemplateResponseDTO tpl = templateEngineImplementor.process(templateRequestDTO);
 
-        NotificationRequestDTO emailReq = NotificationRequestDTO.builder()
+        NotificationRequestDTO emailReq =
+                NotificationRequestDTO.builder()
                         .emailProvider(dto.getEmailProvider())
-                                .to(dto.getTo())
-                                        .subject(tpl.getSubject())
-                                                .body(tpl.getBody())
-                                                        .attachment(dto.getAttachment())
-                                                                .build();
+                        .to(dto.getTo())
+                        .subject(tpl.getSubject())
+                        .body(tpl.getBody())
+                        .attachment(dto.getAttachment())
+                        .build();
 
         transportImplementor.process(emailReq);
     }

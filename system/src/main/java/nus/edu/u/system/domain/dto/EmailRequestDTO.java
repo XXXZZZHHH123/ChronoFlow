@@ -1,9 +1,8 @@
 package nus.edu.u.system.domain.dto;
 
+import java.util.List;
 import lombok.*;
 import nus.edu.u.system.enums.email.EmailProvider;
-
-import java.util.List;
 
 @Builder
 @Data

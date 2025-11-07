@@ -21,10 +21,11 @@ public class SesConfig {
             @Value("${aws.credentials.secret-key}") String secretKey) {
 
         var credentials = AwsBasicCredentials.create(accessKey, secretKey);
-        var client = SesV2Client.builder()
-                .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(credentials))
-                .build();
+        var client =
+                SesV2Client.builder()
+                        .region(Region.of(region))
+                        .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                        .build();
 
         SesClientHolder.init(client);
         return client;

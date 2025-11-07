@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 import nus.edu.u.system.domain.dto.NotificationRequestDTO;
 import nus.edu.u.system.domain.dto.TemplateRequestDTO;
 import nus.edu.u.system.domain.dto.TemplateResponseDTO;
@@ -27,15 +26,16 @@ class EmailNotificationServiceTest {
         EmailNotificationService svc = new EmailNotificationService(transport, template);
 
         // input dto
-        NotificationRequestDTO in = NotificationRequestDTO.builder()
-                .emailProvider(EmailProvider.AWS_SES)
-                .to("user@example.com")
-                .templateId("invite-email")
-                .templateProvider(TemplateProvider.Thymeleaf)
-                .variables(Map.of("name", "Thet"))
-                .locale(Locale.ENGLISH)
-                .attachment(List.of()) // or whatever your type is
-                .build();
+        NotificationRequestDTO in =
+                NotificationRequestDTO.builder()
+                        .emailProvider(EmailProvider.AWS_SES)
+                        .to("user@example.com")
+                        .templateId("invite-email")
+                        .templateProvider(TemplateProvider.Thymeleaf)
+                        .variables(Map.of("name", "Thet"))
+                        .locale(Locale.ENGLISH)
+                        .attachment(List.of()) // or whatever your type is
+                        .build();
 
         // template response (stub)
         TemplateResponseDTO tpl = mock(TemplateResponseDTO.class);
@@ -47,7 +47,8 @@ class EmailNotificationServiceTest {
         svc.send(in);
 
         // verify template request built correctly
-        ArgumentCaptor<TemplateRequestDTO> tplReqCap = ArgumentCaptor.forClass(TemplateRequestDTO.class);
+        ArgumentCaptor<TemplateRequestDTO> tplReqCap =
+                ArgumentCaptor.forClass(TemplateRequestDTO.class);
         verify(template).process(tplReqCap.capture());
         TemplateRequestDTO sentTplReq = tplReqCap.getValue();
         assertEquals("invite-email", sentTplReq.getTemplateId());
@@ -56,7 +57,8 @@ class EmailNotificationServiceTest {
         assertEquals("Thet", sentTplReq.getVariables().get("name"));
 
         // verify transport called with mapped email request
-        ArgumentCaptor<NotificationRequestDTO> outCap = ArgumentCaptor.forClass(NotificationRequestDTO.class);
+        ArgumentCaptor<NotificationRequestDTO> outCap =
+                ArgumentCaptor.forClass(NotificationRequestDTO.class);
         verify(transport).process(outCap.capture());
         NotificationRequestDTO sentEmail = outCap.getValue();
 
@@ -73,15 +75,16 @@ class EmailNotificationServiceTest {
         TemplateEngineImplementor template = mock(TemplateEngineImplementor.class);
         EmailNotificationService svc = new EmailNotificationService(transport, template);
 
-        NotificationRequestDTO in = NotificationRequestDTO.builder()
-                .emailProvider(EmailProvider.AWS_SES)
-                .to("user@example.com")
-                .templateId("invite-email")
-                .templateProvider(TemplateProvider.Thymeleaf)
-                .variables(null) // null vars path
-                .locale(Locale.ENGLISH)
-                .attachment(List.of())
-                .build();
+        NotificationRequestDTO in =
+                NotificationRequestDTO.builder()
+                        .emailProvider(EmailProvider.AWS_SES)
+                        .to("user@example.com")
+                        .templateId("invite-email")
+                        .templateProvider(TemplateProvider.Thymeleaf)
+                        .variables(null) // null vars path
+                        .locale(Locale.ENGLISH)
+                        .attachment(List.of())
+                        .build();
 
         TemplateResponseDTO tpl = mock(TemplateResponseDTO.class);
         when(tpl.getSubject()).thenReturn("S");
