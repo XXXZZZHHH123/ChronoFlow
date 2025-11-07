@@ -24,7 +24,7 @@ import nus.edu.u.system.enums.event.EventStatusEnum;
 import nus.edu.u.system.mapper.attendee.EventAttendeeMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.tenant.TenantMapper;
-import nus.edu.u.system.service.email.AttendeeEmailService;
+import nus.edu.u.system.service.notification.AttendeeEmailService;
 import nus.edu.u.system.service.qrcode.QrCodeService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
