@@ -251,7 +251,7 @@ jobs:
         continue-on-error: true
         with:
           target: "${{ vars.TEST_BASE_URL }}"
-          cmd_options: "-P 1001 -m 5"
+          cmd_options: "-p 10051 -m 5"
           fail_action: false
           allow_issue_writing: false
           artifact_name: "zapfullscan"
