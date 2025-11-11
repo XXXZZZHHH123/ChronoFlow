@@ -255,15 +255,15 @@ jobs:
           docker run --rm \
             -v "$PWD":/zap/wrk/:rw \
             --network host \
-            -w /zap/wrk \
             ghcr.io/zaproxy/zaproxy:stable \
-            zap-full-scan.py \
-              -t "$TARGET" \
-              -j zap-report.json \
-              -x zap-report.xml \
-              -r zap-report.html \
-              -P 1001 \
-              -m 5
+            /bin/sh -c "cd /zap/wrk && \
+              zap-full-scan.py \
+                -t \"$TARGET\" \
+                -j zap-report.json \
+                -x zap-report.xml \
+                -r zap-report.html \
+                -P 1001 \
+                -m 5"
           ZAP_EXIT=$?
           set -e
           if [ "$ZAP_EXIT" -eq 2 ]; then
