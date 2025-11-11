@@ -255,6 +255,7 @@ jobs:
           docker run --rm \
             -v "$PWD":/zap/wrk/:rw \
             --network host \
+            -w /zap/wrk \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-full-scan.py \
               -t "$TARGET" \
