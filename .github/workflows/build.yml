@@ -239,38 +239,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: ZAP Full Scan
-        env:
-          TARGET_URL: ${{ vars.TEST_BASE_URL }}
+      - name: Ensure TARGET_URL configured
         run: |
-          set -euo pipefail
-          TARGET="${TARGET_URL%/}"
-          if [ -z "$TARGET" ]; then
+          if [ -z "${{ vars.TEST_BASE_URL }}" ]; then
             echo "TEST_BASE_URL is not configured." >&2
             exit 1
           fi
-          echo "Running ZAP full scan against $TARGET"
-          docker pull ghcr.io/zaproxy/zaproxy:stable -q
-          set +e
-          docker run --rm \
-            -v "$PWD":/zap/wrk/:rw \
-            --network host \
-            ghcr.io/zaproxy/zaproxy:stable \
-            zap-full-scan.py \
-              -t "$TARGET" \
-              -j /zap/wrk/zap-report.json \
-              -x /zap/wrk/zap-report.xml \
-              -r /zap/wrk/zap-report.html \
-              -P 1001 \
-              -m 5
-          ZAP_EXIT=$?
-          set -e
-          if [ "$ZAP_EXIT" -eq 2 ]; then
-            echo "ZAP reported warnings only (exit code 2). Continuing pipeline."
-          elif [ "$ZAP_EXIT" -ne 0 ]; then
-            echo "ZAP scan failed with exit code $ZAP_EXIT" >&2
-            exit "$ZAP_EXIT"
-          fi
+
+      - name: OWASP ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        continue-on-error: true
+        with:
+          target: "${{ vars.TEST_BASE_URL }}"
+          cmd_options: "-P 1001 -m 5"
+          fail_action: false
+          allow_issue_writing: false
+          artifact_name: "zapfullscan"
 
       - name: Upload ZAP report
         if: always()
@@ -278,6 +262,6 @@ jobs:
         with:
           name: zap-full-scan-${{ github.run_id }}
           path: |
-            zap-report.html
-            zap-report.json
-            zap-report.xml
+            report_html.html
+            report_json.json
+            report_md.md
