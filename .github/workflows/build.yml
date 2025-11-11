@@ -271,3 +271,13 @@ jobs:
             echo "ZAP scan failed with exit code $ZAP_EXIT" >&2
             exit "$ZAP_EXIT"
           fi
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-full-scan-${{ github.run_id }}
+          path: |
+            zap-report.html
+            zap-report.json
+            zap-report.xml
