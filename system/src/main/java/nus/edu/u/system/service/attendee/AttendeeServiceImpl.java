@@ -20,10 +20,12 @@ import nus.edu.u.system.domain.vo.checkin.CheckInRespVO;
 import nus.edu.u.system.domain.vo.checkin.GenerateQrCodesReqVO;
 import nus.edu.u.system.domain.vo.checkin.GenerateQrCodesRespVO;
 import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
-import nus.edu.u.system.enums.event.EventStatusEnum;
 import nus.edu.u.system.mapper.attendee.EventAttendeeMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.tenant.TenantMapper;
+import nus.edu.u.system.service.attendee.validation.CheckInValidationChainBuilder;
+import nus.edu.u.system.service.attendee.validation.CheckInValidationContext;
+import nus.edu.u.system.service.attendee.validation.CheckInValidator;
 import nus.edu.u.system.service.notification.AttendeeEmailService;
 import nus.edu.u.system.service.qrcode.QrCodeService;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,14 +37,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AttendeeServiceImpl implements AttendeeService {
 
     @Resource private EventAttendeeMapper attendeeMapper;
-
     @Resource private EventMapper eventMapper;
-
     @Resource private QrCodeService qrCodeService;
-
     @Resource private AttendeeEmailService attendeeEmailService;
-
     @Resource private TenantMapper tenantMapper;
+    @Resource private CheckInValidationChainBuilder validationChainBuilder;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
@@ -123,6 +122,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                     "Generated new token for updating attendee: email={}",
                     attendee.getAttendeeEmail());
         }
+
         // Generate QR code
         QrCodeRespVO qrCode = qrCodeService.generateEventCheckInQrWithToken(token);
         String qrCodeUrl = baseUrl + "/system/attendee/scan?token=" + token;
@@ -145,45 +145,36 @@ public class AttendeeServiceImpl implements AttendeeService {
     @Override
     @Transactional
     public CheckInRespVO checkIn(String token) {
-        // 1. Validate token
-        EventAttendeeDO attendee = attendeeMapper.selectByToken(token);
-        if (ObjectUtil.isNull(attendee)) {
-            throw exception(INVALID_CHECKIN_TOKEN);
+        log.info("Starting check-in process with validation chain");
+
+        // Build validation context
+        CheckInValidationContext context = CheckInValidationContext.builder()
+                .token(token)
+                .currentTime(LocalDateTime.now())
+                .validationFailed(false)
+                .build();
+
+        // Build and execute validation chain
+        CheckInValidator validationChain = validationChainBuilder.buildValidationChain();
+        validationChain.validate(context);
+
+        // Check if validation failed
+        if (context.isValidationFailed()) {
+            log.warn("Check-in validation failed: {}", context.getErrorMessage());
+            throw exception(VALIDATION_FAILED);
         }
 
-        // 2. Check if already checked in
-        if (ObjectUtil.equal(attendee.getCheckInStatus(), 1)) {
-            throw exception(ALREADY_CHECKED_IN);
-        }
+        // All validations passed - perform check-in
+        EventAttendeeDO attendee = context.getAttendee();
+        EventDO event = context.getEvent();
+        LocalDateTime now = context.getCurrentTime();
 
-        // 3. Validate event status and time
-        EventDO event = eventMapper.selectById(attendee.getEventId());
-        if (ObjectUtil.isNull(event)) {
-            throw exception(EVENT_NOT_FOUND);
-        }
-
-        if (!ObjectUtil.equal(event.getStatus(), EventStatusEnum.ACTIVE.getCode())) {
-            throw exception(EVENT_NOT_ACTIVE);
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime checkInStart = event.getStartTime().minusHours(2);
-        LocalDateTime checkInEnd = event.getEndTime();
-
-        if (now.isBefore(checkInStart)) {
-            throw exception(CHECKIN_NOT_STARTED);
-        }
-        if (now.isAfter(checkInEnd)) {
-            throw exception(CHECKIN_ENDED);
-        }
-
-        // 4. Update check-in status
         attendee.setCheckInStatus(1);
         attendee.setCheckInTime(now);
         attendeeMapper.updateById(attendee);
 
         log.info(
-                "Attendee {} ({}) checked in for event {}",
+                "Attendee {} ({}) checked in successfully for event {}",
                 attendee.getAttendeeName(),
                 attendee.getAttendeeEmail(),
                 event.getName());
@@ -191,12 +182,27 @@ public class AttendeeServiceImpl implements AttendeeService {
         return CheckInRespVO.builder()
                 .eventId(event.getId())
                 .eventName(event.getName())
-                .userId(null) // Attendee 没有 userId
+                .userId(null)
                 .userName(attendee.getAttendeeName())
                 .checkInTime(now)
                 .success(true)
                 .message("Check-in successful!")
                 .build();
+    }
+
+    /**
+     * Map error message to error code constant
+     */
+    private int getErrorCodeFromMessage(String errorMessage) {
+        return switch (errorMessage) {
+            case "INVALID_CHECKIN_TOKEN" -> INVALID_CHECKIN_TOKEN.getCode();
+            case "ALREADY_CHECKED_IN" -> ALREADY_CHECKED_IN.getCode();
+            case "EVENT_NOT_FOUND" -> EVENT_NOT_FOUND.getCode();
+            case "EVENT_NOT_ACTIVE" -> EVENT_NOT_ACTIVE.getCode();
+            case "CHECKIN_NOT_STARTED" -> CHECKIN_NOT_STARTED.getCode();
+            case "CHECKIN_ENDED" -> CHECKIN_ENDED.getCode();
+            default -> INVALID_CHECKIN_TOKEN.getCode();
+        };
     }
 
     @Override
@@ -306,22 +312,18 @@ public class AttendeeServiceImpl implements AttendeeService {
             throw new IllegalArgumentException("Email cannot be empty");
         }
 
-        // Validate event exists
         EventDO event = eventMapper.selectById(eventId);
         if (ObjectUtil.isNull(event)) {
             throw exception(EVENT_NOT_FOUND);
         }
 
-        // Find attendee by email
         EventAttendeeDO attendee = attendeeMapper.selectByEventAndEmail(eventId, email);
 
         if (ObjectUtil.isNull(attendee)) {
-            // Attendee doesn't exist yet - will be created when sending email
             log.info("Attendee not found for eventId={}, email={}", eventId, email);
             throw exception(EVENT_ATTENDEE_NOT_FOUND);
         }
 
-        // Generate token if doesn't exist
         if (ObjectUtil.isNull(attendee.getCheckInToken())) {
             String token = UUID.randomUUID().toString();
             attendee.setCheckInToken(token);

@@ -1,95 +1,118 @@
 package nus.edu.u.system.service.qrcode;
 
-import static nus.edu.u.system.enums.ErrorCodeConstants.QRCODE_GENERATION_FAILED;
-
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.WriterException;
-import com.google.zxing.client.j2se.MatrixToImageWriter;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.system.domain.vo.qrcode.QrCodeReqVO;
 import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
+import nus.edu.u.system.service.qrcode.strategy.QrCodeGenerationStrategy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
+import java.util.List;
+
+
+/**
+ * QR Code Service Implementation using Strategy Pattern
+ *
+ * @author Fan Yazhuoting
+ * @date 2025-10-02
+ */
 @Service
 @Slf4j
 public class QrCodeServiceImpl implements QrCodeService {
+
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
 
-    private static final int DEFAULT_SIZE = 300;
-    private static final String DEFAULT_FORMAT = "PNG";
+    /**
+     * All available QR code generation strategies
+     * Automatically injected by Spring from all @Component implementations
+     */
+    @Resource
+    private List<QrCodeGenerationStrategy> strategies;
 
-    @Override
-    public QrCodeRespVO generateQrCode(QrCodeReqVO reqVO) {
-        try {
-            String content = reqVO.getContent();
-            int size = Optional.ofNullable(reqVO.getSize()).orElse(DEFAULT_SIZE);
-            String format = Optional.ofNullable(reqVO.getFormat()).orElse(DEFAULT_FORMAT);
+    /**
+     * Default strategy to use when no specific strategy is found
+     */
+    private QrCodeGenerationStrategy defaultStrategy;
 
-            byte[] qrCodeBytes = generateQrCodeBytes(content, size, format);
-            String base64Image = Base64.getEncoder().encodeToString(qrCodeBytes);
+    /**
+     * Initialize and sort strategies by priority
+     */
+    public QrCodeServiceImpl() {
+        this.strategies = strategies;
 
-            return QrCodeRespVO.builder()
-                    .base64Image(base64Image)
-                    .contentType("image/" + format.toLowerCase())
-                    .size(size)
-                    .build();
+        // Sort strategies by priority (descending)
+        this.strategies.sort(Comparator.comparingInt(QrCodeGenerationStrategy::getPriority).reversed());
 
-        } catch (IOException e) {
-            log.error("Failed to generate QR code", e);
-            throw new ServiceException(
-                    QRCODE_GENERATION_FAILED.getCode(),
-                    "Failed to generate QR code: " + e.getMessage());
-        }
+        // Set first strategy as default (should be StandardQrCodeStrategy)
+        this.defaultStrategy = strategies.stream()
+                .filter(s -> "STANDARD".equals(s.getStrategyName()))
+                .findFirst()
+                .orElse(strategies.get(0));
+
+        log.info("Initialized QrCodeService with {} strategies. Default: {}",
+                strategies.size(), defaultStrategy.getStrategyName());
     }
 
     @Override
-    public byte[] generateQrCodeBytes(String content, int size, String format) throws IOException {
-        try {
-            // Configure QR code parameters
-            Map<EncodeHintType, Object> hints = new HashMap<>();
-            hints.put(EncodeHintType.CHARACTER_SET, StandardCharsets.UTF_8.name());
-            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
-            hints.put(EncodeHintType.MARGIN, 1);
+    public QrCodeRespVO generateQrCode(QrCodeReqVO reqVO) {
+        QrCodeGenerationStrategy strategy = selectStrategy(reqVO);
 
-            // Generate QR code
-            QRCodeWriter qrCodeWriter = new QRCodeWriter();
-            BitMatrix bitMatrix =
-                    qrCodeWriter.encode(content, BarcodeFormat.QR_CODE, size, size, hints);
+        log.debug("Selected strategy: {} for request type: {}",
+                strategy.getStrategyName(), reqVO.getType());
 
-            // Convert to image bytes
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            MatrixToImageWriter.writeToStream(bitMatrix, format, outputStream);
+        return strategy.generate(reqVO);
+    }
 
-            return outputStream.toByteArray();
+    @Override
+    public byte[] generateQrCodeBytes(String content, int size, String format) {
+        // For backward compatibility - use standard strategy
+        QrCodeReqVO reqVO = QrCodeReqVO.builder()
+                .content(content)
+                .size(size)
+                .format(format)
+                .type("STANDARD")
+                .build();
 
-        } catch (WriterException e) {
-            throw new IOException("Failed to encode QR code", e);
-        }
+        QrCodeRespVO response = generateQrCode(reqVO);
+        return java.util.Base64.getDecoder().decode(response.getBase64Image());
     }
 
     @Override
     public QrCodeRespVO generateEventCheckInQrWithToken(String checkInToken) {
-        // Build secure check-in URL with token
         String url = baseUrl + "/system/attendee/scan?token=" + checkInToken;
 
-        QrCodeReqVO reqVO = QrCodeReqVO.builder().content(url).size(400).format("PNG").build();
+        QrCodeReqVO reqVO = QrCodeReqVO.builder()
+                .content(url)
+                .size(400)
+                .format("PNG")
+                .type("SECURE")
+                .build();
 
         QrCodeRespVO response = generateQrCode(reqVO);
-        log.info("Generated event check-in QR code with token");
+        log.info("Generated event check-in QR code with SECURE strategy");
         return response;
+    }
+
+    /**
+     * Select appropriate strategy based on request
+     *
+     * @param reqVO QR code request
+     * @return Selected strategy
+     */
+    private QrCodeGenerationStrategy selectStrategy(QrCodeReqVO reqVO) {
+        if (reqVO.getType() != null && !reqVO.getType().isBlank()) {
+            return strategies.stream()
+                    .filter(s -> s.supports(reqVO))
+                    .findFirst()
+                    .orElse(defaultStrategy);
+        }
+
+        return strategies.stream()
+                .filter(s -> s.supports(reqVO))
+                .findFirst()
+                .orElse(defaultStrategy);
     }
 }
