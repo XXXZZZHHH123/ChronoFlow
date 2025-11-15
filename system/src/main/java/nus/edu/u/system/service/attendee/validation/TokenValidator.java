@@ -9,8 +9,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
- * Token Validator
- * Validates that the check-in token exists and retrieves attendee record
+ * Token Validator Validates that the check-in token exists and retrieves attendee record
  *
  * @author Fan Yazhuoting
  * @date 2025-10-15
@@ -20,8 +19,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class TokenValidator extends CheckInValidator {
 
-    @Resource
-    private EventAttendeeMapper attendeeMapper;
+    @Resource private EventAttendeeMapper attendeeMapper;
 
     @Override
     protected void doValidate(CheckInValidationContext context) {

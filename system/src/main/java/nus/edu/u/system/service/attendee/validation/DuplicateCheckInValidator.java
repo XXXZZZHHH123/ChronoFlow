@@ -6,8 +6,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
- * Duplicate Check-in Validator
- * Validates that the attendee has not already checked in
+ * Duplicate Check-in Validator Validates that the attendee has not already checked in
  *
  * @author Fan Yazhuoting
  * @date 2025-10-15
@@ -22,8 +21,8 @@ public class DuplicateCheckInValidator extends CheckInValidator {
         log.debug("Validating duplicate check-in: {}", getValidatorName());
 
         if (ObjectUtil.equal(context.getAttendee().getCheckInStatus(), 1)) {
-            log.warn("Attendee {} has already checked in",
-                    context.getAttendee().getAttendeeEmail());
+            log.warn(
+                    "Attendee {} has already checked in", context.getAttendee().getAttendeeEmail());
             context.setValidationFailed(true);
             context.setErrorMessage("ALREADY_CHECKED_IN");
             return;

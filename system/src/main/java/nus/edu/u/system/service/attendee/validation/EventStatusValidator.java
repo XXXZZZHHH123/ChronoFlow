@@ -7,8 +7,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
- * Event Status Validator
- * Validates that the event is in ACTIVE status
+ * Event Status Validator Validates that the event is in ACTIVE status
  *
  * @author Fan Yazhuoting
  * @date 2025-10-15
@@ -23,7 +22,8 @@ public class EventStatusValidator extends CheckInValidator {
         log.debug("Validating event status: {}", getValidatorName());
 
         if (!ObjectUtil.equal(context.getEvent().getStatus(), EventStatusEnum.ACTIVE.getCode())) {
-            log.warn("Event {} is not active, current status: {}",
+            log.warn(
+                    "Event {} is not active, current status: {}",
                     context.getEvent().getName(),
                     context.getEvent().getStatus());
             context.setValidationFailed(true);

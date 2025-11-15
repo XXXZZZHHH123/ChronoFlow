@@ -1,5 +1,7 @@
 package nus.edu.u.system.service.qrcode.strategy;
 
+import static nus.edu.u.system.enums.ErrorCodeConstants.QRCODE_GENERATION_FAILED;
+
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -7,12 +9,6 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import lombok.extern.slf4j.Slf4j;
-import nus.edu.u.common.exception.ServiceException;
-import nus.edu.u.system.domain.vo.qrcode.QrCodeReqVO;
-import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
-import org.springframework.stereotype.Component;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -20,12 +16,14 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import static nus.edu.u.system.enums.ErrorCodeConstants.QRCODE_GENERATION_FAILED;
+import lombok.extern.slf4j.Slf4j;
+import nus.edu.u.common.exception.ServiceException;
+import nus.edu.u.system.domain.vo.qrcode.QrCodeReqVO;
+import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
+import org.springframework.stereotype.Component;
 
 /**
- * Standard QR Code Generation Strategy
- * Uses default settings suitable for most use cases
+ * Standard QR Code Generation Strategy Uses default settings suitable for most use cases
  *
  * @author Fan Yazhuoting
  * @date 2025-10-15
@@ -74,8 +72,8 @@ public class StandardQrCodeStrategy implements QrCodeGenerationStrategy {
 
             // Generate QR code
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
-            BitMatrix bitMatrix = qrCodeWriter.encode(
-                    content, BarcodeFormat.QR_CODE, size, size, hints);
+            BitMatrix bitMatrix =
+                    qrCodeWriter.encode(content, BarcodeFormat.QR_CODE, size, size, hints);
 
             // Convert to image bytes
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -91,9 +89,9 @@ public class StandardQrCodeStrategy implements QrCodeGenerationStrategy {
     @Override
     public boolean supports(QrCodeReqVO reqVO) {
         // Standard strategy supports requests without explicit type or with "STANDARD" type
-        return reqVO.getType() == null ||
-                reqVO.getType().isBlank() ||
-                "STANDARD".equalsIgnoreCase(reqVO.getType());
+        return reqVO.getType() == null
+                || reqVO.getType().isBlank()
+                || "STANDARD".equalsIgnoreCase(reqVO.getType());
     }
 
     @Override

@@ -1,8 +1,8 @@
 package nus.edu.u.system.service.attendee.validation;
 
 /**
- * Abstract Check-in Validator
- * Base class for all check-in validation rules using Chain of Responsibility pattern
+ * Abstract Check-in Validator Base class for all check-in validation rules using Chain of
+ * Responsibility pattern
  *
  * @author Fan Yazhuoting
  * @date 2025-10-15
@@ -23,8 +23,7 @@ public abstract class CheckInValidator {
     }
 
     /**
-     * Validate the check-in request
-     * If validation passes, proceed to next validator in chain
+     * Validate the check-in request If validation passes, proceed to next validator in chain
      *
      * @param context Validation context containing all necessary data
      */
@@ -44,8 +43,8 @@ public abstract class CheckInValidator {
     }
 
     /**
-     * Perform the specific validation logic for this validator
-     * Subclasses must implement this method
+     * Perform the specific validation logic for this validator Subclasses must implement this
+     * method
      *
      * @param context Validation context
      */

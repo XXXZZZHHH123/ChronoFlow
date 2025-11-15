@@ -148,11 +148,12 @@ public class AttendeeServiceImpl implements AttendeeService {
         log.info("Starting check-in process with validation chain");
 
         // Build validation context
-        CheckInValidationContext context = CheckInValidationContext.builder()
-                .token(token)
-                .currentTime(LocalDateTime.now())
-                .validationFailed(false)
-                .build();
+        CheckInValidationContext context =
+                CheckInValidationContext.builder()
+                        .token(token)
+                        .currentTime(LocalDateTime.now())
+                        .validationFailed(false)
+                        .build();
 
         // Build and execute validation chain
         CheckInValidator validationChain = validationChainBuilder.buildValidationChain();
@@ -190,9 +191,7 @@ public class AttendeeServiceImpl implements AttendeeService {
                 .build();
     }
 
-    /**
-     * Map error message to error code constant
-     */
+    /** Map error message to error code constant */
     private int getErrorCodeFromMessage(String errorMessage) {
         return switch (errorMessage) {
             case "INVALID_CHECKIN_TOKEN" -> INVALID_CHECKIN_TOKEN.getCode();

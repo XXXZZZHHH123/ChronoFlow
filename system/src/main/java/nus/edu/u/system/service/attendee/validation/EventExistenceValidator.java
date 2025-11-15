@@ -9,8 +9,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
- * Event Existence Validator
- * Validates that the event exists and retrieves event record
+ * Event Existence Validator Validates that the event exists and retrieves event record
  *
  * @author Fan Yazhuoting
  * @date 2025-10-15
@@ -20,8 +19,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class EventExistenceValidator extends CheckInValidator {
 
-    @Resource
-    private EventMapper eventMapper;
+    @Resource private EventMapper eventMapper;
 
     @Override
     protected void doValidate(CheckInValidationContext context) {

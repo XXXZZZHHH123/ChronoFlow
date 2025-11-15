@@ -1,15 +1,13 @@
 package nus.edu.u.system.service.attendee.validation;
 
 import jakarta.annotation.Resource;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import nus.edu.u.system.service.attendee.validation.*;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 /**
- * Check-in Validation Chain Builder
- * Builds and manages the chain of responsibility for check-in validation
+ * Check-in Validation Chain Builder Builds and manages the chain of responsibility for check-in
+ * validation
  *
  * @author Fan Yazhuoting
  * @date 2025-10-15
@@ -18,20 +16,15 @@ import java.util.List;
 @Slf4j
 public class CheckInValidationChainBuilder {
 
-    @Resource
-    private TokenValidator tokenValidator;
+    @Resource private TokenValidator tokenValidator;
 
-    @Resource
-    private DuplicateCheckInValidator duplicateCheckInValidator;
+    @Resource private DuplicateCheckInValidator duplicateCheckInValidator;
 
-    @Resource
-    private EventExistenceValidator eventExistenceValidator;
+    @Resource private EventExistenceValidator eventExistenceValidator;
 
-    @Resource
-    private EventStatusValidator eventStatusValidator;
+    @Resource private EventStatusValidator eventStatusValidator;
 
-    @Resource
-    private TimeWindowValidator timeWindowValidator;
+    @Resource private TimeWindowValidator timeWindowValidator;
 
     /**
      * Build the validation chain with all validators in order
@@ -53,8 +46,8 @@ public class CheckInValidationChainBuilder {
     }
 
     /**
-     * Alternative method: Build chain from a list of validators
-     * This allows for dynamic chain composition in the future
+     * Alternative method: Build chain from a list of validators This allows for dynamic chain
+     * composition in the future
      *
      * @param validators List of validators in desired order
      * @return The head of the validation chain

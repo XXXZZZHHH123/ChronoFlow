@@ -1,5 +1,7 @@
 package nus.edu.u.system.service.qrcode.strategy;
 
+import static nus.edu.u.system.enums.ErrorCodeConstants.QRCODE_GENERATION_FAILED;
+
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -7,12 +9,6 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import lombok.extern.slf4j.Slf4j;
-import nus.edu.u.common.exception.ServiceException;
-import nus.edu.u.system.domain.vo.qrcode.QrCodeReqVO;
-import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
-import org.springframework.stereotype.Component;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -20,13 +16,15 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import static nus.edu.u.system.enums.ErrorCodeConstants.QRCODE_GENERATION_FAILED;
+import lombok.extern.slf4j.Slf4j;
+import nus.edu.u.common.exception.ServiceException;
+import nus.edu.u.system.domain.vo.qrcode.QrCodeReqVO;
+import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
+import org.springframework.stereotype.Component;
 
 /**
- * Secure QR Code Generation Strategy
- * Uses high error correction level and larger size for better reliability
- * Suitable for critical use cases like event check-in
+ * Secure QR Code Generation Strategy Uses high error correction level and larger size for better
+ * reliability Suitable for critical use cases like event check-in
  *
  * @author Fan Yazhuoting
  * @date 2025-10-15
@@ -50,8 +48,10 @@ public class SecureQrCodeStrategy implements QrCodeGenerationStrategy {
             byte[] qrCodeBytes = generateSecureQrCodeBytes(content, size, format);
             String base64Image = Base64.getEncoder().encodeToString(qrCodeBytes);
 
-            log.info("Generated secure QR code with high error correction: size={}, format={}",
-                    size, format);
+            log.info(
+                    "Generated secure QR code with high error correction: size={}, format={}",
+                    size,
+                    format);
 
             return QrCodeRespVO.builder()
                     .base64Image(base64Image)
@@ -73,13 +73,15 @@ public class SecureQrCodeStrategy implements QrCodeGenerationStrategy {
             // Configure QR code parameters with high security settings
             Map<EncodeHintType, Object> hints = new HashMap<>();
             hints.put(EncodeHintType.CHARACTER_SET, StandardCharsets.UTF_8.name());
-            hints.put(EncodeHintType.ERROR_CORRECTION, SECURE_ERROR_CORRECTION); // High error correction
+            hints.put(
+                    EncodeHintType.ERROR_CORRECTION,
+                    SECURE_ERROR_CORRECTION); // High error correction
             hints.put(EncodeHintType.MARGIN, SECURE_MARGIN); // Larger margin for better scanning
 
             // Generate QR code
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
-            BitMatrix bitMatrix = qrCodeWriter.encode(
-                    content, BarcodeFormat.QR_CODE, size, size, hints);
+            BitMatrix bitMatrix =
+                    qrCodeWriter.encode(content, BarcodeFormat.QR_CODE, size, size, hints);
 
             // Convert to image bytes
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
