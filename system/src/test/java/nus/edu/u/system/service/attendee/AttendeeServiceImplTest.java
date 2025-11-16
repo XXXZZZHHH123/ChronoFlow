@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.*;
 import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpLogic;
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,7 +24,11 @@ import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
 import nus.edu.u.system.mapper.attendee.EventAttendeeMapper;
 import nus.edu.u.system.mapper.task.EventMapper;
 import nus.edu.u.system.mapper.tenant.TenantMapper;
+import nus.edu.u.system.service.attendee.validation.CheckInValidationChainBuilder;
+import nus.edu.u.system.service.attendee.validation.CheckInValidationContext;
+import nus.edu.u.system.service.attendee.validation.CheckInValidator;
 import nus.edu.u.system.service.qrcode.QrCodeService;
+import org.apache.ibatis.session.ResultHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -45,6 +51,13 @@ class AttendeeServiceImplTest {
         setField("qrCodeService", qrCodeService);
         setField("tenantMapper", new InMemoryTenantMapper());
         setField("baseUrl", "http://test-host");
+
+        // IMPORTANT: AttendeeServiceImpl now uses a validationChainBuilder for checkIn.
+        // Inject a stub builder that returns a validator which locates attendee and event
+        // from the in-memory mappers and sets the context accordingly.
+        setField(
+                "validationChainBuilder",
+                new StubValidationChainBuilder(attendeeMapper, eventMapper));
     }
 
     private void setField(String name, Object value) throws Exception {
@@ -786,29 +799,15 @@ class AttendeeServiceImplTest {
         }
 
         @Override
-        public java.util.List<nus.edu.u.system.domain.dataobject.tenant.TenantDO> selectList(
-                com.baomidou.mybatisplus.core.metadata.IPage<
-                                nus.edu.u.system.domain.dataobject.tenant.TenantDO>
-                        page,
-                com.baomidou.mybatisplus.core.conditions.Wrapper<
-                                nus.edu.u.system.domain.dataobject.tenant.TenantDO>
-                        queryWrapper) {
-            throw new UnsupportedOperationException();
+        public List<TenantDO> selectList(IPage<TenantDO> page, Wrapper<TenantDO> queryWrapper) {
+            return List.of();
         }
 
         @Override
         public void selectList(
-                com.baomidou.mybatisplus.core.metadata.IPage<
-                                nus.edu.u.system.domain.dataobject.tenant.TenantDO>
-                        page,
-                com.baomidou.mybatisplus.core.conditions.Wrapper<
-                                nus.edu.u.system.domain.dataobject.tenant.TenantDO>
-                        queryWrapper,
-                org.apache.ibatis.session.ResultHandler<
-                                nus.edu.u.system.domain.dataobject.tenant.TenantDO>
-                        resultHandler) {
-            throw new UnsupportedOperationException();
-        }
+                IPage<TenantDO> page,
+                Wrapper<TenantDO> queryWrapper,
+                ResultHandler<TenantDO> resultHandler) {}
 
         @Override
         public java.util.List<java.util.Map<String, Object>> selectMaps(
@@ -893,6 +892,62 @@ class AttendeeServiceImplTest {
                                         nus.edu.u.system.domain.dataobject.tenant.TenantDO>
                                 queryWrapper) {
             throw new UnsupportedOperationException();
+        }
+    }
+
+    /**
+     * Stub builder & validator to emulate the validation chain used by AttendeeServiceImpl.checkIn.
+     * The validator will: - lookup attendee by token, - lookup event by attendee.eventId, - set
+     * attendee and event into context (and keep validationFailed=false) when found, - set
+     * validationFailed=true with a simple error message when not found.
+     */
+    private static final class StubValidationChainBuilder extends CheckInValidationChainBuilder {
+        private final InMemoryAttendeeMapper attendeeMapper;
+        private final InMemoryEventMapper eventMapper;
+
+        private StubValidationChainBuilder(
+                InMemoryAttendeeMapper attendeeMapper, InMemoryEventMapper eventMapper) {
+            this.attendeeMapper = attendeeMapper;
+            this.eventMapper = eventMapper;
+        }
+
+        @Override
+        public CheckInValidator buildValidationChain() {
+            return new CheckInValidator() {
+                @Override
+                public void validate(CheckInValidationContext context) {
+                    String token = context.getToken();
+                    if (token == null) {
+                        context.setValidationFailed(true);
+                        context.setErrorMessage("INVALID_CHECKIN_TOKEN");
+                        return;
+                    }
+                    EventAttendeeDO attendee = attendeeMapper.selectByToken(token);
+                    if (attendee == null) {
+                        context.setValidationFailed(true);
+                        context.setErrorMessage("INVALID_CHECKIN_TOKEN");
+                        return;
+                    }
+                    EventDO event = eventMapper.selectById(attendee.getEventId());
+                    if (event == null) {
+                        context.setValidationFailed(true);
+                        context.setErrorMessage("EVENT_NOT_FOUND");
+                        return;
+                    }
+                    // Basic time/status checks could be added if necessary.
+                    context.setAttendee(attendee);
+                    context.setEvent(event);
+                    context.setValidationFailed(false);
+                }
+
+                @Override
+                protected void doValidate(CheckInValidationContext context) {}
+
+                @Override
+                protected String getValidatorName() {
+                    return "";
+                }
+            };
         }
     }
 }
