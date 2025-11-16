@@ -1,8 +1,10 @@
 package nus.edu.u.system.service.qrcode;
 
 import jakarta.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.system.domain.vo.qrcode.QrCodeReqVO;
 import nus.edu.u.system.domain.vo.qrcode.QrCodeRespVO;
@@ -13,8 +15,8 @@ import org.springframework.stereotype.Service;
 /**
  * QR Code Service Implementation using Strategy Pattern
  *
- * @author Fan Yazhuoting
- * @date 2025-10-02
+ * <p>Ensures injected strategy list is copied into a mutable list before sorting or modification,
+ * avoiding ImmutableCollections UnsupportedOperationException in test / runtime environments.
  */
 @Service
 @Slf4j
@@ -23,24 +25,28 @@ public class QrCodeServiceImpl implements QrCodeService {
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
 
-    /**
-     * All available QR code generation strategies Automatically injected by Spring from
-     * all @Component implementations
-     */
+    /** All available QR code generation strategies automatically injected by Spring */
     @Resource private List<QrCodeGenerationStrategy> strategies;
 
     /** Default strategy to use when no specific strategy is found */
     private QrCodeGenerationStrategy defaultStrategy;
 
-    /** Initialize and sort strategies by priority */
-    public QrCodeServiceImpl() {
-        this.strategies = strategies;
+    @PostConstruct
+    public void init() {
+        if (strategies == null || strategies.isEmpty()) {
+            log.warn(
+                    "No QrCodeGenerationStrategy implementations found. Service may not work properly.");
+            return;
+        }
+
+        // Make a mutable copy to avoid UnsupportedOperationException when original list is
+        // immutable
+        this.strategies = new ArrayList<>(this.strategies);
 
         // Sort strategies by priority (descending)
-        this.strategies.sort(
-                Comparator.comparingInt(QrCodeGenerationStrategy::getPriority).reversed());
+        strategies.sort(Comparator.comparingInt(QrCodeGenerationStrategy::getPriority).reversed());
 
-        // Set first strategy as default (should be StandardQrCodeStrategy)
+        // Set default strategy (prefer STANDARD if present)
         this.defaultStrategy =
                 strategies.stream()
                         .filter(s -> "STANDARD".equals(s.getStrategyName()))
@@ -50,7 +56,7 @@ public class QrCodeServiceImpl implements QrCodeService {
         log.info(
                 "Initialized QrCodeService with {} strategies. Default: {}",
                 strategies.size(),
-                defaultStrategy.getStrategyName());
+                defaultStrategy == null ? "null" : defaultStrategy.getStrategyName());
     }
 
     @Override
@@ -59,15 +65,18 @@ public class QrCodeServiceImpl implements QrCodeService {
 
         log.debug(
                 "Selected strategy: {} for request type: {}",
-                strategy.getStrategyName(),
-                reqVO.getType());
+                strategy == null ? "null" : strategy.getStrategyName(),
+                reqVO == null ? "null" : reqVO.getType());
+
+        if (strategy == null) {
+            throw new IllegalStateException("No QR code strategy available");
+        }
 
         return strategy.generate(reqVO);
     }
 
     @Override
     public byte[] generateQrCodeBytes(String content, int size, String format) {
-        // For backward compatibility - use standard strategy
         QrCodeReqVO reqVO =
                 QrCodeReqVO.builder()
                         .content(content)
@@ -88,18 +97,16 @@ public class QrCodeServiceImpl implements QrCodeService {
                 QrCodeReqVO.builder().content(url).size(400).format("PNG").type("SECURE").build();
 
         QrCodeRespVO response = generateQrCode(reqVO);
-        log.info("Generated event check-in QR code with SECURE strategy");
+        log.info("Generated event check-in QR code with selected strategy");
         return response;
     }
 
-    /**
-     * Select appropriate strategy based on request
-     *
-     * @param reqVO QR code request
-     * @return Selected strategy
-     */
     private QrCodeGenerationStrategy selectStrategy(QrCodeReqVO reqVO) {
-        if (reqVO.getType() != null && !reqVO.getType().isBlank()) {
+        if (strategies == null || strategies.isEmpty()) {
+            return defaultStrategy;
+        }
+
+        if (reqVO != null && reqVO.getType() != null && !reqVO.getType().isBlank()) {
             return strategies.stream()
                     .filter(s -> s.supports(reqVO))
                     .findFirst()
